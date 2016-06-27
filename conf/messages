@@ -1,0 +1,4 @@
+error.invalid.int = Please enter a valid integer
+error.invalid.someNumber = This must be an integer, ALRIGHT?
+
+error.required.destination = Destination must be specified

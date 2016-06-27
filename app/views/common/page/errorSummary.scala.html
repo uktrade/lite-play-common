@@ -1,0 +1,25 @@
+@(form: Form[_])
+@if(form.hasErrors) {
+
+  <script>
+    function doFocus(name) {
+      document.querySelector("input[name='" + name + "']").focus();
+    }
+  </script>
+
+  <div class="error">Please correct the following errors:
+
+    @form.errors()
+
+    <ul>
+      @for(error <- form.errors().values().flatten) {
+        <li><a href="javascript:doFocus('@error.key')">@Messages(error.message())</a></li>
+        @*<p>@Messages(error.message(), error.arguments.toArray: _*)</p>*@
+        @*args: @error.arguments*@
+        @*msg: @error.message*@
+        @*key: @error.key*@
+      }
+    </ul>
+
+  </div>
+}
