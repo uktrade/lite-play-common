@@ -1,0 +1,28 @@
+This build created from:
+
+ * govuk_frontend_toolkit   v4.13.0
+ * govuk_elements           v1.2.1
+ * govuk_template           v0.17.3
+ 
+SASS merge (elements/toolkit)
+==============================
+
+Copy all following files to app/assets/template/stylesheets:
+ 
+  govuk_elements/public/sass/_govuk-elements.scss
+  govuk_elements/public/sass/main*.css 
+  govuk_frontend_toolkit/stylesheets/**.scss
+
+Copy govuk_frontend_toolkit/images to public/images
+
+Modify app/assets/template/stylesheets/elements/_helpers.scss: 
+  change $path declaration to:  $path: "../images/";
+
+
+Template files
+==============
+
+In govuk_template run:
+  bundle exec rake build:play
+  
+Copy pkg/play_govuk_template-0.17.3/assets/* to public/template
