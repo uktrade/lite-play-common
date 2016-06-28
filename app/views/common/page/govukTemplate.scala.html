@@ -54,7 +54,7 @@
 
     <div id="global-cookie-message">
 
-      @cookieMessage.getOrElse("<p>GOV.UK uses cookies to make the site simpler. <a href=\"https://www.gov.uk/help/cookies\">Find out more about cookies</a></p>")
+      @cookieMessage.getOrElse(Html("<p>GOV.UK uses cookies to make the site simpler. <a href=\"https://www.gov.uk/help/cookies\">Find out more about cookies</a></p>"))
 
     </div>
 
@@ -107,6 +107,7 @@
     <div id="global-app-error" class="app-error hidden"></div>
 
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/govuk-template.js")"></script>
+    <script src="@controllers.common.routes.Assets.versioned("template/javascripts/vendor/details.polyfill.js")"></script>
 
     @bodyEnd
     </body>
