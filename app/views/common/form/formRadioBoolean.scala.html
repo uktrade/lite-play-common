@@ -1,0 +1,25 @@
+@(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", trueFirst: Boolean = true)
+
+<div class="form-group @if(field.error.isDefined){ error }">
+
+  <p class="lede form-block">@prompt</p>
+
+  <fieldset class="inline">
+    <legend class="visually-hidden">@prompt</legend>
+
+    @if(field.error.isDefined) {
+      <p class="error-message">@Messages(field.error.get.message)</p>
+    }
+
+    <label class="block-label" for="@field.name-T">
+      <input id="@field.name-T" name="@field.name" value="true" type="radio" @if(field.value.getOrElse("").equals("true")){ checked="checked" }>
+      @truePrompt
+    </label>
+
+    <label class="block-label" for="@field.name-F">
+      <input id="@field.name-F" name="@field.name" value="falsegit " type="radio" @if(field.value.getOrElse("").equals("false")){ checked="checked" }>
+      @falsePrompt
+    </label>
+  </fieldset>
+
+</div>
