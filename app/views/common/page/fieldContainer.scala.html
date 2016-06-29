@@ -1,0 +1,11 @@
+@(field: Field)(content: Html)
+
+<div class="form-group @if(field.error.isDefined){ error }">
+
+  @if(field.error.isDefined) {
+    <p class="error-message">@Messages(field.error.get.message)</p>
+  }
+
+  @content
+
+</div>

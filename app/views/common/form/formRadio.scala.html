@@ -1,0 +1,6 @@
+@(field: Field, prompt: Html, optionValue: String)
+
+<label class="block-label" for="@field.name@optionValue">
+  <input id="@field.name@optionValue" name="@field.name" value="@optionValue" type="radio" @if(field.value.getOrElse("").equals(optionValue)){ checked="checked" }>
+  @prompt
+</label>
