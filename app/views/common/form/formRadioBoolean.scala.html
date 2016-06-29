@@ -1,4 +1,4 @@
-@(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", trueFirst: Boolean = true)
+@(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No")
 
 <div class="form-group @if(field.error.isDefined){ error }">
 
@@ -17,7 +17,7 @@
     </label>
 
     <label class="block-label" for="@field.name-F">
-      <input id="@field.name-F" name="@field.name" value="falsegit " type="radio" @if(field.value.getOrElse("").equals("false")){ checked="checked" }>
+      <input id="@field.name-F" name="@field.name" value="false" type="radio" @if(field.value.getOrElse("").equals("false")){ checked="checked" }>
       @falsePrompt
     </label>
   </fieldset>
