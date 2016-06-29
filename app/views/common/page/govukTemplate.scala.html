@@ -1,4 +1,24 @@
-@(title: Option[String], bodyClasses: Option[String], htmlLang: Option[String] = None)(head:Html, bodyStart:Html, bodyEnd:Html, insideHeader:Html, afterHeader:Html, footerTop:Html, footerLinks:Html, headerClass:Html = HtmlFormat.empty, propositionHeader:Html = HtmlFormat.empty, homepageUrl:Option[Html] = None, globalHeaderText:Option[Html] = None, cookieMessage:Option[Html] = None, skipLinkMessage:Option[Html] = None, logoLinkTitle:Option[Html] = None, licenceMessage:Html, crownCopyrightMessage:Option[Html] = None)(content:Html)
+@(title: Option[String],
+  bodyClasses: Option[String],
+  htmlLang: Option[String] = None
+)(head:Html,
+  bodyStart:Html,
+  bodyEnd:Html,
+  insideHeader:Html,
+  afterHeader:Html,
+  footerTop:Html,
+  footerLinks:Html,
+  headerClass:Html = HtmlFormat.empty,
+  propositionHeader:Html = HtmlFormat.empty,
+  homepageUrl:Option[Html] = None,
+  globalHeaderText:Option[Html] = None,
+  cookieMessage:Option[Html] = None,
+  skipLinkMessage:Option[Html] = None,
+  skipLinkTarget:String = "content",
+  logoLinkTitle:Option[Html] = None,
+  licenceMessage:Html,
+  crownCopyrightMessage:Option[Html] = None
+)(content:Html)
 <!DOCTYPE html>
 <!--[if lt IE 9]><html class="lte-ie8" lang="@htmlLang.getOrElse("en")"><![endif]-->
   <!--[if gt IE 8]><!--><html lang="@htmlLang.getOrElse("en")"><!--<![endif]-->
@@ -41,14 +61,14 @@
     @head
   </head>
 
-  <body class="@bodyClasses.getOrElse("")">
-    <script>document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');</script>
+  <body class="@bodyClasses.getOrElse("") js-disabled">
+    <script>document.body.className = ((document.body.className) ? document.body.className.replace(" js-disabled","") + ' js-enabled' : 'js-enabled');</script>
 
     @bodyStart
 
     <div id="skiplink-container">
       <div>
-        <a href="#content" class="skiplink">@skipLinkMessage.getOrElse("Skip to main content")</a>
+        <a href="#@skipLinkTarget" class="skiplink">@skipLinkMessage.getOrElse("Skip to main content")</a>
       </div>
     </div>
 
