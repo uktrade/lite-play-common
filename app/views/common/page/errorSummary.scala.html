@@ -1,17 +1,17 @@
-@(form: Form[_])
+@(form: Form[_], title: Option[Html] = None, description: Option[Html] = None)
 @if(form.hasErrors) {
 
-  <script>
-    function doFocus(name) {
-      document.querySelector("input[name='" + name + "']").focus();
+  <div class="error-summary" role="group" aria-labelledby="error-summary-heading" tabindex="-1">
+
+    <h2 class="heading-medium error-summary-heading" id="error-summary-heading">
+      @title.getOrElse("There are errors on this page")
+    </h2>
+
+    @if(description.isDefined) {
+      <p>@description</p>
     }
-  </script>
 
-  <div class="error">Please correct the following errors:
-
-    @form.errors()
-
-    <ul>
+    <ul class="error-summary-list">
       @for(error <- form.errors().values().flatten) {
         <li><a href="javascript:doFocus('@error.key')">@Messages(error.message())</a></li>
         @*<p>@Messages(error.message(), error.arguments.toArray: _*)</p>*@
@@ -22,4 +22,10 @@
     </ul>
 
   </div>
+
+  <script>
+    function doFocus(name) {
+      document.querySelector("input[name='" + name + "']").focus();
+    }
+  </script>
 }
