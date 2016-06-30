@@ -1,4 +1,4 @@
-@(form: Form[_], title: Option[Html] = None, description: Option[Html] = None)
+@(form: Form[_], title: Option[Html] = None, description: Option[Html] = None, fieldOrder: Seq[String] = Seq.empty)
 @if(form.hasErrors) {
 
   <div class="error-summary" role="group" aria-labelledby="error-summary-heading" tabindex="-1">
@@ -12,12 +12,14 @@
     }
 
     <ul class="error-summary-list">
-      @for(error <- form.errors().values().flatten) {
+      @* Print all errors without a defined order first *@
+      @for(error <- form.errors().entrySet().filter(e => !fieldOrder.contains(e.getKey)).flatMap(e => e.getValue())) {
         <li><a href="javascript:doFocus('@error.key')">@Messages(error.message())</a></li>
-        @*<p>@Messages(error.message(), error.arguments.toArray: _*)</p>*@
-        @*args: @error.arguments*@
-        @*msg: @error.message*@
-        @*key: @error.key*@
+      }
+
+      @* For errors with defined order, print in correct order *@
+      @for(error <- fieldOrder.filter(e => form.errors.containsKey(e)).flatMap(e => form.errors().get(e))) {
+        <li><a href="javascript:doFocus('@error.key')">@Messages(error.message())</a></li>
       }
     </ul>
 
