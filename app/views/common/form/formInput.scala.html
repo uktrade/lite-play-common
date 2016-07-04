@@ -1,17 +1,18 @@
-@(field: Field, label: String = "CHANGEME", hint: String = "")
+@(field: Field, hint: Option[Html] = None)(label: Html)
 
 <div class="form-group search-form-group @if(field.error.isDefined){ error }">
+
+  <label class="form-label" for="@field.id">@label</label>
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <label class="form-label" for="@field.id">@label @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ (required)}</label>
-  <input class="form-control" id="@field.id" name="@field.name" type="text" value="@field.value"/>
-  <label class="form-label" for="@field.id">
-    <span class="form-hint">@hint</span>
-  </label>
-  @* @for(constraint <- field.constraints) {*@
-    @*constraint: @constraint*@
-  @*}*@
+  <input class="form-control" id="@field.id" name="@field.name" type="text" value="@field.value"
+    @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ data-validation-required="true" } />
+  @if(hint.isDefined){
+    <label class="form-label" for="@field.id">
+      <span class="form-hint">@hint</span>
+    </label>
+  }
 </div>
