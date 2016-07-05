@@ -1,21 +1,8 @@
 @import utils.common.SelectOption
 @(field: Field, options: List[SelectOption])(prompt: Html)
 
-<div class="form-group @if(field.error.isDefined){ error }">
-
-  <p class="lede form-block">@prompt</p>
-
-  <fieldset>
-    <legend class="visually-hidden">@prompt</legend>
-
-    @if(field.error.isDefined) {
-      <p class="error-message">@Messages(field.error.get.message)</p>
-    }
-
-    @for(option <- options) {
-      @formRadio(field, Html(option.prompt), option.value)
-    }
-
-  </fieldset>
-
-</div>
+@formRadioGroupContainer(field)(prompt) {
+  @for(option <- options) {
+    @formRadio(field, Html(option.prompt), option.value)
+  }
+}

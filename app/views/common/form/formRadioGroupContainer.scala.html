@@ -1,0 +1,18 @@
+@(field: Field)(prompt: Html)(radioContent: Html)
+
+<div class="form-group @if(field.error.isDefined){ error }">
+
+  <p class="lede form-block">@prompt</p>
+
+  <fieldset>
+    <legend class="visually-hidden">@prompt</legend>
+
+    @if(field.error.isDefined) {
+      <p class="error-message">@Messages(field.error.get.message)</p>
+    }
+
+    @radioContent
+
+  </fieldset>
+
+</div>
