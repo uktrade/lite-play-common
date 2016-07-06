@@ -1,6 +1,6 @@
 @(field: Field, hint: Option[Html] = None)(label: Html)
 
-<div class="form-group search-form-group @if(field.error.isDefined){ error }">
+<div class="form-group @if(field.error.isDefined){ error }">
 
   <label class="form-label" for="@field.id">@label</label>
 
