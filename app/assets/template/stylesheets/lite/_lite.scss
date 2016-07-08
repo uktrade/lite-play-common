@@ -1,1 +1,21 @@
 @import "js";
+
+button.link {
+  .underline {
+    text-decoration: underline;
+  }
+  text-decoration: none;
+  color: $link-colour;
+  text-align: left;
+  border: none;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  cursor: hand;
+  padding-left: 0px;
+}
+
+button.link:hover {
+  color: $link-hover-colour;
+  background: none;
+}
