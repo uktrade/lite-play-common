@@ -1,21 +1,29 @@
 @import "js";
 
+button {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: normal;
+  line-height: inherit;
+}
+
 button.link {
-  .underline {
-    text-decoration: underline;
-  }
-  text-decoration: none;
-  color: $link-colour;
-  text-align: left;
-  border: none;
   background: none;
+  border: none;
   box-shadow: none;
-  cursor: pointer;
+  color: $link-colour;
   cursor: hand;
+  cursor: pointer;
   padding-left: 0px;
+  text-align: left;
+  text-decoration: none;
+}
+
+button.link.underlined {
+  text-decoration: underline;
 }
 
 button.link:hover {
-  color: $link-hover-colour;
   background: none;
+  color: $link-hover-colour;
 }
