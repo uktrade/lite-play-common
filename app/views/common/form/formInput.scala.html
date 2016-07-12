@@ -1,4 +1,4 @@
-@(field: Field, hint: Option[Html] = None)(label: Html)
+@(field: Field, hint: Option[Html] = None, cssClass : String = "")(label: Html)
 
 <div class="form-group @if(field.error.isDefined){ error }">
 
@@ -8,7 +8,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <input class="form-control" id="@field.id" name="@field.name" type="text" value="@field.value"
+  <input class="form-control @cssClass" id="@field.id" name="@field.name" type="text" value="@field.value"
     @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ data-validation-required="true" } />
   @if(hint.isDefined){
     <label class="form-label" for="@field.id">
