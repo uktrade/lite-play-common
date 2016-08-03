@@ -1,4 +1,5 @@
 @import "js";
+@import "../_conditionals.scss";
 
 button {
   font-family: inherit;
@@ -32,3 +33,10 @@ h1.heading-tight, h2.heading-tight, h3.heading-tight, h4.heading-tight {
   margin-bottom: 10px;
 }
 
+// Follows pattern set by .form-control in ../_forms.scss
+.form-control-wide {
+  width: 100%;
+  @include media(tablet) {
+    width: 75%;
+  }
+}
