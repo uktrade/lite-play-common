@@ -1,0 +1,5 @@
+@import components.common.journey.JourneyManager
+
+@()
+<input type="hidden" name="@JourneyManager.JOURNEY_STAGE_REQUEST_PARAM" value="@ctx().args.get(JourneyManager.JOURNEY_STAGE_CONTEXT_PARAM)" />
+<input type="hidden" name="@JourneyManager.JOURNEY_HISTORY_REQUEST_PARAM" value="@ctx().args.get(JourneyManager.JOURNEY_HISTORY_CONTEXT_PARAM)" />
