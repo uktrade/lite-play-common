@@ -2,6 +2,7 @@ package components.common.journey;
 
 import static play.mvc.Controller.ctx;
 
+import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.mvc.Result;
 
@@ -176,7 +177,7 @@ public class JourneyManager {
     String historyString = getPostParamValue(JOURNEY_HISTORY_REQUEST_PARAM, false);
     String journeyName = ctx().session().get(SESSION_JOURNEY_PARAM);
 
-    if (currentStage != null && historyString != null && journeyName != null) {
+    if (StringUtils.isNoneBlank(currentStage, historyString, journeyName)) {
 
       Logger.info("Setting journey parameters on request (stage " + currentStage + ")");
 

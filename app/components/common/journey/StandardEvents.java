@@ -12,4 +12,7 @@ public class StandardEvents {
 
   public static final JourneyEvent CANCEL = new JourneyEvent("_CANCEL");
 
+  public static final ParameterisedJourneyEvent<Boolean> CONFIRM
+    = new ParameterisedJourneyEvent<>("_CONFIRM", Boolean.class);
+
 }
