@@ -70,24 +70,24 @@ public class CountryServiceClient {
     private final List<Country> countries;
     private final String errorMessage;
 
-    private CountryServiceResponse(Status status, List<Country> countries) {
-      this.status = status;
+    private CountryServiceResponse(List<Country> countries) {
+      this.status = SUCCESS;
       this.countries = countries;
       this.errorMessage = null;
     }
 
-    private CountryServiceResponse(Status status, String errorMessage) {
-      this.status = status;
+    private CountryServiceResponse(String errorMessage) {
+      this.status = ERROR;
       this.errorMessage = errorMessage;
       this.countries = new ArrayList<>();
     }
 
     public static CountryServiceResponse success(List<Country> countries) {
-      return new CountryServiceResponse(SUCCESS, countries);
+      return new CountryServiceResponse(countries);
     }
 
     public static CountryServiceResponse failure(String errorMessage) {
-      return new CountryServiceResponse(ERROR, errorMessage);
+      return new CountryServiceResponse(errorMessage);
     }
 
     public Status getStatus() {
