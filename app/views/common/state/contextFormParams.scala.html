@@ -1,0 +1,8 @@
+@import components.common.state.ContextParamManager
+
+@()
+@for(p <- ctx().args.get(ContextParamManager.CTX_PARAM_NAME).asInstanceOf[ContextParamManager].getAllContextParams) {
+  <input type="hidden" name="@p.getName" value="@p.getValue" />
+}
+
+@views.html.helper.CSRF.formField

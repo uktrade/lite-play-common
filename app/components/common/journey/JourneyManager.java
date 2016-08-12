@@ -3,11 +3,12 @@ package components.common.journey;
 import static play.mvc.Controller.ctx;
 
 import org.apache.commons.lang3.StringUtils;
-import play.Logger;
 import play.mvc.Result;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,103 +17,77 @@ import java.util.function.BiFunction;
 
 public class JourneyManager {
 
-  public static final String JOURNEY_STAGE_REQUEST_PARAM = "journeyStage";
-  public static final String JOURNEY_HISTORY_REQUEST_PARAM = "journeyHistory";
-
-  public static final String JOURNEY_STAGE_CONTEXT_PARAM = "journeyStage";
-  public static final String JOURNEY_HISTORY_CONTEXT_PARAM = "journeyHistory";
   public static final String JOURNEY_BACK_LINK_CONTEXT_PARAM = "journeyBackLink";
   public static final String JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM = "journeySuppressBackLink";
-
-  private static final String SESSION_JOURNEY_PARAM = "journey";
+  private static final String JOURNEY_NAME_SEPARATOR_CHAR = "~";
 
   private final Map<String, JourneyDefinition> journeyNameToDefinitionMap;
+
+  private final JourneyContextParamProvider journeyContextParamProvider = new JourneyContextParamProvider();
 
   public JourneyManager(JourneyDefinition... journeyDefinitions) {
 
     if (journeyDefinitions.length == 0) {
-      throw new RuntimeException("At least one JourneyDefinition must be provided");
+      throw new JourneyManagerException("At least one JourneyDefinition must be provided");
     }
 
     Map<String, JourneyDefinition> journeyNameToDefinitionMap = new HashMap<>();
     for (JourneyDefinition definition : journeyDefinitions) {
+      //Check journey names don't contain the special delimiter character as this will break deserialisation
+      if (definition.getJourneyName().contains(JOURNEY_NAME_SEPARATOR_CHAR)) {
+        throw new JourneyManagerException(String.format("Journey names cannot contain '%s' character", JOURNEY_NAME_SEPARATOR_CHAR));
+      }
+
       journeyNameToDefinitionMap.put(definition.getJourneyName(), definition);
     }
 
     this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyNameToDefinitionMap);
   }
 
-  private static List<String> deserialiseJourneyHistory(String fromString) {
-    List<String> history = new ArrayList<>();
-    Collections.addAll(history, fromString.split(","));
-    return history;
+  public void startJourney(String journeyName) {
+    String startStageMnem = getDefinition(journeyName).getStartStage().getMnemonic();
+
+    Journey newJourney = Journey.createJourney(journeyName, startStageMnem);
+
+    journeyContextParamProvider.updateParamValueOnContext(newJourney.serialiseToString());
+
+    //Make sure back link is hidden for the new journey
+    setBackLinkOnContext(newJourney);
   }
 
-  private static String serialiseJourneyHistory(List<String> history) {
-    return String.join(",", history);
-  }
-
-  public void startJourney(String journeyId) {
-    //TODO should be a request parameter
-    ctx().session().put(SESSION_JOURNEY_PARAM, journeyId);
-
-    String startStageMnem = journeyNameToDefinitionMap.get(journeyId).getStartStage().getMnemonic();
-
-    ctx().args.put(JOURNEY_STAGE_CONTEXT_PARAM, startStageMnem);
-    ctx().args.put(JOURNEY_HISTORY_CONTEXT_PARAM, serialiseJourneyHistory(Collections.singletonList(startStageMnem)));
-
-    //don't show the back link for a new journey
-    ctx().args.put(JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, true);
-  }
-
-  private static String getPostParamValue(String paramName, boolean strict) {
-
-    Map<String, String[]> postParamMap = ctx().request().body().asFormUrlEncoded();
-
-    if (postParamMap == null) {
-      if (strict) {
-        throw new RuntimeException("Journey navigation is only supported by POST requests");
-      }
-      else {
-        return null;
-      }
-    }
-
-    String[] paramArray = postParamMap.get(paramName);
-
-    if (paramArray == null || paramArray.length == 0 /*|| StringUtils.isBlank(paramArray[0])*/) {
-      if (strict) {
-        throw new RuntimeException("Request body missing mandatory journey parameter " + paramName);
-      }
-      else {
-        return null;
-      }
+  private JourneyDefinition getDefinition(String journeyName) {
+    JourneyDefinition journeyDefinition = journeyNameToDefinitionMap.get(journeyName);
+    if (journeyDefinition == null) {
+      throw new JourneyManagerException("Unknown journey name " + journeyName);
     }
     else {
-      return paramArray[0];
+      return journeyDefinition;
     }
+  }
+
+  private JourneyDefinition getDefinition(Journey journey) {
+    return getDefinition(journey.journeyName);
   }
 
   private CompletionStage<Result> performTransitionInternal(BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction) {
 
-    //TODO should also be in request
-    JourneyDefinition journeyDefinition = journeyNameToDefinitionMap.get(ctx().session().get(SESSION_JOURNEY_PARAM));
+    Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
 
-    String currentStage = getPostParamValue(JOURNEY_STAGE_REQUEST_PARAM, true);
-    String historyString = getPostParamValue(JOURNEY_HISTORY_REQUEST_PARAM, true);
+    if (journey == null) {
+      throw new JourneyManagerException("Cannot perform a journey transition without a journey parameter");
+    }
 
-    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, currentStage);
+    JourneyDefinition journeyDefinition = getDefinition(journey);
 
-    List<String> history = deserialiseJourneyHistory(historyString);
+    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageMnemonic());
 
-    history.add(transitionResult.getNewStage().getMnemonic());
+    journey.nextStage(transitionResult.getNewStage().getMnemonic());
 
-    ctx().args.put(JOURNEY_STAGE_CONTEXT_PARAM, transitionResult.getNewStage().getMnemonic());
-    ctx().args.put(JOURNEY_HISTORY_CONTEXT_PARAM, serialiseJourneyHistory(history));
+    journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
     //TODO persist history
 
-    ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, transitionResult.getBackLinkText());
+    setBackLinkOnContext(journey);
 
     return transitionResult.getNewStage().getFormRenderSupplier().get();
   }
@@ -132,10 +107,13 @@ public class JourneyManager {
     ctx().args.put(JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, true);
   }
 
-  private void setBackLinkOnContext(JourneyDefinition journeyDefinition, List<String> history, int offset) {
+  private void setBackLinkOnContext(Journey journey) {
 
-    if (history.size() > offset - 1) {
-      JourneyStage newPreviousStage = journeyDefinition.resolveStageFromMnemonic(history.get(history.size() - offset));
+    if (journey.historyQueue.size() > 1) {
+
+      String previousStageMnem = new ArrayList<>(journey.historyQueue).get(journey.historyQueue.size() - 2);
+
+      JourneyStage newPreviousStage = getDefinition(journey).resolveStageFromMnemonic(previousStageMnem);
       ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, newPreviousStage.getDisplayName());
     }
     else {
@@ -146,24 +124,29 @@ public class JourneyManager {
 
   public CompletionStage<Result> navigateBack() {
 
-    String historyString = getPostParamValue(JOURNEY_HISTORY_REQUEST_PARAM, true);
-    JourneyDefinition journeyDefinition = journeyNameToDefinitionMap.get(ctx().session().get("journey"));
-    List<String> history = deserialiseJourneyHistory(historyString);
+    Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
+
+    if (journey == null) {
+      throw new JourneyManagerException("Cannot navigate back without a journey parameter");
+    }
+
+    JourneyDefinition journeyDefinition = getDefinition(journey);
+
+    Deque<String> history = journey.historyQueue;
 
     if (history.size() > 1) {
-      //Remove the current stage
-      history.remove(history.size() - 1);
+      history.removeLast();
+
       //Resolve the previous stage
-      String previousStageMnem = history.get(history.size() - 1);
+      String previousStageMnem = history.peekLast();
 
       JourneyStage stage = journeyDefinition.resolveStageFromMnemonic(previousStageMnem);
 
-      ctx().args.put(JOURNEY_STAGE_CONTEXT_PARAM, stage.getMnemonic());
-      ctx().args.put(JOURNEY_HISTORY_CONTEXT_PARAM, serialiseJourneyHistory(history));
+      journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-      //TODO persist history
+      //TODO persist newly modified history
 
-      setBackLinkOnContext(journeyDefinition, history, 2);
+      setBackLinkOnContext(journey);
 
       return stage.getFormRenderSupplier().get();
     } else {
@@ -173,25 +156,62 @@ public class JourneyManager {
 
   public void setContextArguments() {
 
-    String currentStage = getPostParamValue(JOURNEY_STAGE_REQUEST_PARAM, false);
-    String historyString = getPostParamValue(JOURNEY_HISTORY_REQUEST_PARAM, false);
-    String journeyName = ctx().session().get(SESSION_JOURNEY_PARAM);
+    Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
 
-    if (StringUtils.isNoneBlank(currentStage, historyString, journeyName)) {
-
-      Logger.info("Setting journey parameters on request (stage " + currentStage + ")");
-
-      JourneyDefinition journeyDefinition = journeyNameToDefinitionMap.get(journeyName);
-
-      ctx().args.put(JOURNEY_STAGE_CONTEXT_PARAM, currentStage);
-      ctx().args.put(JOURNEY_HISTORY_CONTEXT_PARAM, historyString);
-
-      setBackLinkOnContext(journeyDefinition, deserialiseJourneyHistory(historyString), 1);
+    //If no journey parameter is available on this request, don't show a back link
+    if (journey != null) {
+      setBackLinkOnContext(journey);
     }
     else {
       hideBackLink();
-      Logger.info(String.format("Request missing journey parameters, not setting any (stage %s history %s name %s)",
-          currentStage, historyString, journeyName));
+    }
+  }
+
+  private static class Journey {
+
+    private final String journeyName;
+    private final Deque<String> historyQueue;
+
+    private Journey(String journeyName, Deque<String> historyQueue) {
+      this.journeyName = journeyName;
+      this.historyQueue = historyQueue;
+    }
+
+    public String getCurrentStageMnemonic() {
+      return historyQueue.peekLast();
+    }
+
+    public String serialiseToString() {
+      return journeyName + JOURNEY_NAME_SEPARATOR_CHAR +  String.join(",", historyQueue);
+    }
+
+    public void nextStage(String stageMnemonic) {
+      historyQueue.addLast(stageMnemonic);
+    }
+
+    public static Journey fromString(String journeyString) {
+
+      if (StringUtils.isBlank(journeyString)) {
+        return null;
+      }
+
+      if (!journeyString.contains(JOURNEY_NAME_SEPARATOR_CHAR)) {
+        throw new JourneyManagerException("Invalid journey string, missing underscore character");
+      }
+      else {
+        String[] journeyStringSplit = journeyString.split(JOURNEY_NAME_SEPARATOR_CHAR, 2);
+        String journeyName = journeyStringSplit[0];
+        String journeyHistory = journeyStringSplit[1];
+
+        List<String> history = new ArrayList<>();
+        Collections.addAll(history, journeyHistory.split(","));
+
+        return new Journey(journeyName, new ArrayDeque<>(history));
+      }
+    }
+
+    public static Journey createJourney(String journeyName, String initialStateMnemonic) {
+      return new Journey(journeyName, new ArrayDeque<>(Collections.singletonList(initialStateMnemonic)));
     }
   }
 }

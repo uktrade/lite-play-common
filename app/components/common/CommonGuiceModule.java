@@ -1,9 +1,11 @@
 package components.common;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import components.common.journey.JourneyContextParamProvider;
 import components.common.persistence.RedisKeyConfig;
-import components.common.transaction.ContextAccessorStrategy;
-import components.common.transaction.StaticContextAccessorStrategy;
+import components.common.state.ContextParamManager;
+import components.common.transaction.TransactionContextParamProvider;
 import play.Configuration;
 import play.Environment;
 import redis.clients.jedis.JedisPool;
@@ -23,7 +25,6 @@ public class CommonGuiceModule extends AbstractModule {
   protected void configure() {
 
     bind(JedisPool.class).toInstance(createJedisPool());
-    bind(ContextAccessorStrategy.class).toInstance(new StaticContextAccessorStrategy());
     bind(RedisKeyConfig.class).toInstance(createRedisKeyConfig());
   }
 
@@ -36,5 +37,10 @@ public class CommonGuiceModule extends AbstractModule {
   private RedisKeyConfig createRedisKeyConfig() {
     return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), configuration.getString("redis.hash.name"),
         configuration.getInt("redis.hash.ttlSeconds"));
+  }
+
+  @Provides
+  public ContextParamManager provideContextParamManager() {
+    return new ContextParamManager(new JourneyContextParamProvider(), new TransactionContextParamProvider());
   }
 }
