@@ -1,8 +1,8 @@
 @(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No")
 
-<div class="form-group @if(field.error.isDefined){ error }">
+<h2 class="heading-medium">@prompt</h2>
 
-  <h2 class="heading-medium">@prompt</h2>
+<div class="form-group @if(field.error.isDefined){ error }">
 
   <fieldset class="inline">
     <legend class="visually-hidden">@prompt</legend>
