@@ -2,6 +2,10 @@ package components.common.journey;
 
 import com.google.common.collect.Table;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * EVENT argument = argument provided when an event fires
  * TRANSITION argument = toString of argument object used to fire transition (can represent event argument,
@@ -13,12 +17,32 @@ public class JourneyDefinition {
 
   private final Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap;
 
+  private final Map<String, JourneyStage> registeredStages;
+
   private final JourneyStage startStage;
 
-  JourneyDefinition(String journeyName, Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap, JourneyStage startStage) {
+  JourneyDefinition(String journeyName, Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap,
+                    Map<String, JourneyStage> registeredStages, JourneyStage startStage) {
     this.journeyName = journeyName;
     this.stageTransitionMap = stageTransitionMap;
+    this.registeredStages = registeredStages;
     this.startStage = startStage;
+
+    //Validate that all stages referenced by transitions are registered
+    Set<JourneyStage> unregisteredStages = stageTransitionMap.rowKeySet()
+        .stream()
+        .filter(e -> !registeredStages.containsKey(e.getHash()))
+        .collect(Collectors.toSet());
+
+    //TODO check destination stages are also registered
+    if (unregisteredStages.size() > 0) {
+      String unregistered = unregisteredStages
+          .stream()
+          .map(JourneyStage::getInternalName)
+          .collect(Collectors.joining(", "));
+
+      throw new JourneyException("Stages are not registered: " + unregistered);
+    }
   }
 
   public String getJourneyName() {
@@ -29,13 +53,15 @@ public class JourneyDefinition {
     return startStage;
   }
 
-  public JourneyStage resolveStageFromMnemonic(String mnemonic) {
-    //TODO is there a better way?
-    return stageTransitionMap.rowKeySet()
-        .stream()
-        .filter(e -> e.getMnemonic().equals(mnemonic))
-        .findFirst()
-        .orElseThrow(() -> new JourneyException(String.format("Stage '%s' is not defined in this journey", mnemonic)));
+  public JourneyStage resolveStageFromHash(String hash) {
+    JourneyStage journeyStage = registeredStages.get(hash);
+
+    if (journeyStage == null) {
+      throw new JourneyException(String.format("Stage '%s' is not defined in this journey", hash));
+    }
+    else {
+      return journeyStage;
+    }
   }
 
   private CommonJourneyEvent resolveEventMnemonic(String mnemonic) {
@@ -48,12 +74,12 @@ public class JourneyDefinition {
   }
 
 
-  public TransitionResult fireEvent(String currentStageName, JourneyEvent event) {
-    return fireEventInternal(currentStageName, event, null);
+  public TransitionResult fireEvent(String currentStageHash, JourneyEvent event) {
+    return fireEventInternal(currentStageHash, event, null);
   }
 
-  public <T> TransitionResult fireEvent(String currentStageName, ParameterisedJourneyEvent<T> event, T eventArgument) {
-    return fireEventInternal(currentStageName, event, eventArgument);
+  public <T> TransitionResult fireEvent(String currentStageHash, ParameterisedJourneyEvent<T> event, T eventArgument) {
+    return fireEventInternal(currentStageHash, event, eventArgument);
   }
 
   private TransitionResult resolveMoveAction(JourneyStage currentStage, TransitionAction transitionAction,
@@ -73,11 +99,11 @@ public class JourneyDefinition {
     }
   }
 
-  private TransitionResult fireEventInternal(String currentStageName, CommonJourneyEvent event, Object eventArgument) {
+  private TransitionResult fireEventInternal(String currentStageHash, CommonJourneyEvent event, Object eventArgument) {
 
     //TODO validation: transition cannot be a loop
 
-    JourneyStage currentStage = resolveStageFromMnemonic(currentStageName);
+    JourneyStage currentStage = resolveStageFromHash(currentStageHash);
 
     TransitionAction transitionAction = stageTransitionMap.get(currentStage, event);
     if (transitionAction == null) {

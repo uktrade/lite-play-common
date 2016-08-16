@@ -7,7 +7,8 @@ libraryDependencies ++= Seq(
   javaWs,
   filters,
   "org.assertj" % "assertj-core" % "3.4.1",
-  "io.mikael" % "urlbuilder" % "2.0.7"
+  "io.mikael" % "urlbuilder" % "2.0.7",
+  "org.assertj" % "assertj-core" % "3.5.2" % "test"
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)

@@ -3,6 +3,7 @@ package components.common.journey;
 import static play.mvc.Controller.ctx;
 
 import org.apache.commons.lang3.StringUtils;
+import play.Logger;
 import play.mvc.Result;
 
 import java.util.ArrayDeque;
@@ -20,6 +21,7 @@ public class JourneyManager {
   public static final String JOURNEY_BACK_LINK_CONTEXT_PARAM = "journeyBackLink";
   public static final String JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM = "journeySuppressBackLink";
   private static final String JOURNEY_NAME_SEPARATOR_CHAR = "~";
+  static final String JOURNEY_STAGE_SEPARATOR_CHAR = "-";
 
   private final Map<String, JourneyDefinition> journeyNameToDefinitionMap;
 
@@ -45,9 +47,9 @@ public class JourneyManager {
   }
 
   public void startJourney(String journeyName) {
-    String startStageMnem = getDefinition(journeyName).getStartStage().getMnemonic();
+    String startStageHash = getDefinition(journeyName).getStartStage().getHash();
 
-    Journey newJourney = Journey.createJourney(journeyName, startStageMnem);
+    Journey newJourney = Journey.createJourney(journeyName, startStageHash);
 
     journeyContextParamProvider.updateParamValueOnContext(newJourney.serialiseToString());
 
@@ -69,7 +71,8 @@ public class JourneyManager {
     return getDefinition(journey.journeyName);
   }
 
-  private CompletionStage<Result> performTransitionInternal(BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction) {
+  private CompletionStage<Result> performTransitionInternal(
+      BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction, CommonJourneyEvent event) {
 
     Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
 
@@ -79,9 +82,11 @@ public class JourneyManager {
 
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
-    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageMnemonic());
+    String previousStageName = journeyDefinition.resolveStageFromHash(journey.getCurrentStageHash()).getInternalName();
 
-    journey.nextStage(transitionResult.getNewStage().getMnemonic());
+    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash());
+
+    journey.nextStage(transitionResult.getNewStage().getHash());
 
     journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
@@ -89,17 +94,21 @@ public class JourneyManager {
 
     setBackLinkOnContext(journey);
 
+    Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
+        journey.journeyName, previousStageName, event.getEventMnemonic(), transitionResult.getNewStage().getInternalName()));
+
     return transitionResult.getNewStage().getFormRenderSupplier().get();
   }
 
   public <T extends JourneyEvent> CompletionStage<Result> performTransition(T event) {
 
-    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event));
+    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event), event);
   }
 
   public <T extends ParameterisedJourneyEvent<U>, U> CompletionStage<Result> performTransition(T event, U eventArgument) {
 
-    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event, eventArgument));
+    return performTransitionInternal(
+        (journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event, eventArgument), event);
 
   }
 
@@ -111,9 +120,9 @@ public class JourneyManager {
 
     if (journey.historyQueue.size() > 1) {
 
-      String previousStageMnem = new ArrayList<>(journey.historyQueue).get(journey.historyQueue.size() - 2);
+      String previousStageHash = new ArrayList<>(journey.historyQueue).get(journey.historyQueue.size() - 2);
 
-      JourneyStage newPreviousStage = getDefinition(journey).resolveStageFromMnemonic(previousStageMnem);
+      JourneyStage newPreviousStage = getDefinition(journey).resolveStageFromHash(previousStageHash);
       ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, newPreviousStage.getDisplayName());
     }
     else {
@@ -138,9 +147,9 @@ public class JourneyManager {
       history.removeLast();
 
       //Resolve the previous stage
-      String previousStageMnem = history.peekLast();
+      String previousStageHash = history.peekLast();
 
-      JourneyStage stage = journeyDefinition.resolveStageFromMnemonic(previousStageMnem);
+      JourneyStage stage = journeyDefinition.resolveStageFromHash(previousStageHash);
 
       journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
@@ -177,16 +186,16 @@ public class JourneyManager {
       this.historyQueue = historyQueue;
     }
 
-    public String getCurrentStageMnemonic() {
+    public String getCurrentStageHash() {
       return historyQueue.peekLast();
     }
 
     public String serialiseToString() {
-      return journeyName + JOURNEY_NAME_SEPARATOR_CHAR +  String.join(",", historyQueue);
+      return journeyName + JOURNEY_NAME_SEPARATOR_CHAR +  String.join(JOURNEY_STAGE_SEPARATOR_CHAR, historyQueue);
     }
 
-    public void nextStage(String stageMnemonic) {
-      historyQueue.addLast(stageMnemonic);
+    public void nextStage(String stageHash) {
+      historyQueue.addLast(stageHash);
     }
 
     public static Journey fromString(String journeyString) {
@@ -204,14 +213,14 @@ public class JourneyManager {
         String journeyHistory = journeyStringSplit[1];
 
         List<String> history = new ArrayList<>();
-        Collections.addAll(history, journeyHistory.split(","));
+        Collections.addAll(history, journeyHistory.split(JOURNEY_STAGE_SEPARATOR_CHAR));
 
         return new Journey(journeyName, new ArrayDeque<>(history));
       }
     }
 
-    public static Journey createJourney(String journeyName, String initialStateMnemonic) {
-      return new Journey(journeyName, new ArrayDeque<>(Collections.singletonList(initialStateMnemonic)));
+    public static Journey createJourney(String journeyName, String initialStateHash) {
+      return new Journey(journeyName, new ArrayDeque<>(Collections.singletonList(initialStateHash)));
     }
   }
 }
