@@ -94,6 +94,10 @@ public class CountryServiceClient {
       return status;
     }
 
+    public boolean isOk() {
+      return status == SUCCESS && !countries.isEmpty();
+    }
+
     public List<Country> getCountries() {
       return countries;
     }
