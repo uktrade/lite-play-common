@@ -31,3 +31,12 @@ Misc
 ====
 
 Copy govuk_elements/public/javascripts/vendor/details.polyfill.js to public/template/javascripts/vendor
+
+jQuery
+======
+
+Using the following jQuery components:
+* jQuery Core v1.12.4
+* jQuery UI v1.12.0 (no theme)
+* selectToAutocomplete v1.0.9 (5da5816) (https://github.com/JamieAppleseed/selectToAutocomplete/5da5816)
+
