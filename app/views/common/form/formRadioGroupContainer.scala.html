@@ -1,8 +1,8 @@
 @(field: Field)(prompt: Html)(radioContent: Html)
 
-<div class="form-group @if(field.error.isDefined){ error }">
+<h2 class="heading-medium">@prompt</h2>
 
-  <p class="lede form-block">@prompt</p>
+<div class="form-group @if(field.error.isDefined) { error }">
 
   <fieldset>
     <legend class="visually-hidden">@prompt</legend>
