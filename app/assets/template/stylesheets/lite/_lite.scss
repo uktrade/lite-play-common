@@ -30,6 +30,35 @@ button.link:hover {
   color: $link-hover-colour;
 }
 
+button.secondary {
+  @include button ($govuk-blue);
+  @include box-sizing (border-box);
+  padding: em(10) em(15) em(5) em(15);
+  vertical-align: top;
+  @include media (mobile) {
+    width: 100%;
+  }
+}
+
+// Fix unwanted button padding in Firefox
+button.secondary::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+button.secondary:focus {
+  outline: 3px solid $focus-colour;
+}
+
+// Disabled buttons
+button.secondary[disabled="disabled"] {
+  background: $govuk-blue;
+}
+
+button.secondary[disabled="disabled"]:focus {
+  outline: none;
+}
+
 h1.heading-tight, h2.heading-tight, h3.heading-tight, h4.heading-tight {
   margin-bottom: 10px;
 }
