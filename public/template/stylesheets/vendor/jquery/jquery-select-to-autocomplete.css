@@ -3,21 +3,20 @@
   list-style: none;
   background-color: #fff;
   width: 218px;
-  border: 1px solid #B0BECA;
+  border: 1px solid #b0beca;
   max-height: 350px;
   overflow-x: hidden;
 }
+
 .ui-autocomplete .ui-menu-item {
-  border-top: 1px solid #B0BECA;
+  border-top: 1px solid #b0beca;
   display: block;
-  padding: 4px 6px;
-  color: #353D44;
+  color: #005ea5;
   cursor: pointer;
 }
-.ui-autocomplete .ui-menu-item:first-child {
-  border-top: none;
-}
-.ui-autocomplete .ui-menu-item.ui-state-focus {
-  background-color: #D5E5F4;
-  color: #161A1C;
+
+.ui-autocomplete .ui-state-active {
+  margin:-1px;
+  background-color: #005ea5;
+  color: #fff;
 }
