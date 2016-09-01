@@ -7,19 +7,28 @@ import components.common.persistence.RedisKeyConfig;
 import components.common.state.ContextParamManager;
 import components.common.transaction.TransactionContextParamProvider;
 import play.Configuration;
-import play.Environment;
 
 public class CommonGuiceModule extends AbstractModule {
 
-  public CommonGuiceModule() {
+  private final Configuration configuration;
+
+  public CommonGuiceModule(Configuration configuration) {
+    this.configuration = configuration;
   }
 
   @Override
   protected void configure() {
+    bind(RedisKeyConfig.class).toInstance(createRedisKeyConfig());
   }
 
   @Provides
   public ContextParamManager provideContextParamManager() {
     return new ContextParamManager(new JourneyContextParamProvider(), new TransactionContextParamProvider());
+  }
+
+
+  private RedisKeyConfig createRedisKeyConfig() {
+    return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), configuration.getString("redis.hash.name"),
+        configuration.getInt("redis.hash.ttlSeconds"));
   }
 }

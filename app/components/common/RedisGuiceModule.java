@@ -18,7 +18,6 @@ public class RedisGuiceModule extends AbstractModule {
   protected void configure() {
 
     bind(JedisPool.class).toInstance(createJedisPool());
-    bind(RedisKeyConfig.class).toInstance(createRedisKeyConfig());
   }
 
   private JedisPool createJedisPool() {
@@ -27,9 +26,5 @@ public class RedisGuiceModule extends AbstractModule {
         configuration.getInt("redis.timeout"));
   }
 
-  private RedisKeyConfig createRedisKeyConfig() {
-    return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), configuration.getString("redis.hash.name"),
-        configuration.getInt("redis.hash.ttlSeconds"));
-  }
 
 }
