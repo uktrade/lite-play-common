@@ -7,18 +7,21 @@ import java.util.function.Supplier;
 
 public final class JourneyStage {
 
-  private final String mnemonic;
+  private final String hash;
+  private final String internalName;
   private final String displayName;
   private final Supplier<CompletionStage<Result>> formRenderSupplier;
 
-  public JourneyStage(String mnemonic, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
-    this.mnemonic = mnemonic;
+  JourneyStage(String hash, String internalName, String displayName,
+               Supplier<CompletionStage<Result>> formRenderSupplier) {
+    this.hash = hash;
+    this.internalName = internalName;
     this.displayName = displayName;
     this.formRenderSupplier = formRenderSupplier;
 
-    //Stage mnem are serialised to a CSV list, so they cannot contain commas
-    if(mnemonic.contains(",")) {
-      throw new RuntimeException("Stage mnemonic cannot contain comma character");
+    //Stage hashes are serialised to a hyphen separated list, so they cannot contain hyphens
+    if(hash.contains(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR)) {
+      throw new RuntimeException("Stage hash cannot contain separator character");
     }
   }
 
@@ -26,8 +29,12 @@ public final class JourneyStage {
     return formRenderSupplier;
   }
 
-  public String getMnemonic() {
-    return mnemonic;
+  public String getHash() {
+    return hash;
+  }
+
+  public String getInternalName() {
+    return internalName;
   }
 
   public String getDisplayName() {
@@ -36,6 +43,6 @@ public final class JourneyStage {
 
   @Override
   public String toString() {
-    return "stage '" + mnemonic +  "'";
+    return "stage '" + internalName +  "'";
   }
 }

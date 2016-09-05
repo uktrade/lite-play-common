@@ -2,6 +2,7 @@ package components.common.transaction;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 
 import java.util.UUID;
@@ -9,20 +10,18 @@ import java.util.UUID;
 @Singleton
 public class TransactionManager {
 
-  private static final String TRANSACTION_ID_SESSION_ATTR = "transactionId";
-
-  private final ContextAccessorStrategy contextAccessor;
+  private final TransactionContextParamProvider transactionContextParamProvider;
 
   @Inject
-  public TransactionManager(ContextAccessorStrategy contextAccessor) {
-    this.contextAccessor = contextAccessor;
+  public TransactionManager(TransactionContextParamProvider transactionContextParamProvider) {
+    this.transactionContextParamProvider = transactionContextParamProvider;
   }
 
   public String createTransaction() {
 
     String newTransactionId = UUID.randomUUID().toString();
 
-    contextAccessor.getCurrentContext().session().put(TRANSACTION_ID_SESSION_ATTR, newTransactionId);
+    transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
 
     Logger.info("Created transaction " + newTransactionId);
 
@@ -30,8 +29,12 @@ public class TransactionManager {
   }
 
   public String getTransactionId() {
-    return contextAccessor.getCurrentContext().session().get(TRANSACTION_ID_SESSION_ATTR);
+    String transactionId = transactionContextParamProvider.getParamValueFromContext();
+
+    if (StringUtils.isBlank(transactionId)) {
+      throw new RuntimeException("Transaction ID is not available");
+    }
+
+    return transactionId;
   }
-
-
 }

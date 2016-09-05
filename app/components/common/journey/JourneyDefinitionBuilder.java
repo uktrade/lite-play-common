@@ -2,9 +2,12 @@ package components.common.journey;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import org.apache.commons.codec.digest.DigestUtils;
+import play.mvc.Result;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -13,9 +16,25 @@ public class JourneyDefinitionBuilder {
 
   private final Table<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> stageTransitionBuilderMap = HashBasedTable.create();
 
+  private final Map<String, JourneyStage> knownStages = new HashMap<>();
+
   public JourneyDefinitionBuilder() {
   }
 
+  public JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
+
+    String hash = DigestUtils.sha1Hex(name).substring(0, 5);
+
+    if (knownStages.containsKey(hash)) {
+      throw new JourneyDefinitionException(String.format("Stage %s is already registered (or a hash collision occurred)", name));
+    }
+    else {
+      JourneyStage journeyStage = new JourneyStage(hash, name, displayName, formRenderSupplier);
+      knownStages.put(hash, journeyStage);
+
+      return journeyStage;
+    }
+  }
 
   public StageBuilder atStage(JourneyStage stage) {
     return new StageBuilder(stage);
@@ -238,7 +257,7 @@ public class JourneyDefinitionBuilder {
       stageTransitionMap.put(cell.getRowKey(), cell.getColumnKey(), transitionAction);
     }
 
-    return new JourneyDefinition(journeyName, stageTransitionMap, startStage);
+    return new JourneyDefinition(journeyName, stageTransitionMap, knownStages, startStage);
   }
 
 //  public static SubjourneyBuilder subjourney(JourneyDefinition jd) {
