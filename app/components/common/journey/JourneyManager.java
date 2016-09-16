@@ -46,7 +46,7 @@ public class JourneyManager {
     this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyNameToDefinitionMap);
   }
 
-  public void startJourney(String journeyName) {
+  public CompletionStage<Result> startJourney(String journeyName) {
     String startStageHash = getDefinition(journeyName).getStartStage().getHash();
 
     Journey newJourney = Journey.createJourney(journeyName, startStageHash);
@@ -55,6 +55,8 @@ public class JourneyManager {
 
     //Make sure back link is hidden for the new journey
     setBackLinkOnContext(newJourney);
+
+    return getDefinition(journeyName).getStartStage().getFormRenderSupplier().get();
   }
 
   private JourneyDefinition getDefinition(String journeyName) {

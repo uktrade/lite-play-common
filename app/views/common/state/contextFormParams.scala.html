@@ -1,7 +1,7 @@
-@import components.common.state.ContextParamManager
+@import utils.common.ViewUtil
 
 @()
-@for(p <- ctx().args.get(ContextParamManager.CTX_PARAM_NAME).asInstanceOf[ContextParamManager].getAllContextParams) {
+@for(p <- ViewUtil.currentParamManager().getAllContextParams) {
   <input type="hidden" name="@p.getName" value="@p.getValue" />
 }
 
