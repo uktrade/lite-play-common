@@ -8,8 +8,8 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <textarea class="form-control @cssClass" id="@field.id" row="@rows" name="@field.name" type="text" value="@field.value"
-    @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ data-validation-required="true" }></textarea>
+  <textarea class="form-control @cssClass" id="@field.id" row="@rows" name="@field.name" type="text"
+    @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ data-validation-required="true" }>@field.value</textarea>
   @if(hint.isDefined){
     <label class="form-label" for="@field.id">
       <span class="form-hint">@hint</span>
