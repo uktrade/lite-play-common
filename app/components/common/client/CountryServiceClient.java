@@ -12,6 +12,7 @@ import play.libs.ws.WSRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
 import static components.common.client.CountryServiceClient.CountryServiceResponse.failure;
@@ -100,6 +101,29 @@ public class CountryServiceClient {
 
     public List<Country> getCountries() {
       return countries;
+    }
+
+    public List<Country> getCountriesByRef(List<String> countryRefs) {
+      // Returns in order of countryRefs
+      List<Country> filteredCountries = new ArrayList<>();
+      for (String countryRef : countryRefs) {
+        Optional<Country> countryOptional = countries.stream()
+            .filter(country -> countryRef.equals(country.getCountryRef()))
+            .findFirst();
+        if (countryOptional.isPresent()) {
+          filteredCountries.add(countryOptional.get());
+        }
+      }
+      return filteredCountries;
+    }
+
+    public Optional<Country> getCountryByRef(String countryRef) {
+      if (countryRef == null || countryRef.isEmpty()) {
+        return Optional.empty();
+      }
+      return countries.stream()
+          .filter(country -> countryRef.equals(country.getCountryRef()))
+          .findFirst();
     }
 
     public String getErrorMessage() {
