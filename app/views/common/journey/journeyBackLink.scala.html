@@ -6,7 +6,7 @@
   @if(!ctx().args.getOrDefault(JourneyManager.JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, Boolean.FALSE).asInstanceOf[java.lang.Boolean]) {
     @journeyFormParams()
 
-    <button class="link-back link underlined">@overridePrompt.getOrElse(ctx().args.getOrDefault(JourneyManager.JOURNEY_BACK_LINK_CONTEXT_PARAM, "Back"))</button>
+    <button class="link-back">@overridePrompt.getOrElse(ctx().args.getOrDefault(JourneyManager.JOURNEY_BACK_LINK_CONTEXT_PARAM, "Back"))</button>
   }
 
 

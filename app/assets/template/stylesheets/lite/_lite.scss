@@ -30,6 +30,16 @@ button.link:hover {
   color: $link-hover-colour;
 }
 
+button.link-back {
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: hand;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+}
+
 button.secondary {
   @include button ($govuk-blue);
   @include box-sizing (border-box);
