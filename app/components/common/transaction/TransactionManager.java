@@ -21,11 +21,12 @@ public class TransactionManager {
 
     String newTransactionId = UUID.randomUUID().toString();
 
-    transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
+    return createNewTransaction(newTransactionId);
+  }
 
-    Logger.info("Created transaction " + newTransactionId);
+  public String createTransaction(String newTransactionId) {
 
-    return newTransactionId;
+    return createNewTransaction(newTransactionId);
   }
 
   public String getTransactionId() {
@@ -36,5 +37,14 @@ public class TransactionManager {
     }
 
     return transactionId;
+  }
+
+  private String createNewTransaction(String newTransactionId) {
+    transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
+
+    Logger.info("Created transaction " + newTransactionId);
+
+    return newTransactionId;
+
   }
 }
