@@ -1,6 +1,7 @@
 package components.common.persistence;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import components.common.transaction.TransactionManager;
@@ -107,27 +108,52 @@ public abstract class CommonRedisDao {
    */
   protected final <T> Optional<T> readObject(String fieldName, Class<T> objectClass) {
 
+    String objectJson = readField(fieldName);
+
+    if (StringUtils.isBlank(objectJson)) {
+      return Optional.empty();
+    }
+
+    try {
+      return Optional.of(objectMapper.readValue(objectJson, objectClass));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to deserialise JSON object from Redis", e);
+    }
+  }
+
+  /**
+   * Reads an object stored as JSON from the given field in the transaction data hash.
+   * @param fieldName Field to read.
+   * @param typeReference Type reference of object being read.
+   * @return The deserialised object, which may not exist if the field is empty.
+   */
+  protected final <T> Optional<T> readObject(String fieldName, TypeReference<T> typeReference) {
+
+    String objectJson = readField(fieldName);
+
+    if (StringUtils.isBlank(objectJson)) {
+      return Optional.empty();
+    }
+
+    try {
+      return Optional.of(objectMapper.readValue(objectJson, typeReference));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to deserialise JSON object from Redis", e);
+    }
+  }
+
+  private String readField(String fieldName) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      String objectJson;
       try (Jedis jedis = pool.getResource()) {
-        objectJson = jedis.hget(hashKey(), fieldName);
-      }
-
-      if (StringUtils.isBlank(objectJson)) {
-        return Optional.empty();
-      }
-
-      try {
-        return Optional.of(objectMapper.readValue(objectJson, objectClass));
-      } catch (IOException e) {
-        throw new RuntimeException("Failed to deserialise JSON object from Redis", e);
+        return jedis.hget(hashKey(), fieldName);
       }
     }
     finally {
       Logger.debug(String.format("Read of '%s' object completed in %d ms", fieldName, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
     }
   }
+
 
   /**
    * @return The current Jedis connection pool, for execution of arbitrary Redis commands.
