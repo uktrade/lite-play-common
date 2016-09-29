@@ -84,7 +84,12 @@ select.ui-autocomplete-base {
 }
 
 .ui-autocomplete-input {
-  width: 100%;
+  width: 70%;
+  margin-right: 15px;
+  @include media (mobile) {
+    width: 100%;
+    margin-right: inherit;
+  }
 }
 
 .link-next-to-button {
