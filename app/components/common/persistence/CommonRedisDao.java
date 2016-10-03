@@ -175,4 +175,16 @@ public abstract class CommonRedisDao {
   protected String keyPrefix() {
     return keyConfig.getKeyPrefix() + ":" + transactionManager.getTransactionId();
   }
+
+  public boolean transactionExists(String transactionId) {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (Jedis jedis = pool.getResource()) {
+      String key = keyConfig.getKeyPrefix() + ":" + transactionId + ":" + keyConfig.getHashName();
+      return !jedis.hgetAll(key).isEmpty();
+    }
+    finally {
+      Logger.debug(String.format("Read of '%s' transaction completed in %d ms", transactionId, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+  }
+
 }
