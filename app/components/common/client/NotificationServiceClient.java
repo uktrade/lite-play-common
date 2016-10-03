@@ -1,6 +1,6 @@
 package components.common.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import play.Logger;
@@ -8,6 +8,7 @@ import play.libs.Json;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -19,16 +20,14 @@ public class NotificationServiceClient {
   private final int wsTimeout;
   private final String wsUrl;
 
-  private static final String APPLICATION_REFERENCE_TEMPLATE = "permissionsFinder:applicationReference";
   private static final String TEMPLATE_QUERY_NAME = "template";
   private static final String RECIPIENT_EMAIL_QUERY_NAME = "recipientEmail";
 
   @Inject
   public NotificationServiceClient(WSClient ws,
-                             @Named("notificationServiceHost") String wsHost,
-                             @Named("notificationServicePort") int wsPort,
-                             @Named("notificationServiceTimeout") int wsTimeout
-  ) {
+                                   @Named("notificationServiceHost") String wsHost,
+                                   @Named("notificationServicePort") int wsPort,
+                                   @Named("notificationServiceTimeout") int wsTimeout) {
     this.ws = ws;
     this.wsHost = wsHost;
     this.wsPort = wsPort;
@@ -37,19 +36,23 @@ public class NotificationServiceClient {
   }
 
   /**
-   * Calls Notification Service using template: permissionsFinder:applicationReference
+   * Sends an email using the Notification service.
+   * @param templateName Template name of email to send. This must be registered on the Notification service.
+   * @param emailAddress Recipient email address.
+   * @param templateParams Name/value pairs of parameters for the given template. This map must match the parameter
+   *                       specification for the template on the Notification service.
    */
-  public void sendApplicationReferenceEmail(String emailAddress, String applicationReference) {
+  public void sendEmail(String templateName, String emailAddress, Map<String, String> templateParams) {
 
-    Logger.info("notification [" + APPLICATION_REFERENCE_TEMPLATE + "|" + emailAddress + "|" + applicationReference + "]");
+    Logger.info("notification [" + templateName + "|" + emailAddress + "]");
 
-    final JsonNode nameValueJson = Json.newObject()
-        .put("applicationReference", applicationReference);
+    ObjectNode nameValueJson = Json.newObject();
+    templateParams.forEach((k, v) -> nameValueJson.put(k, v));
 
     CompletionStage<WSResponse> wsResponse = ws.url(wsUrl)
         .setHeader("Content-Type", "application/json")
         .setRequestTimeout(wsTimeout)
-        .setQueryParameter(TEMPLATE_QUERY_NAME, APPLICATION_REFERENCE_TEMPLATE)
+        .setQueryParameter(TEMPLATE_QUERY_NAME, templateName)
         .setQueryParameter(RECIPIENT_EMAIL_QUERY_NAME, emailAddress)
         .post(nameValueJson);
 
