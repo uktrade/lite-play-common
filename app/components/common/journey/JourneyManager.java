@@ -2,16 +2,13 @@ package components.common.journey;
 
 import static play.mvc.Controller.ctx;
 
-import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.mvc.Result;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
@@ -20,7 +17,6 @@ public class JourneyManager {
 
   public static final String JOURNEY_BACK_LINK_CONTEXT_PARAM = "journeyBackLink";
   public static final String JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM = "journeySuppressBackLink";
-  private static final String JOURNEY_NAME_SEPARATOR_CHAR = "~";
   public static final String JOURNEY_NAME_SEPARATOR_CHAR = "~";
   static final String JOURNEY_STAGE_SEPARATOR_CHAR = "-";
 
@@ -28,7 +24,10 @@ public class JourneyManager {
 
   private final JourneyContextParamProvider journeyContextParamProvider = new JourneyContextParamProvider();
 
-  public JourneyManager(JourneyDefinition... journeyDefinitions) {
+  private final JourneySerialiser journeySerialiser;
+
+  public JourneyManager(JourneySerialiser journeySerialiser, JourneyDefinition... journeyDefinitions) {
+    this.journeySerialiser = journeySerialiser;
 
     if (journeyDefinitions.length == 0) {
       throw new JourneyManagerException("At least one JourneyDefinition must be provided");
@@ -93,7 +92,7 @@ public class JourneyManager {
 
     journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-    //TODO persist history
+    journeySerialiser.writeJourney(journey);
 
     setBackLinkOnContext(journey);
 
@@ -156,7 +155,7 @@ public class JourneyManager {
 
       journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-      //TODO persist newly modified history
+      journeySerialiser.writeJourney(journey);
 
       setBackLinkOnContext(journey);
 
@@ -177,6 +176,20 @@ public class JourneyManager {
     else {
       hideBackLink();
     }
+  }
+
+  public CompletionStage<Result> restoreCurrentStage() {
+    Journey journey = journeySerialiser.readJourney();
+
+    JourneyDefinition journeyDefinition = getDefinition(journey);
+
+    JourneyStage stage = journeyDefinition.resolveStageFromHash(journey.getCurrentStageHash());
+
+    journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
+
+    setBackLinkOnContext(journey);
+
+    return stage.getFormRenderSupplier().get();
   }
 
 }
