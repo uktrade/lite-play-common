@@ -192,4 +192,8 @@ public class JourneyManager {
     return stage.getFormRenderSupplier().get();
   }
 
+  public boolean isJourneySerialised() {
+    return journeySerialiser.readJourney() != null;
+  }
+
 }
