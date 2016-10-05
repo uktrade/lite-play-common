@@ -64,6 +64,19 @@ public class NotificationServiceClient {
         return CompletableFuture.supplyAsync(() -> false);
       }
     });
+
+    CompletionStage<Boolean> handledResult = result.handle((responseIsOk, error) -> {
+      if (error != null || !responseIsOk) {
+        Logger.error("Notification service failure");
+        if (error != null) {
+          Logger.error(error.getMessage(), error);
+        }
+        return false;
+      }
+      else {
+        return true;
+      }
+    });
   }
 
 }
