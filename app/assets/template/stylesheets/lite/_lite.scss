@@ -1,5 +1,6 @@
 @import "js";
 @import "../_conditionals.scss";
+@import "../colours/_palette";
 
 button {
   font-family: inherit;
@@ -113,4 +114,8 @@ input.hidden {
   padding: 0px;
   outline: none;
   border: 0px;
+}
+
+a.not-visited:visited {
+  color: $link-colour;
 }
