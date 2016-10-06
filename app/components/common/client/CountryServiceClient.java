@@ -1,24 +1,25 @@
 package components.common.client;
 
+import static components.common.client.CountryServiceClient.CountryServiceResponse.failure;
+import static components.common.client.CountryServiceClient.CountryServiceResponse.success;
+import static components.common.client.CountryServiceClient.Status.ERROR;
+import static components.common.client.CountryServiceClient.Status.SUCCESS;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import components.common.logging.CorrelationId;
 import models.common.Country;
 import play.Logger;
+import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
-import play.libs.ws.WSRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-
-import static components.common.client.CountryServiceClient.CountryServiceResponse.failure;
-import static components.common.client.CountryServiceClient.CountryServiceResponse.success;
-import static components.common.client.CountryServiceClient.Status.ERROR;
-import static components.common.client.CountryServiceClient.Status.SUCCESS;
 
 public class CountryServiceClient {
 
@@ -41,28 +42,27 @@ public class CountryServiceClient {
     this.objectMapper = objectMapper;
   }
 
-  public CompletionStage<CountryServiceResponse> getCountries() {
-    WSRequest request = wsClient.url("http://" + countryServiceHost + ":" + countryServicePort + "/countries/set/export-control");
-    request.setRequestTimeout(countryServiceTimeout);
+  public CompletionStage<CountryServiceResponse> getCountries(HttpExecutionContext httpExecutionContext) {
+    return wsClient.url("http://" + countryServiceHost + ":" + countryServicePort + "/countries/set/export-control")
+        .withRequestFilter(CorrelationId.requestFilter)
+        .setRequestTimeout(countryServiceTimeout)
+        .get().handleAsync((result, error) -> {
+          if (error != null) {
+            Logger.error("Country service client failure.", error);
+          } else if (result.getStatus() != 200) {
+            Logger.error("Country service error - {}", result.getBody());
+          } else {
+            try {
+              String json = result.asJson().toString();
+              List<Country> sites = objectMapper.readValue(json, new TypeReference<List<Country>>() {});
+              return success(sites);
+            } catch (IOException e) {
+              Logger.error("Failed to parse Country service response as JSON.", e);
+            }
+          }
 
-    return request.get().handle((result, error) -> {
-      if (error != null) {
-        Logger.error("Country service client failure.", error);
-      }
-      else if (result.getStatus() != 200) {
-        Logger.error("Country service error - {}", result.getBody());
-      } else {
-        try {
-          String json = result.asJson().toString();
-          List<Country> sites = objectMapper.readValue(json, new TypeReference<List<Country>>() {});
-          return success(sites);
-        } catch (IOException e) {
-          Logger.error("Failed to parse Country service response as JSON.", e);
-        }
-      }
-
-      return failure("Country service failure.");
-    });
+          return failure("Country service failure.");
+        }, httpExecutionContext.current());
   }
 
   public static final class CountryServiceResponse {
