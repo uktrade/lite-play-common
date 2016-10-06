@@ -101,6 +101,21 @@ public abstract class CommonRedisDao {
   }
 
   /**
+   * Deletes a simple string value from the given field in the transaction data hash.
+   * @param fieldName Field to read.
+   */
+  public final void deleteString(String fieldName) {
+
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (Jedis jedis = pool.getResource()) {
+      jedis.hdel(hashKey(), fieldName);
+    }
+    finally {
+      Logger.debug(String.format("Delete of '%s' string completed in %d ms", fieldName, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+  }
+
+  /**
    * Reads an object stored as JSON from the given field in the transaction data hash.
    * @param fieldName Field to read.
    * @param objectClass Class of object being read.
@@ -184,6 +199,12 @@ public abstract class CommonRedisDao {
     }
     finally {
       Logger.debug(String.format("Read of '%s' transaction completed in %d ms", transactionId, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+  }
+
+  public boolean pendingTransactionExists() {
+    try (Jedis jedis = pool.getResource()) {
+      return jedis.hexists(hashKey(), "pending:transactionType");
     }
   }
 
