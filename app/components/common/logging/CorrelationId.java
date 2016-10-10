@@ -85,7 +85,7 @@ public class CorrelationId {
    *  }, httpExecutionContext.current());
    * }</pre>
    */
-  public static WSRequestFilter requestFilter = executor -> {
+  public static final WSRequestFilter requestFilter = executor -> {
     WSRequestExecutor next = request -> {
       request.setHeader(HTTP_HEADER_NAME, CorrelationId.get());
       return executor.apply(request);
