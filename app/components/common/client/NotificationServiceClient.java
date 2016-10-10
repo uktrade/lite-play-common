@@ -3,8 +3,10 @@ package components.common.client;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import components.common.logging.CorrelationId;
 import play.Logger;
 import play.libs.Json;
+import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
 
@@ -14,6 +16,7 @@ import java.util.concurrent.CompletionStage;
 
 public class NotificationServiceClient {
 
+  private final HttpExecutionContext httpExecutionContext;
   private final WSClient ws;
   private final String wsHost;
   private final int wsPort;
@@ -24,10 +27,12 @@ public class NotificationServiceClient {
   private static final String RECIPIENT_EMAIL_QUERY_NAME = "recipientEmail";
 
   @Inject
-  public NotificationServiceClient(WSClient ws,
+  public NotificationServiceClient(HttpExecutionContext httpExecutionContext,
+                                   WSClient ws,
                                    @Named("notificationServiceHost") String wsHost,
                                    @Named("notificationServicePort") int wsPort,
                                    @Named("notificationServiceTimeout") int wsTimeout) {
+    this.httpExecutionContext = httpExecutionContext;
     this.ws = ws;
     this.wsHost = wsHost;
     this.wsPort = wsPort;
@@ -40,7 +45,6 @@ public class NotificationServiceClient {
    * @param templateName Template name of email to send. This must be registered on the Notification service.
    * @param emailAddress Recipient email address.
    * @param templateParams Name/value pairs of parameters for the given template. This map must match the parameter
-   *                       specification for the template on the Notification service.
    */
   public void sendEmail(String templateName, String emailAddress, Map<String, String> templateParams) {
 
@@ -50,22 +54,23 @@ public class NotificationServiceClient {
     templateParams.forEach((k, v) -> nameValueJson.put(k, v));
 
     CompletionStage<WSResponse> wsResponse = ws.url(wsUrl)
+        .withRequestFilter(CorrelationId.requestFilter)
         .setHeader("Content-Type", "application/json")
         .setRequestTimeout(wsTimeout)
         .setQueryParameter(TEMPLATE_QUERY_NAME, templateName)
         .setQueryParameter(RECIPIENT_EMAIL_QUERY_NAME, emailAddress)
         .post(nameValueJson);
 
-    CompletionStage<Boolean> result = wsResponse.thenCompose(r -> {
+    CompletionStage<Boolean> result = wsResponse.thenComposeAsync(r -> {
       Logger.info("notification [response status: " + r.getStatus() + "]");
       if (r.getStatus() == 200) {
         return CompletableFuture.supplyAsync(() -> true);
       } else {
         return CompletableFuture.supplyAsync(() -> false);
       }
-    });
+    }, httpExecutionContext.current());
 
-    CompletionStage<Boolean> handledResult = result.handle((responseIsOk, error) -> {
+    CompletionStage<Boolean> handledResult = result.handleAsync((responseIsOk, error) -> {
       if (error != null || !responseIsOk) {
         Logger.error("Notification service failure");
         if (error != null) {
@@ -76,7 +81,7 @@ public class NotificationServiceClient {
       else {
         return true;
       }
-    });
+    }, httpExecutionContext.current());
   }
 
 }

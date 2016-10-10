@@ -1,10 +1,17 @@
 package components.common.client;
 
+import static components.common.client.CountryServiceClient.Status.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static play.mvc.Results.ok;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import play.libs.Json;
+import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WS;
 import play.libs.ws.WSClient;
 import play.routing.Router;
@@ -13,13 +20,10 @@ import play.server.Server;
 
 import java.io.InputStream;
 
-import static components.common.client.CountryServiceClient.Status.SUCCESS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static play.mvc.Results.ok;
-
 public class CountryServiceClientTest {
 
   private CountryServiceClient client;
+  private ExecutorThreadPool delegateExecutor;
 
   @Before
   public void setup() {
@@ -34,12 +38,17 @@ public class CountryServiceClientTest {
     Server server = Server.forRouter(router);
     int port = server.httpPort();
     WSClient ws = WS.newClient(port);
-    client = new CountryServiceClient(ws, "localhost", port, 10000, new ObjectMapper());
+    delegateExecutor = new ExecutorThreadPool();
+    client = new CountryServiceClient(new HttpExecutionContext(delegateExecutor), ws, "localhost", port, 10000, new ObjectMapper());
+  }
+
+  @After
+  public void cleanup() throws Exception {
+    delegateExecutor.stop();
   }
 
   @Test
   public void shouldGetCompanyDetails() throws Exception {
-
     CountryServiceClient.CountryServiceResponse response = client.getCountries().toCompletableFuture().get();
 
     assertThat(response.getStatus()).isEqualTo(SUCCESS);
