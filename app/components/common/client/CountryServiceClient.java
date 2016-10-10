@@ -23,6 +23,7 @@ import java.util.concurrent.CompletionStage;
 
 public class CountryServiceClient {
 
+  private final HttpExecutionContext httpExecutionContext;
   private final WSClient wsClient;
   private final String countryServiceHost;
   private final int countryServicePort;
@@ -30,11 +31,13 @@ public class CountryServiceClient {
   private final ObjectMapper objectMapper;
 
   @Inject
-  public CountryServiceClient(WSClient wsClient,
+  public CountryServiceClient(HttpExecutionContext httpExecutionContext,
+                              WSClient wsClient,
                               @Named("countryServiceHost") String countryServiceHost,
                               @Named("countryServicePort") int countryServicePort,
                               @Named("countryServiceTimeout") int countryServiceTimeout,
                               ObjectMapper objectMapper) {
+    this.httpExecutionContext = httpExecutionContext;
     this.wsClient = wsClient;
     this.countryServiceHost = countryServiceHost;
     this.countryServicePort = countryServicePort;
@@ -42,7 +45,7 @@ public class CountryServiceClient {
     this.objectMapper = objectMapper;
   }
 
-  public CompletionStage<CountryServiceResponse> getCountries(HttpExecutionContext httpExecutionContext) {
+  public CompletionStage<CountryServiceResponse> getCountries() {
     return wsClient.url("http://" + countryServiceHost + ":" + countryServicePort + "/countries/set/export-control")
         .withRequestFilter(CorrelationId.requestFilter)
         .setRequestTimeout(countryServiceTimeout)

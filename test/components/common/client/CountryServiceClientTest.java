@@ -7,6 +7,7 @@ import static play.mvc.Results.ok;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import play.libs.Json;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 public class CountryServiceClientTest {
 
   private CountryServiceClient client;
+  private ExecutorThreadPool delegateExecutor;
 
   @Before
   public void setup() {
@@ -36,14 +38,18 @@ public class CountryServiceClientTest {
     Server server = Server.forRouter(router);
     int port = server.httpPort();
     WSClient ws = WS.newClient(port);
-    client = new CountryServiceClient(ws, "localhost", port, 10000, new ObjectMapper());
+    delegateExecutor = new ExecutorThreadPool();
+    client = new CountryServiceClient(new HttpExecutionContext(delegateExecutor), ws, "localhost", port, 10000, new ObjectMapper());
+  }
+
+  @After
+  public void cleanup() throws Exception {
+    delegateExecutor.stop();
   }
 
   @Test
   public void shouldGetCompanyDetails() throws Exception {
-    ExecutorThreadPool delegate = new ExecutorThreadPool();
-    CountryServiceClient.CountryServiceResponse response = client.getCountries(new HttpExecutionContext(delegate)).toCompletableFuture().get();
-    delegate.stop();
+    CountryServiceClient.CountryServiceResponse response = client.getCountries().toCompletableFuture().get();
 
     assertThat(response.getStatus()).isEqualTo(SUCCESS);
     assertThat(response.getCountries().size()).isEqualTo(18);
