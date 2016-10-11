@@ -1,0 +1,131 @@
+@import util._
+@import views.html.common.page._
+
+@(error: Option[play.api.UsefulException], corrID: String)
+
+
+@govukTemplate(
+  Some("Application Error - Import & Export Licensing"),
+  bodyClasses = None,
+  htmlLang = None
+)(
+  head = HtmlFormat.empty,
+  bodyStart = HtmlFormat.empty,
+  bodyEnd = HtmlFormat.empty,
+  insideHeader = HtmlFormat.empty,
+  afterHeader = HtmlFormat.empty,
+  footerTop = HtmlFormat.empty,
+  footerLinks = HtmlFormat.empty,
+  headerClass = Html("with-proposition"),
+  propositionHeader = Html("<div class=\"header-proposition\"><div class=\"content\"><nav id=\"proposition-menu\"><a id=\"proposition-name\" href=\"/\">"
+    + "Import / Export Licensing</a></nav></div></div>"),
+  homepageUrl = None,
+  globalHeaderText = None,
+  cookieMessage = None,
+  skipLinkMessage = None,
+  skipLinkTarget = "contentStart",
+  logoLinkTitle = None,
+  licenceMessage = Html("<p>All content is available under the " +
+    "<a rel=\"license\" href=\"https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/\">Open Government Licence v3.0</a>," +
+    " except where otherwise stated</p>"),
+  crownCopyrightMessage = None
+){
+  <main id="content" role="main">
+
+    <a id="contentStart"></a>
+
+    <header class="page-header">
+      <div>
+        <h1 class="heading-xlarge">Application Error</h1>
+      </div>
+    </header>
+
+    <div class="error-summary" role="group" aria-labelledby="error-summary-heading" tabindex="-1">
+
+      <h2 class="heading-medium error-summary-heading" id="error-summary-heading">
+        Application Error
+      </h2>
+
+      <p>The application has experienced an unexpected error. Please click the browser back button and <a href="javascript: window.history.back()">try again</a>.</p>
+      <p>If this fails, close your browser and try the action again.</p>
+      <br />
+      <p>In the event of further problems, please contact support.</p>
+      <p>Error reference: <strong class="bold-small">@corrID</strong></p>
+    </div>
+
+    @if(error.isDefined) {
+      @detailPanel("error-info"){View detailed error information} {
+
+        @error.get match {
+
+          case source: play.api.PlayException.ExceptionSource => {
+
+            @Option(source.sourceName).map { name =>
+              <h2 class="bold-small">
+                Problem occurred in:
+                @Option(source.line).fold {
+                  @name (line number not found)
+                } { line =>
+                  @name:@line
+                }
+              </h2>
+
+              <pre id="source-code" class="code">
+@Option(source.interestingLines(4)).map {
+  case interesting => {@interesting.focus.zipWithIndex.map {
+    case (line, index) => {@(interesting.firstLine + index) @if(index == interesting.errorLine){>}else{|} @line
+}}}}</pre>
+              <br/>
+              <br/>
+<pre id="stack-trace" class="code">
+->@source.cause.getClass.getName
+ : @source.cause.getMessage
+
+@source.cause.getStackTrace.map {line => @line
+}</pre>
+
+            }
+
+          }
+
+          case attachment: play.api.PlayException.ExceptionAttachment => {
+
+            <h2 class="bold-small">@attachment.subTitle</h2>
+
+            <div>
+            @attachment.content.split("\n").zipWithIndex.map {
+
+              case (line, index) => {
+                <pre><span class="line">@(index + 1)</span> <span class="code">@line</span></pre>
+              }
+
+            }
+            </div>
+
+          }
+
+          case exception: play.api.PlayException if exception.cause != null => {
+
+            <h2 class="bold-small">
+              No source available, here is the exception stack trace:
+            </h2>
+
+<pre id="stack-trace" class="code">
+->@exception.cause.getClass.getName
+ : @exception.cause.getMessage
+
+@exception.cause.getStackTrace.map {line => @line
+}</pre>
+
+          }
+
+          case _ => {
+          }
+
+        }
+
+      }
+    }
+
+  </main>
+}
