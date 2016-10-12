@@ -4,13 +4,13 @@ import play.Configuration;
 import play.Environment;
 import play.api.OptionalSourceMapper;
 import play.api.PlayException;
-import play.api.UsefulException;
 import play.api.http.HttpErrorHandlerExceptions;
 import play.http.HttpErrorHandler;
 import play.mvc.Http.RequestHeader;
 import play.mvc.Result;
 import play.mvc.Results;
 import scala.Option;
+import views.html.common.error.serverError;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -48,16 +48,19 @@ public class ErrorHandler implements HttpErrorHandler {
    * @param message The error message.
    */
   public CompletionStage<Result> onClientError(RequestHeader request, int statusCode, String message) {
+    Option<Exception> optionalException = Option.empty();
+
     if (isErrorDetailEnabled) {
       String outputMessage = HttpResponseStatus.valueOf(statusCode).toString();
       if (message != null && !message.isEmpty()) {
         outputMessage += " - " + message;
       }
       PlayException exception = new PlayException("Client Error", outputMessage, new MessageOnlyException(outputMessage));
-      return CompletableFuture.completedFuture(Results.internalServerError(views.html.common.error.serverError.render(Option.apply(exception), CorrelationId.get())));
-    } else {
-      return CompletableFuture.completedFuture(Results.internalServerError(views.html.common.error.serverError.render(Option.empty(), CorrelationId.get())));
+
+      optionalException = Option.apply(exception);
     }
+
+    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, CorrelationId.get())));
   }
 
   /**
@@ -67,12 +70,13 @@ public class ErrorHandler implements HttpErrorHandler {
    * @param exception The server error.
    */
   public CompletionStage<Result> onServerError(RequestHeader request, Throwable exception) {
+    Option<Exception> optionalException = Option.empty();
+
     if (isErrorDetailEnabled) {
-      UsefulException usefulException = HttpErrorHandlerExceptions.throwableToUsefulException(sourceMapper.sourceMapper(), environment.isProd(), exception);
-      return CompletableFuture.completedFuture(Results.internalServerError(views.html.common.error.serverError.render(Option.apply(usefulException), CorrelationId.get())));
-    } else {
-      return CompletableFuture.completedFuture(Results.internalServerError(views.html.common.error.serverError.render(Option.empty(), CorrelationId.get())));
+      optionalException = Option.apply(HttpErrorHandlerExceptions.throwableToUsefulException(sourceMapper.sourceMapper(), environment.isProd(), exception));
     }
+
+    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, CorrelationId.get())));
   }
 
   /**
