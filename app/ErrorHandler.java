@@ -13,6 +13,8 @@ import play.mvc.Results;
 import scala.Option;
 import views.html.common.error.serverError;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -61,7 +63,7 @@ public class ErrorHandler implements HttpErrorHandler {
       optionalException = Option.apply(exception);
     }
 
-    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, CorrelationId.get())));
+    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, Option.empty(), CorrelationId.get())));
   }
 
   /**
@@ -72,6 +74,7 @@ public class ErrorHandler implements HttpErrorHandler {
    */
   public CompletionStage<Result> onServerError(RequestHeader request, Throwable exception) {
     Option<Exception> optionalException = Option.empty();
+    Option<String> optionalFormattedStackTrace = Option.empty();
 
     Logger.error(String.format("\n\n! @%s - Internal server error, for (%s) [%s] ->\n",
         CorrelationId.get(), request.method(), request.uri()), exception
@@ -79,9 +82,14 @@ public class ErrorHandler implements HttpErrorHandler {
 
     if (isErrorDetailEnabled) {
       optionalException = Option.apply(HttpErrorHandlerExceptions.throwableToUsefulException(sourceMapper.sourceMapper(), environment.isProd(), exception));
+
+      // Get stack trace
+      StringWriter sw = new StringWriter();
+      exception.printStackTrace(new PrintWriter(sw));
+      optionalFormattedStackTrace = Option.apply(sw.toString());
     }
 
-    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, CorrelationId.get())));
+    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, optionalFormattedStackTrace, CorrelationId.get())));
   }
 
   /**

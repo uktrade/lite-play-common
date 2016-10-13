@@ -1,7 +1,7 @@
 @import util._
 @import views.html.common.page._
 
-@(error: Option[Exception], corrID: String)
+@(error: Option[Exception], formattedStackTrace: Option[String], corrID: String)
 
 
 @govukTemplate(
@@ -81,9 +81,8 @@
 ->@source.cause.getClass.getName
  : @source.cause.getMessage
 
-@source.cause.getStackTrace.map {line => @line
-}</pre>
-
+@formattedStackTrace
+</pre>
             }
 
           }
@@ -114,8 +113,8 @@
 ->@exception.cause.getClass.getName
  : @exception.cause.getMessage
 
-@exception.cause.getStackTrace.map {line => @line
-}</pre>
+@formattedStackTrace
+</pre>
 
           }
 
