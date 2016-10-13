@@ -2,6 +2,7 @@ import components.common.logging.CorrelationId;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import play.Configuration;
 import play.Environment;
+import play.Logger;
 import play.api.OptionalSourceMapper;
 import play.api.PlayException;
 import play.api.http.HttpErrorHandlerExceptions;
@@ -71,6 +72,10 @@ public class ErrorHandler implements HttpErrorHandler {
    */
   public CompletionStage<Result> onServerError(RequestHeader request, Throwable exception) {
     Option<Exception> optionalException = Option.empty();
+
+    Logger.error(String.format("\n\n! @%s - Internal server error, for (%s) [%s] ->\n",
+        CorrelationId.get(), request.method(), request.uri()), exception
+    );
 
     if (isErrorDetailEnabled) {
       optionalException = Option.apply(HttpErrorHandlerExceptions.throwableToUsefulException(sourceMapper.sourceMapper(), environment.isProd(), exception));
