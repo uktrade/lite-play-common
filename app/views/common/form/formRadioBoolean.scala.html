@@ -1,6 +1,8 @@
-@(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No")
+@(field: Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false)
 
-<h2 class="heading-medium">@prompt</h2>
+@if(!hideHeading) {
+  <h2 class="heading-medium">@prompt</h2>
+}
 
 <div class="form-group @if(field.error.isDefined){ error }">
 
