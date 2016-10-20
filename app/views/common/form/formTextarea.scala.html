@@ -1,4 +1,5 @@
-@(field: Field, hint: Option[Html] = None, rows: String = "2", cssClass : String = "")(label: Html)
+@import utils.common.ViewUtil
+@(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass : String = "")(label: Html)
 
 <div class="form-group @if(field.error.isDefined){ error }">
 
@@ -9,7 +10,13 @@
   }
 
   <textarea class="form-control @cssClass" id="@field.id" row="@rows" name="@field.name" type="text"
-    @if(field.constraints.find{e => "constraint.required".equals(e._1)}){ data-validation-required="true" }>@field.value</textarea>
+    @{
+      val fieldValidationData = ViewUtil.fieldValidationJSON(field);
+      if(fieldValidationData != null){
+        HtmlFormat.raw("data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+      }
+    }
+  >@field.value</textarea>
   @if(hint.isDefined){
     <label class="form-label" for="@field.id">
       <span class="form-hint">@hint</span>
