@@ -2,6 +2,7 @@ package components.common;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
 import components.common.journey.JourneyContextParamProvider;
 import components.common.persistence.RedisKeyConfig;
 import components.common.state.ContextParamManager;
@@ -18,7 +19,14 @@ public class CommonGuiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(RedisKeyConfig.class).toInstance(createRedisKeyConfig());
+
+    //Dynamically bind hash configs based on contents of config file
+    for (Configuration daoHashConfig : configuration.getConfigList("redis.daoHashes")) {
+      bind(RedisKeyConfig.class)
+          .annotatedWith(Names.named(daoHashConfig.getString("name")))
+          .toInstance(createRedisKeyConfig(daoHashConfig));
+    }
+
   }
 
   @Provides
@@ -27,8 +35,8 @@ public class CommonGuiceModule extends AbstractModule {
   }
 
 
-  private RedisKeyConfig createRedisKeyConfig() {
-    return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), configuration.getString("redis.hash.name"),
-        configuration.getInt("redis.hash.ttlSeconds"));
+  private RedisKeyConfig createRedisKeyConfig(Configuration hashConfiguration) {
+    return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), hashConfiguration.getString("hashName"),
+        hashConfiguration.getInt("ttlSeconds"));
   }
 }
