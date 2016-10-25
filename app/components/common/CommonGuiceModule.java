@@ -7,6 +7,8 @@ import components.common.journey.JourneyContextParamProvider;
 import components.common.persistence.RedisKeyConfig;
 import components.common.state.ContextParamManager;
 import components.common.transaction.TransactionContextParamProvider;
+import components.common.transaction.TransactionIdProvider;
+import components.common.transaction.TransactionManager;
 import play.Configuration;
 
 public class CommonGuiceModule extends AbstractModule {
@@ -27,6 +29,8 @@ public class CommonGuiceModule extends AbstractModule {
           .toInstance(createRedisKeyConfig(daoHashConfig));
     }
 
+    //Provide a useful default binding for TransactionIdProvider
+    bind(TransactionIdProvider.class).to(TransactionManager.class);
   }
 
   @Provides

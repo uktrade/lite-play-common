@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
-import components.common.transaction.TransactionManager;
+import components.common.transaction.TransactionIdProvider;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.libs.Json;
@@ -26,14 +26,14 @@ public abstract class CommonRedisDao {
 
   private final RedisKeyConfig keyConfig;
   private final JedisPool pool;
-  private final TransactionManager transactionManager;
+  private final TransactionIdProvider transactionIdProvider;
 
   private final ObjectMapper objectMapper = Json.newDefaultMapper();
 
-  public CommonRedisDao(RedisKeyConfig keyConfig, JedisPool pool, TransactionManager transactionManager) {
+  public CommonRedisDao(RedisKeyConfig keyConfig, JedisPool pool, TransactionIdProvider transactionIdProvider) {
     this.keyConfig = keyConfig;
     this.pool = pool;
-    this.transactionManager = transactionManager;
+    this.transactionIdProvider = transactionIdProvider;
   }
 
   /**
@@ -188,7 +188,7 @@ public abstract class CommonRedisDao {
    * @return The prefix of any key to be used by this DAO, scoped to the current transaction.
    */
   protected String keyPrefix() {
-    return keyConfig.getKeyPrefix() + ":" + transactionManager.getTransactionId();
+    return keyConfig.getKeyPrefix() + ":" + transactionIdProvider.getTransactionId();
   }
 
   public boolean transactionExists(String transactionId) {

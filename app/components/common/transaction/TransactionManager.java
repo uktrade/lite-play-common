@@ -8,7 +8,7 @@ import play.Logger;
 import java.util.UUID;
 
 @Singleton
-public class TransactionManager {
+public class TransactionManager implements TransactionIdProvider {
 
   private final TransactionContextParamProvider transactionContextParamProvider;
 
@@ -32,6 +32,7 @@ public class TransactionManager {
     transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
   }
 
+  @Override
   public String getTransactionId() {
     String transactionId = transactionContextParamProvider.getParamValueFromContext();
 
