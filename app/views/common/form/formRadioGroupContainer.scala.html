@@ -1,8 +1,15 @@
-@(field: Field)(prompt: Html)(radioContent: Html)
+@import utils.common.ViewUtil
+@(field: Form.Field)(prompt: Html)(radioContent: Html)
 
 <h2 class="heading-medium">@prompt</h2>
 
-<div class="form-group @if(field.error.isDefined) { error }">
+<div id="@field.name" class="form-group @if(field.error.isDefined) { error }"
+  @{
+    val fieldValidationData = ViewUtil.fieldValidationJSON(field);
+    if(fieldValidationData != null){
+      HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+    }
+  }>
 
   <fieldset>
     <legend class="visually-hidden">@prompt</legend>

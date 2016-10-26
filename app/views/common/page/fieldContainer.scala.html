@@ -1,6 +1,13 @@
-@(field: Field)(content: Html)
+@import utils.common.ViewUtil
+@(field: Form.Field)(content: Html)
 
-<div class="form-group @if(field.error.isDefined){ error }">
+<div id="@field.name" class="form-group @if(field.error.isDefined){ error }"
+  @{
+    val fieldValidationData = ViewUtil.fieldValidationJSON(field);
+    if(fieldValidationData != null){
+      HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+    }
+  }>
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>

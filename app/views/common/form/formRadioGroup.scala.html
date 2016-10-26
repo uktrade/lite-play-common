@@ -1,5 +1,5 @@
 @import utils.common.SelectOption
-@(field: Field, options: List[SelectOption])(prompt: Html)
+@(field: Form.Field, options: List[SelectOption])(prompt: Html)
 
 @formRadioGroupContainer(field)(prompt) {
   @for(option <- options) {
