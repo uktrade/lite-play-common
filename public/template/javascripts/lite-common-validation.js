@@ -21,7 +21,7 @@ LITECommon.ClientSideValidation = {
 
     var form = event.target;
 
-    $('[data-validation]', form).each(function (i, field) {
+    $(form).find('[data-validation]').each(function (i, field) {
       LITECommon.ClientSideValidation._clearFieldClientSideError(field);
 
       var validationRules = $(field).data('validation');
@@ -135,8 +135,8 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     var formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
-    var errorMessages = $("p.error-message", formGroup);
-    var clientsideErrorMessages = $("p.error-message["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]", formGroup);
+    var errorMessages = $(formGroup).find("p.error-message");
+    var clientsideErrorMessages = $(formGroup).find("p.error-message["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]");
 
     // Clear the error class on the form-group if the only messages in the group are client side ones
     if (errorMessages.length === clientsideErrorMessages.length) {
@@ -213,9 +213,9 @@ LITECommon.ClientSideValidation = {
         errorSummary = newSummary.insertAfter(anchor);
       }
 
-      var errorSummaryList = $('ul.error-summary-list', errorSummary);
+      var errorSummaryList = $(errorSummary).find('ul.error-summary-list');
       // Clear any previous clientside messages first
-      $("li["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]", errorSummaryList).remove();
+      $(errorSummaryList).find("li["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]").remove();
       // Add to error-summary-list if the message/id is not already there
       $(validationFailures).each(function (i, failure) {
         if ($('a[href="#' + failure.field.id + '"]:contains("' + failure.message + '")').length === 0) {
@@ -236,7 +236,7 @@ LITECommon.ClientSideValidation = {
 $(document).ready(function (){
   $('form').each(function (i, form) {
     // For each form see if it has fields with validation attributes on them
-    if ($('[data-validation]', form).length > 0) {
+    if ($(form).find('[data-validation]').length > 0) {
       // If so add a submit hook
       $(form).submit(LITECommon.ClientSideValidation.validateForm);
     }
