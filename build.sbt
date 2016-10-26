@@ -13,4 +13,4 @@ libraryDependencies ++= Seq(
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
