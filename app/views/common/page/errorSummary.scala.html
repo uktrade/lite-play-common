@@ -14,12 +14,12 @@
     <ul class="error-summary-list">
       @* Print all errors without a defined order first *@
       @for(error <- form.errors().entrySet().filter(e => !fieldOrder.contains(e.getKey)).flatMap(e => e.getValue())) {
-        <li><a href="#@error.key">@Messages(error.message())</a></li>
+        <li><a href="#@form.field(error.key).id">@Messages(error.message())</a></li>
       }
 
       @* For errors with defined order, print in correct order *@
       @for(error <- fieldOrder.filter(e => form.errors.containsKey(e)).flatMap(e => form.errors().get(e))) {
-        <li><a href="#@error.key">@Messages(error.message())</a></li>
+        <li><a href="#@form.field(error.key).id">@Messages(error.message())</a></li>
       }
     </ul>
 
