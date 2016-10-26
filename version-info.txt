@@ -1,8 +1,8 @@
 This build created from:
 
- * govuk_frontend_toolkit   v4.13.0
- * govuk_elements           v1.2.1
- * govuk_template           v0.17.3
+ * govuk_frontend_toolkit   v5.0.0
+ * govuk_elements           v2.1.0
+ * govuk_template           v0.19.0
 
 SASS merge (elements/toolkit)
 ==============================
@@ -25,12 +25,16 @@ Template files
 In govuk_template run:
   bundle exec rake build:play
 
-Copy pkg/play_govuk_template-0.17.3/assets/* to public/template
+Copy pkg/play_govuk_template-0.19.0/assets/* to public/template
 
 Misc
 ====
 
 Copy govuk_elements/public/javascripts/vendor/details.polyfill.js to public/template/javascripts/vendor
+
+Add overridden govuk_template styling to /public/template/stylesheets/lite.css and lite-ie.css
+
+/public/template/stylesheets/external-links/* pulled from govuk_template v0.17.3
 
 jQuery
 ======
