@@ -81,7 +81,12 @@ h1.heading-tight, h2.heading-tight, h3.heading-tight, h4.heading-tight {
 }
 
 select.ui-autocomplete-base {
-  width: 100%;
+  width: 75%;
+  margin-right: 15px;
+  @include media(mobile) {
+    width: 100%;
+    margin-right: inherit;
+  }
 }
 
 .ui-autocomplete-input {
