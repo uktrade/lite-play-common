@@ -17,9 +17,12 @@ public class TransactionManager implements TransactionIdProvider {
     this.transactionContextParamProvider = transactionContextParamProvider;
   }
 
-  public String createTransaction() {
+  public static String generateTransactionId() {
+    return UUID.randomUUID().toString();
+  }
 
-    String newTransactionId = UUID.randomUUID().toString();
+  public String createTransaction() {
+    String newTransactionId = generateTransactionId();
 
     transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
 
