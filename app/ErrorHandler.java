@@ -53,17 +53,22 @@ public class ErrorHandler implements HttpErrorHandler {
   public CompletionStage<Result> onClientError(RequestHeader request, int statusCode, String message) {
     Option<Exception> optionalException = Option.empty();
 
-    if (isErrorDetailEnabled) {
-      String outputMessage = HttpResponseStatus.valueOf(statusCode).toString();
-      if (message != null && !message.isEmpty()) {
-        outputMessage += " - " + message;
-      }
-      PlayException exception = new PlayException("Client Error", outputMessage, new MessageOnlyException(outputMessage));
+    String outputMessage = HttpResponseStatus.valueOf(statusCode).toString();
+    if (message != null && !message.isEmpty()) {
+      outputMessage += " - " + message;
+    }
+    MessageOnlyException cause = new MessageOnlyException(outputMessage);
 
+    Logger.error(String.format("\n\n! @%s - Client error, for (%s) [%s] ->\n",
+        CorrelationId.get(), request.method(), request.uri()), cause
+    );
+
+    if (isErrorDetailEnabled) {
+      PlayException exception = new PlayException("Client Error", outputMessage, cause);
       optionalException = Option.apply(exception);
     }
 
-    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, Option.empty(), CorrelationId.get())));
+    return CompletableFuture.completedFuture(Results.status(statusCode, serverError.render(optionalException, Option.empty(), CorrelationId.get())));
   }
 
   /**
