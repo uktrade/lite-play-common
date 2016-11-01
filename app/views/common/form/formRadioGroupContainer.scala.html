@@ -1,7 +1,7 @@
 @import utils.common.ViewUtil
-@(field: Form.Field)(prompt: Html)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium")(radioContent: Html)
 
-<h2 class="heading-medium">@prompt</h2>
+<h2 class="@promptCssClass">@prompt</h2>
 
 <div id="@field.name" class="form-group @if(field.error.isDefined) { error }"
   @{
