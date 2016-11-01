@@ -248,7 +248,7 @@ $(document).ready(function (){
     // For each form see if it has fields with validation attributes on them
     if ($(form).find('[data-validation]').length > 0) {
       // If so add a submit hook
-      $(form).submit(LITECommon.ClientSideValidation.validateForm);
+     $(form).submit(LITECommon.ClientSideValidation.validateForm);
     }
   });
 });

@@ -14,7 +14,7 @@
   @for((option, index) <- options.iterator.zipWithIndex) {
     <label class="block-label" for="@field.name@index">
       <input id="@field.name@index" type="checkbox" name="@{field.name}[@index]" value="@option._1.value" @if(option._2) { checked="checked" }>
-      @option._1.prompt
+      @Html(option._1.prompt)
     </label>
   }
 </div>
