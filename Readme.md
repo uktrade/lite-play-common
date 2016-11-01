@@ -17,3 +17,16 @@ In production mode the extra information will not be shown by default. If you wa
 production you can add the following line to your application config:
 
 `errorDetailEnabled = true`
+
+## Client side validation
+
+Any forms sent out which contain elements with `data-validation` attributes will be validated client side.
+
+`data-validation` attributes should be set on form fields and form-groups and contain field validation information in 
+escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidationJSON(field)`, where field is a 
+`Form.field`.
+
+### Skipping validation
+
+You might have a form with multiple submit buttons and only want client side validation to run for some of them. For the
+submit buttons that you want to skip validation you can put an attribute of `data-skip-validation` on them.

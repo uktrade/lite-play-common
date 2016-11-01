@@ -17,11 +17,21 @@ LITECommon.ClientSideValidation = {
   validateForm: function (event) {
     "use strict";
 
+    var $form = $(event.target);
+
+    var $activeElement = $(document.activeElement);
+    if (
+      $activeElement.length &&
+      $form.has($activeElement) &&
+      $activeElement.is('[data-skip-validation]')
+    ) {
+      // Skip validation if the active element (typically the element that cause the form submit) contains a data-skip-validation attribute
+      return true;
+    }
+
     var validationFailures = [];
 
-    var form = event.target;
-
-    $(form).find('[data-validation]').each(function (i, field) {
+    $form.find('[data-validation]').each(function (i, field) {
       LITECommon.ClientSideValidation._clearFieldClientSideError(field);
 
       var validationRules = $(field).data('validation');
