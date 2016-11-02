@@ -18,8 +18,6 @@ public class NotificationServiceClient {
 
   private final HttpExecutionContext httpExecutionContext;
   private final WSClient ws;
-  private final String wsHost;
-  private final int wsPort;
   private final int wsTimeout;
   private final String wsUrl;
 
@@ -29,15 +27,12 @@ public class NotificationServiceClient {
   @Inject
   public NotificationServiceClient(HttpExecutionContext httpExecutionContext,
                                    WSClient ws,
-                                   @Named("notificationServiceHost") String wsHost,
-                                   @Named("notificationServicePort") int wsPort,
+                                   @Named("notificationServiceAddress") String wsAddress,
                                    @Named("notificationServiceTimeout") int wsTimeout) {
     this.httpExecutionContext = httpExecutionContext;
     this.ws = ws;
-    this.wsHost = wsHost;
-    this.wsPort = wsPort;
     this.wsTimeout = wsTimeout;
-    this.wsUrl = "http://" + wsHost + ":" + wsPort + "/notification/send-email";
+    this.wsUrl = wsAddress + "/notification/send-email";
   }
 
   /**

@@ -25,28 +25,25 @@ public class CountryServiceClient {
 
   private final HttpExecutionContext httpExecutionContext;
   private final WSClient wsClient;
-  private final String countryServiceHost;
-  private final int countryServicePort;
+  private final String countryServiceUrl;
   private final int countryServiceTimeout;
   private final ObjectMapper objectMapper;
 
   @Inject
   public CountryServiceClient(HttpExecutionContext httpExecutionContext,
                               WSClient wsClient,
-                              @Named("countryServiceHost") String countryServiceHost,
-                              @Named("countryServicePort") int countryServicePort,
+                              @Named("countryServiceAddress") String countryServiceAddress,
                               @Named("countryServiceTimeout") int countryServiceTimeout,
                               ObjectMapper objectMapper) {
     this.httpExecutionContext = httpExecutionContext;
     this.wsClient = wsClient;
-    this.countryServiceHost = countryServiceHost;
-    this.countryServicePort = countryServicePort;
+    this.countryServiceUrl = countryServiceAddress + "/countries/set/export-control";
     this.countryServiceTimeout = countryServiceTimeout;
     this.objectMapper = objectMapper;
   }
 
   public CompletionStage<CountryServiceResponse> getCountries() {
-    return wsClient.url("http://" + countryServiceHost + ":" + countryServicePort + "/countries/set/export-control")
+    return wsClient.url(countryServiceUrl)
         .withRequestFilter(CorrelationId.requestFilter)
         .setRequestTimeout(countryServiceTimeout)
         .get().handleAsync((result, error) -> {
