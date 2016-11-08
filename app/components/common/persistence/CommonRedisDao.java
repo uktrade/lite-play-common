@@ -208,4 +208,7 @@ public abstract class CommonRedisDao {
     }
   }
 
+  protected TransactionIdProvider getTransactionIdProvider() {
+    return transactionIdProvider;
+  }
 }
