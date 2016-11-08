@@ -4,9 +4,11 @@ import components.common.state.ContextParamProvider;
 
 public class JourneyContextParamProvider extends ContextParamProvider {
 
+  public static final String JOURNEY_CONTEXT_PARAM_NAME = "ctx_journey";
+
   @Override
   public String getParamName() {
-    return "ctx_journey";
+    return JOURNEY_CONTEXT_PARAM_NAME;
   }
 
 }

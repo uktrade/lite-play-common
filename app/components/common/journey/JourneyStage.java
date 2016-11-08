@@ -1,32 +1,26 @@
 package components.common.journey;
 
+import play.mvc.Call;
 import play.mvc.Result;
 
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
-public final class JourneyStage {
+public abstract class JourneyStage {
 
   private final String hash;
   private final String internalName;
   private final String displayName;
-  private final Supplier<CompletionStage<Result>> formRenderSupplier;
 
-  JourneyStage(String hash, String internalName, String displayName,
-               Supplier<CompletionStage<Result>> formRenderSupplier) {
+  protected JourneyStage(String hash, String internalName, String displayName) {
     this.hash = hash;
     this.internalName = internalName;
     this.displayName = displayName;
-    this.formRenderSupplier = formRenderSupplier;
 
     //Stage hashes are serialised to a hyphen separated list, so they cannot contain hyphens
     if(hash.contains(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR)) {
       throw new RuntimeException("Stage hash cannot contain separator character");
     }
-  }
-
-  public Supplier<CompletionStage<Result>> getFormRenderSupplier() {
-    return formRenderSupplier;
   }
 
   public String getHash() {
@@ -40,6 +34,14 @@ public final class JourneyStage {
   public String getDisplayName() {
     return displayName;
   }
+
+  public abstract boolean isRendered();
+
+  public abstract Supplier<CompletionStage<Result>> getFormRenderSupplier();
+
+  public abstract boolean isCallable();
+
+  public abstract Call getEntryCall();
 
   @Override
   public String toString() {

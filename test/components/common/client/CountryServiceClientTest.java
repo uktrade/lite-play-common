@@ -39,7 +39,7 @@ public class CountryServiceClientTest {
     int port = server.httpPort();
     WSClient ws = WS.newClient(port);
     delegateExecutor = new ExecutorThreadPool();
-    client = new CountryServiceClient(new HttpExecutionContext(delegateExecutor), ws, "localhost", port, 10000, new ObjectMapper());
+    client = new CountryServiceClient(new HttpExecutionContext(delegateExecutor), ws, "localhost", 10000, new ObjectMapper());
   }
 
   @After
