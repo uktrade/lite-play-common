@@ -14,17 +14,29 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * Builder for defining one or more Journeys. Consumers should extend this class and implement the {@link #journeys} method
+ * in order to define stages, transitions and branching logic for a journey. For more information see the documentation in
+ * <tt>/docs/Journey.md</tt>.
+ */
 public abstract class JourneyDefinitionBuilder {
 
+  /** Transitions (stage + event) mapped to defined branching/transition logic  */
   private final Table<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> stageTransitionBuilderMap = HashBasedTable.create();
 
+  /** Stage names to registered Stages */
   private final Map<String, JourneyStage> knownStages = new HashMap<>();
 
-  /** Names to start stages */
+  /** Names to start stages/back links */
   private final Map<String, JourneyDefinitionOptions> definedJourneys = new HashMap<>();
 
   protected JourneyDefinitionBuilder() {
   }
+
+  /**
+   * Defines all transitions and journeys for this builder.
+   */
+  protected abstract void journeys();
 
   private static final class JourneyDefinitionOptions {
     private final JourneyStage startStage;
@@ -51,6 +63,8 @@ public abstract class JourneyDefinitionBuilder {
   }
 
   final Collection<JourneyDefinition> buildAll() {
+
+    journeys();
 
     if (definedJourneys.size() == 0) {
       throw new JourneyDefinitionException("No journeys have been defined in this Builder");
@@ -115,12 +129,6 @@ public abstract class JourneyDefinitionBuilder {
   protected final StageBuilder atStage(JourneyStage stage) {
     return new StageBuilder(stage);
   }
-
-
-//  public StageBuilder atAnyStage() {
-//    //wait till build(), iterate all known stages
-//    throw new JourneyDefinitionException("atAnyStage not yet supported");
-//  }
 
   protected final class StageBuilder {
 

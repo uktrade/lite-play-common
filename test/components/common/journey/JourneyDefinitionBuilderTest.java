@@ -14,7 +14,7 @@ public class JourneyDefinitionBuilderTest {
 
   private final JourneyEvent EVENT_1 = new JourneyEvent("E1");
 
-  private class BaseStageBuilder extends JourneyDefinitionBuilder {
+  private abstract class BaseStageBuilder extends JourneyDefinitionBuilder {
     public BaseStageBuilder() {
       STAGE_1 = defineStage("S1", "S1", () -> null);
     }
@@ -25,7 +25,8 @@ public class JourneyDefinitionBuilderTest {
   public void testUnregisteredStagesFail() {
 
     class TestBuilder extends BaseStageBuilder {
-      public TestBuilder() {
+      @Override
+      protected void journeys() {
 
         atStage(UNKNOWN_STAGE)
             .onEvent(EVENT_1)

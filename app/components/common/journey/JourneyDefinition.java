@@ -67,15 +67,6 @@ public class JourneyDefinition {
     }
   }
 
-  private CommonJourneyEvent resolveEventMnemonic(String mnemonic) {
-    //TODO is there a better way?
-    return stageTransitionMap.columnKeySet()
-        .stream()
-        .filter(e -> e.getEventMnemonic().equals(mnemonic))
-        .findFirst()
-        .orElseThrow(() -> new JourneyException(String.format("Even '%s' is not defined in this journey", mnemonic)));
-  }
-
 
   public TransitionResult fireEvent(String currentStageHash, JourneyEvent event) {
     return fireEventInternal(currentStageHash, event, null);

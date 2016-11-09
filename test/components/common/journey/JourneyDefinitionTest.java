@@ -31,10 +31,8 @@ public class JourneyDefinitionTest {
   private final ParameterisedJourneyEvent<Integer> INT_PARAM_EVENT = new ParameterisedJourneyEvent<>("PIE", Integer.class);
 
   //Builder which defines stages for tests to subclass with event definitions
-  private class BaseStageBuilder extends JourneyDefinitionBuilder {
+  private abstract class BaseStageBuilder extends JourneyDefinitionBuilder {
     BaseStageBuilder() {
-      super();
-
       STAGE_1 = defineStage("S1", "S1", () -> null);
       STAGE_2 = defineStage("S2", "S2", () -> null);
       STAGE_3 = defineStage("S3", "S3", () -> null);
@@ -47,8 +45,8 @@ public class JourneyDefinitionTest {
   public void testBasicDefinition() {
 
     class TestBuilder extends BaseStageBuilder {
-      private TestBuilder() {
-        super();
+      @Override
+      protected void journeys() {
 
         atStage(STAGE_1)
             .onEvent(EVENT_1)
@@ -73,9 +71,8 @@ public class JourneyDefinitionTest {
   public void testParamBranchDefinition() {
 
     class TestBuilder extends BaseStageBuilder {
-      private TestBuilder() {
-        super();
-
+      @Override
+      protected void journeys() {
         atStage(STAGE_1)
             .onEvent(ENUM_PARAM_EVENT)
             .branch()
@@ -104,9 +101,8 @@ public class JourneyDefinitionTest {
   public void testParamBranchDefinition_withConverter() {
 
     class TestBuilder extends BaseStageBuilder {
-      private TestBuilder() {
-        super();
-
+      @Override
+      protected void journeys() {
         atStage(STAGE_1)
             .onEvent(ENUM_PARAM_EVENT)
             .branchWith(e -> "_" + e.toString())

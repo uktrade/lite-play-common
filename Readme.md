@@ -2,6 +2,11 @@
 
 Common code for use in all LITE Play projects.
 
+## Journey Manager
+
+The `JourneyManager` and associated classes allow you to define a user's journey through the application. 
+[Read further details here](docs/Journey.md).
+
 
 ## Error Pages
 

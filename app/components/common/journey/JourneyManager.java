@@ -70,7 +70,7 @@ public class JourneyManager {
 
     journeyContextParamProvider.updateParamValueOnContext(newJourney.serialiseToString());
 
-    //Make sure back link is hidden for the new journey
+    //Back link may need hiding or setting to the journey's exit link if it has one
     setBackLinkOnContext(newJourney);
 
     return stageAsResult(getDefinition(journeyName).getStartStage());
