@@ -35,6 +35,10 @@ public class TransactionManager implements TransactionIdProvider {
     transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
   }
 
+  public boolean isTransactionIdAvailable() {
+    return StringUtils.isNoneBlank(transactionContextParamProvider.getParamValueFromContext());
+  }
+
   @Override
   public String getTransactionId() {
     String transactionId = transactionContextParamProvider.getParamValueFromContext();
@@ -42,8 +46,9 @@ public class TransactionManager implements TransactionIdProvider {
     if (StringUtils.isBlank(transactionId)) {
       throw new RuntimeException("Transaction ID is not available");
     }
-
-    return transactionId;
+    else {
+      return transactionId;
+    }
   }
 
 }
