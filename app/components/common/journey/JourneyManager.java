@@ -114,7 +114,7 @@ public class JourneyManager {
 
     journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-    journeySerialiser.writeJourney(journey);
+    saveJourney(journey);
 
     setBackLinkOnContext(journey);
 
@@ -233,13 +233,14 @@ public class JourneyManager {
 
       journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-      journeySerialiser.writeJourney(journey);
+      saveJourney(journey);
 
       setBackLinkOnContext(journey);
 
       return stageAsResult(stage);
 
-    } else if (journeyDefinition.getExitBackLink().isPresent()) {
+    }
+    else if (journeyDefinition.getExitBackLink().isPresent()) {
       //We are exiting the current journey - wipe context info
       journeyContextParamProvider.updateParamValueOnContext("");
       hideBackLink();
@@ -266,7 +267,7 @@ public class JourneyManager {
   }
 
   public CompletionStage<Result> restoreCurrentStage() {
-    Journey journey = journeySerialiser.readJourney();
+    Journey journey = restoreJourney();
 
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
@@ -279,8 +280,16 @@ public class JourneyManager {
     return stageAsResult(stage);
   }
 
+  public void saveJourney(Journey journey) {
+    journeySerialiser.writeJourneyString(journey.toString());
+  }
+
+  public Journey restoreJourney() {
+    return Journey.fromString(journeySerialiser.readJourneyString());
+  }
+
   public boolean isJourneySerialised() {
-    return journeySerialiser.readJourney() != null;
+    return restoreJourney() != null;
   }
 
 }
