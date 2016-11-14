@@ -281,7 +281,7 @@ public class JourneyManager {
   }
 
   public void saveJourney(Journey journey) {
-    journeySerialiser.writeJourneyString(journey.toString());
+    journeySerialiser.writeJourneyString(journey.serialiseToString());
   }
 
   public Journey restoreJourney() {
