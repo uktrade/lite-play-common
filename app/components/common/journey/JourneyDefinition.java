@@ -3,6 +3,7 @@ package components.common.journey;
 import com.google.common.collect.Table;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,12 +22,15 @@ public class JourneyDefinition {
 
   private final JourneyStage startStage;
 
+  private final BackLink exitBackLink;
+
   JourneyDefinition(String journeyName, Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap,
-                    Map<String, JourneyStage> registeredStages, JourneyStage startStage) {
+                    Map<String, JourneyStage> registeredStages, JourneyStage startStage, BackLink exitBackLink) {
     this.journeyName = journeyName;
     this.stageTransitionMap = stageTransitionMap;
     this.registeredStages = registeredStages;
     this.startStage = startStage;
+    this.exitBackLink = exitBackLink;
 
     //Validate that all stages referenced by transitions are registered
     Set<JourneyStage> unregisteredStages = stageTransitionMap.rowKeySet()
@@ -36,8 +40,7 @@ public class JourneyDefinition {
 
     //TODO check destination stages are also registered
     if (unregisteredStages.size() > 0) {
-      String unregistered = unregisteredStages
-          .stream()
+      String unregistered = unregisteredStages.stream()
           .map(JourneyStage::getInternalName)
           .collect(Collectors.joining(", "));
 
@@ -62,15 +65,6 @@ public class JourneyDefinition {
     else {
       return journeyStage;
     }
-  }
-
-  private CommonJourneyEvent resolveEventMnemonic(String mnemonic) {
-    //TODO is there a better way?
-    return stageTransitionMap.columnKeySet()
-        .stream()
-        .filter(e -> e.getEventMnemonic().equals(mnemonic))
-        .findFirst()
-        .orElseThrow(() -> new JourneyException(String.format("Even '%s' is not defined in this journey", mnemonic)));
   }
 
 
@@ -148,6 +142,10 @@ public class JourneyDefinition {
         return resolveMoveAction(currentStage, transitionAction, event);
       }
     }
+  }
+
+  public Optional<BackLink> getExitBackLink() {
+    return Optional.ofNullable(exitBackLink);
   }
 
   private static class TransitionResultImpl implements TransitionResult {

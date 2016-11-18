@@ -2,16 +2,21 @@ package components.common.journey;
 
 import static play.mvc.Controller.ctx;
 
+import com.google.inject.Inject;
+import components.common.state.ContextParamManager;
+import io.mikael.urlbuilder.UrlBuilder;
 import play.Logger;
 import play.mvc.Result;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class JourneyManager {
 
@@ -26,10 +31,20 @@ public class JourneyManager {
 
   private final JourneySerialiser journeySerialiser;
 
-  public JourneyManager(JourneySerialiser journeySerialiser, JourneyDefinition... journeyDefinitions) {
-    this.journeySerialiser = journeySerialiser;
+  private final ContextParamManager contextParamManager;
 
-    if (journeyDefinitions.length == 0) {
+  @Inject
+  public JourneyManager(JourneySerialiser journeySerialiser, ContextParamManager contextParamManager,
+                        Collection<JourneyDefinitionBuilder> journeyDefinitionBuilders) {
+    this.journeySerialiser = journeySerialiser;
+    this.contextParamManager = contextParamManager;
+
+    //Build all JourneyDefinitions from all JourneyDefinitionBuilders
+    Collection<JourneyDefinition> journeyDefinitions = journeyDefinitionBuilders.stream()
+        .flatMap(e -> e.buildAll().stream())
+        .collect(Collectors.toSet());
+
+    if (journeyDefinitions.size() == 0) {
       throw new JourneyManagerException("At least one JourneyDefinition must be provided");
     }
 
@@ -40,7 +55,9 @@ public class JourneyManager {
         throw new JourneyManagerException(String.format("Journey names cannot contain '%s' character", JOURNEY_NAME_SEPARATOR_CHAR));
       }
 
-      journeyNameToDefinitionMap.put(definition.getJourneyName(), definition);
+      //Don't allow duplicate journey names from multiple builders
+      journeyNameToDefinitionMap.merge(definition.getJourneyName(), definition,
+          (a,b) -> {throw new JourneyManagerException("Attempt to create duplicate journey named " + definition.getJourneyName());});
     }
 
     this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyNameToDefinitionMap);
@@ -53,10 +70,19 @@ public class JourneyManager {
 
     journeyContextParamProvider.updateParamValueOnContext(newJourney.serialiseToString());
 
-    //Make sure back link is hidden for the new journey
+    //Back link may need hiding or setting to the journey's exit link if it has one
     setBackLinkOnContext(newJourney);
 
-    return getDefinition(journeyName).getStartStage().getFormRenderSupplier().get();
+    return stageAsResult(getDefinition(journeyName).getStartStage());
+  }
+
+  private CompletionStage<Result> stageAsResult(JourneyStage stage) {
+    if (stage.isCallable()) {
+      return contextParamManager.addParamsAndRedirect(stage.getEntryCall());
+    }
+    else {
+      return stage.getFormRenderSupplier().get();
+    }
   }
 
   private JourneyDefinition getDefinition(String journeyName) {
@@ -76,11 +102,7 @@ public class JourneyManager {
   private CompletionStage<Result> performTransitionInternal(
       BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction, CommonJourneyEvent event) {
 
-    Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
-
-    if (journey == null) {
-      throw new JourneyManagerException("Cannot perform a journey transition without a journey parameter");
-    }
+    Journey journey = getJourneyFromRequest();
 
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
@@ -92,14 +114,47 @@ public class JourneyManager {
 
     journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-    journeySerialiser.writeJourney(journey);
+    saveJourney(journey);
 
     setBackLinkOnContext(journey);
 
     Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
         journey.getJourneyName(), previousStageName, event.getEventMnemonic(), transitionResult.getNewStage().getInternalName()));
 
-    return transitionResult.getNewStage().getFormRenderSupplier().get();
+    return stageAsResult(transitionResult.getNewStage());
+  }
+
+
+  private String uriForTransitionInternal(BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction) {
+
+    Journey journey = getJourneyFromRequest();
+    JourneyDefinition journeyDefinition = getDefinition(journey);
+
+    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash());
+
+    JourneyStage nextStage = transitionResult.getNewStage();
+    if (nextStage.isCallable()) {
+      //Set all known context params in the querystring of the callable URI
+      String callUri = contextParamManager.addParamsToCall(nextStage.getEntryCall());
+
+      //Update the journey context param so it reflects the stage of the journey the user WILL be on when they click it
+      journey.nextStage(nextStage.getHash());
+      callUri = updateJourneyParamOnUri(callUri, journey.serialiseToString());
+
+      return callUri;
+    }
+    else {
+      throw new JourneyException(nextStage.getInternalName() + " is not callable (must be defined with a Call in JourneyDefinition)");
+    }
+  }
+
+  private Journey getJourneyFromRequest() {
+    Journey journey = Journey.fromString(journeyContextParamProvider.getParamValueFromRequest());
+
+    if (journey == null) {
+      throw new JourneyManagerException("Cannot perform a journey transition without a journey parameter");
+    }
+    return journey;
   }
 
   public <T extends JourneyEvent> CompletionStage<Result> performTransition(T event) {
@@ -114,23 +169,46 @@ public class JourneyManager {
 
   }
 
-  private void hideBackLink() {
-    ctx().args.put(JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, true);
+  public <T extends JourneyEvent> String uriForTransition(T event) {
+    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event));
+  }
+
+  public <T extends ParameterisedJourneyEvent<U>, U>  String uriForTransition(T event, U eventArgument) {
+    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event, eventArgument));
+  }
+
+  private String updateJourneyParamOnUri(String uri, String newJourney) {
+    UrlBuilder urlBuilder = UrlBuilder.fromString(uri);
+    urlBuilder = urlBuilder.setParameter(JourneyContextParamProvider.JOURNEY_CONTEXT_PARAM_NAME, newJourney);
+    return urlBuilder.toString();
   }
 
   private void setBackLinkOnContext(Journey journey) {
 
+    JourneyDefinition journeyDefinition = getDefinition(journey);
     if (journey.getHistoryQueue().size() > 1) {
 
       String previousStageHash = new ArrayList<>(journey.getHistoryQueue()).get(journey.getHistoryQueue().size() - 2);
 
-      JourneyStage newPreviousStage = getDefinition(journey).resolveStageFromHash(previousStageHash);
-      ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, newPreviousStage.getDisplayName());
+      JourneyStage newPreviousStage = journeyDefinition.resolveStageFromHash(previousStageHash);
+      setBackLinkPrompt(newPreviousStage.getDisplayName());
+    }
+    else if (journeyDefinition.getExitBackLink().isPresent()) {
+      String exitPrompt = journeyDefinition.getExitBackLink().get().getPrompt();
+      setBackLinkPrompt(exitPrompt);
     }
     else {
       //don't show the back link if no back history is available
       hideBackLink();
     }
+  }
+
+  private void hideBackLink() {
+    ctx().args.put(JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, true);
+  }
+
+  private void setBackLinkPrompt(String prompt) {
+    ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, prompt);
   }
 
   public CompletionStage<Result> navigateBack() {
@@ -155,12 +233,22 @@ public class JourneyManager {
 
       journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-      journeySerialiser.writeJourney(journey);
+      saveJourney(journey);
 
       setBackLinkOnContext(journey);
 
-      return stage.getFormRenderSupplier().get();
-    } else {
+      return stageAsResult(stage);
+
+    }
+    else if (journeyDefinition.getExitBackLink().isPresent()) {
+      //We are exiting the current journey - wipe context info
+      journeyContextParamProvider.updateParamValueOnContext("");
+      hideBackLink();
+
+      BackLink exitBackLink = journeyDefinition.getExitBackLink().get();
+      return contextParamManager.addParamsAndRedirect(exitBackLink.getCall());
+    }
+    else {
       throw new RuntimeException("Cannot go back any further");
     }
   }
@@ -179,7 +267,7 @@ public class JourneyManager {
   }
 
   public CompletionStage<Result> restoreCurrentStage() {
-    Journey journey = journeySerialiser.readJourney();
+    Journey journey = restoreJourney();
 
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
@@ -189,11 +277,19 @@ public class JourneyManager {
 
     setBackLinkOnContext(journey);
 
-    return stage.getFormRenderSupplier().get();
+    return stageAsResult(stage);
+  }
+
+  public void saveJourney(Journey journey) {
+    journeySerialiser.writeJourneyString(journey.serialiseToString());
+  }
+
+  public Journey restoreJourney() {
+    return Journey.fromString(journeySerialiser.readJourneyString());
   }
 
   public boolean isJourneySerialised() {
-    return journeySerialiser.readJourney() != null;
+    return restoreJourney() != null;
   }
 
 }

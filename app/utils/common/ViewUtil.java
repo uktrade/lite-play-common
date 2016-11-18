@@ -4,6 +4,7 @@ import static play.mvc.Controller.ctx;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import components.common.journey.BackLink;
 import components.common.state.ContextParamManager;
 import play.data.Form;
 import play.data.validation.Constraints;
@@ -13,8 +14,11 @@ import play.mvc.Call;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class ViewUtil {
+
+  private static final String BACK_LINK_CONTEXT_PARAM_NAME = "back_link";
 
   public static ContextParamManager currentParamManager() {
     return (ContextParamManager) ctx().args.get(ContextParamManager.CTX_PARAM_NAME);
@@ -133,6 +137,14 @@ public class ViewUtil {
     catch (Exception e) {
       return null;
     }
+  }
+
+  public static void overrideBackLink(BackLink backLink) {
+    ctx().args.put(BACK_LINK_CONTEXT_PARAM_NAME, backLink);
+  }
+
+  public static Optional<BackLink> currentBackLink() {
+    return Optional.ofNullable((BackLink) ctx().args.get(BACK_LINK_CONTEXT_PARAM_NAME));
   }
 
 }

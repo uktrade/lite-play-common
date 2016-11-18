@@ -1,21 +1,21 @@
 package components.common.journey;
 
 /**
- * Interface for storing and retrieving a Journey object in persistent storage.
+ * Interface for saving and restoring a serialised Journey object in persistent storage.
  * Typically implemented by a subclass of CommonRedisDao.
  */
 public interface JourneySerialiser {
 
   /**
-   * Returns the Journey from persistent storage
-   * @return the Journey
+   * Returns the serialised Journey string from persistent storage
+   * @return the serialised journey
    */
-  Journey readJourney();
+  String readJourneyString();
 
   /**
-   * Writes the serialised Journey to persistent storage
-   * @param journey The journey to write
+   * Writes the serialised Journey string to persistent storage
+   * @param journeyString The journey string to write
    */
-  void writeJourney(Journey journey);
+  void writeJourneyString(String journeyString);
 
 }

@@ -3,8 +3,10 @@ package components.common.journey;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import org.apache.commons.codec.digest.DigestUtils;
+import play.mvc.Call;
 import play.mvc.Result;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -12,16 +14,97 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class JourneyDefinitionBuilder {
+/**
+ * Builder for defining one or more Journeys. Consumers should extend this class and implement the {@link #journeys} method
+ * in order to define stages, transitions and branching logic for a journey. For more information see the documentation in
+ * <tt>/docs/Journey.md</tt>.
+ */
+public abstract class JourneyDefinitionBuilder {
 
+  /** Transitions (stage + event) mapped to defined branching/transition logic  */
   private final Table<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> stageTransitionBuilderMap = HashBasedTable.create();
 
+  /** Stage names to registered Stages */
   private final Map<String, JourneyStage> knownStages = new HashMap<>();
 
-  public JourneyDefinitionBuilder() {
+  /** Names to start stages/back links */
+  private final Map<String, JourneyDefinitionOptions> definedJourneys = new HashMap<>();
+
+  protected JourneyDefinitionBuilder() {
   }
 
-  public JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
+  /**
+   * Defines all transitions and journeys for this builder.
+   */
+  protected abstract void journeys();
+
+  private static final class JourneyDefinitionOptions {
+    private final JourneyStage startStage;
+    private final BackLink exitBackLink;
+
+    private JourneyDefinitionOptions(JourneyStage startStage, BackLink exitBackLink) {
+      this.startStage = startStage;
+      this.exitBackLink = exitBackLink;
+    }
+  }
+
+  protected final void defineJourney(String journeyName, JourneyStage startStage) {
+    defineJourney(journeyName, new JourneyDefinitionOptions(startStage, null));
+  }
+
+  protected final void defineJourney(String journeyName, JourneyStage startStage, BackLink exitBackLink) {
+    defineJourney(journeyName, new JourneyDefinitionOptions(startStage, exitBackLink));
+  }
+
+  private void defineJourney(String journeyName, JourneyDefinitionOptions journeyDefinitionOptions) {
+    definedJourneys.merge(journeyName, journeyDefinitionOptions, (a, b) -> {
+      throw new JourneyDefinitionException("Journey " + journeyName + " is already defined in this Builder");
+    });
+  }
+
+  final Collection<JourneyDefinition> buildAll() {
+
+    journeys();
+
+    if (definedJourneys.size() == 0) {
+      throw new JourneyDefinitionException("No journeys have been defined in this Builder");
+    }
+    else {
+      return definedJourneys.entrySet().stream().map(e -> build(e.getKey(), e.getValue())).collect(Collectors.toSet());
+    }
+  }
+
+  private JourneyDefinition build(String journeyName, JourneyDefinitionOptions options) {
+
+    Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap = HashBasedTable.create();
+
+    for (Table.Cell<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> cell : stageTransitionBuilderMap.cellSet()) {
+      ActionBuilderContainer value = cell.getValue();
+      if (value == null) {
+        throw new JourneyDefinitionException(String.format("Null ActionBuilderContainer found in table row %s column %s", cell.getRowKey(), cell.getColumnKey()));
+      }
+
+      TransitionAction transitionAction = value.build();
+      stageTransitionMap.put(cell.getRowKey(), cell.getColumnKey(), transitionAction);
+    }
+
+    return new JourneyDefinition(journeyName, stageTransitionMap, knownStages, options.startStage, options.exitBackLink);
+  }
+
+  protected final JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
+    return defineStage(name, displayName, null, formRenderSupplier);
+  }
+
+  protected final JourneyStage defineStage(String name, String displayName, Call call) {
+    return defineStage(name, displayName, call, null);
+  }
+
+  private JourneyStage defineStage(String name, String displayName, Call call,
+                                   Supplier<CompletionStage<Result>> formRenderSupplier) {
+
+    if (!(call != null ^ formRenderSupplier != null)) {
+      throw new IllegalArgumentException("Call and formRendererSupplier are mutually exclusive arguments");
+    }
 
     String hash = DigestUtils.sha1Hex(name).substring(0, 5);
 
@@ -29,24 +112,25 @@ public class JourneyDefinitionBuilder {
       throw new JourneyDefinitionException(String.format("Stage %s is already registered (or a hash collision occurred)", name));
     }
     else {
-      JourneyStage journeyStage = new JourneyStage(hash, name, displayName, formRenderSupplier);
+      JourneyStage journeyStage;
+      if (call != null) {
+        journeyStage = new CallableJourneyStage(hash, name, displayName, call);
+      }
+      else {
+        journeyStage = new RenderedJourneyStage(hash, name, displayName, formRenderSupplier);
+      }
+
       knownStages.put(hash, journeyStage);
 
       return journeyStage;
     }
   }
 
-  public StageBuilder atStage(JourneyStage stage) {
+  protected final StageBuilder atStage(JourneyStage stage) {
     return new StageBuilder(stage);
   }
 
-
-  public StageBuilder atAnyStage() {
-    //wait till build(), iterate all known stages
-    throw new JourneyDefinitionException("atAnyStage not yet supported");
-  }
-
-  public final class StageBuilder {
+  protected final class StageBuilder {
 
     private final JourneyStage stage;
     private CommonJourneyEvent event;
@@ -90,7 +174,7 @@ public class JourneyDefinitionBuilder {
   }
 
 
-  public static abstract class ActionBuilderContainer {
+  protected static abstract class ActionBuilderContainer {
 
     private final StageBuilder owningStageBuilder;
 
@@ -130,7 +214,7 @@ public class JourneyDefinitionBuilder {
     }
   }
 
-  public static class NoParamEventBuilder extends ActionBuilderContainer {
+  protected static final class NoParamEventBuilder extends ActionBuilderContainer {
 
     public NoParamEventBuilder(StageBuilder owningStageBuilder) {
       super(owningStageBuilder);
@@ -144,7 +228,7 @@ public class JourneyDefinitionBuilder {
   }
 
 
-  public static class ParamEventBuilder<T> extends ActionBuilderContainer {
+  protected static final class ParamEventBuilder<T> extends ActionBuilderContainer {
 
     public ParamEventBuilder(StageBuilder owningStageBuilder) {
       super(owningStageBuilder);
@@ -163,7 +247,7 @@ public class JourneyDefinitionBuilder {
     }
   }
 
-  public static abstract class TransitionActionBuilder {
+  private static abstract class TransitionActionBuilder {
     protected abstract TransitionAction build();
   }
 
@@ -172,7 +256,7 @@ public class JourneyDefinitionBuilder {
    * @param <E> Event argument type
    * @param <T> Transition argument type
    */
-  public static class BranchBuilder<E, T> {
+  protected static final class BranchBuilder<E, T> {
 
     private final Function<E, T> eventArgumentConverter;
     private final Supplier<T> transitionArgumentSupplier;
@@ -225,7 +309,7 @@ public class JourneyDefinitionBuilder {
     }
   }
 
-  public static TransitionActionBuilder moveTo(JourneyStage stage) {
+  protected static TransitionActionBuilder moveTo(JourneyStage stage) {
 
     return new TransitionActionBuilder() {
       @Override
@@ -234,48 +318,4 @@ public class JourneyDefinitionBuilder {
       }
     };
   }
-//
-//  private static final class MoveToActionBuilder implements TransitionActionBuilder {
-//
-//  }
-
-  public static TransitionActionBuilder completeJourney() {
-    throw new JourneyDefinitionException("Journey completion not supported");
-  }
-
-  public JourneyDefinition build(String journeyName, JourneyStage startStage) {
-
-    Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap = HashBasedTable.create();
-
-    for (Table.Cell<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> cell : stageTransitionBuilderMap.cellSet()) {
-      ActionBuilderContainer value = cell.getValue();
-      if (value == null) {
-        throw new JourneyDefinitionException(String.format("Null ActionBuilderContainer found in table row %s column %s", cell.getRowKey(), cell.getColumnKey()));
-      }
-
-      TransitionAction transitionAction = value.build();
-      stageTransitionMap.put(cell.getRowKey(), cell.getColumnKey(), transitionAction);
-    }
-
-    return new JourneyDefinition(journeyName, stageTransitionMap, knownStages, startStage);
-  }
-
-//  public static SubjourneyBuilder subjourney(JourneyDefinition jd) {
-//
-//    return new SubjourneyBuilder();
-//  }
-//
-//  public static class SubjourneyBuilder {
-//
-//    public TransitionActionBuilder whenFinished(TransitionActionBuilder transitionActionBuilder) {
-//      return transitionActionBuilder;
-//    }
-//  }
-////
-////  public static <T> BranchBuilder<T, T> branch(Supplier<T> paramSupplier){
-////    return new BranchBuilder<T, T>(paramSupplier);
-////
-////  }
-
-
 }
