@@ -17,6 +17,7 @@ Copy govuk_frontend_toolkit/images to public/template/images
 
 Modify app/assets/template/stylesheets/main.scss:
   change $path declaration to:  $path: "../images/";
+  import lite scss at bottom of file: @import "lite/lite";
 
 
 Template files
