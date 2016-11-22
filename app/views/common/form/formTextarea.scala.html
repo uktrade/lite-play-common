@@ -9,7 +9,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <textarea class="form-control @cssClass" id="@field.id" row="@rows" name="@field.name" type="text"
+  <textarea class="form-control @cssClass" id="@field.id" rows="@rows" name="@field.name" type="text"
     @{
       val fieldValidationData = ViewUtil.fieldValidationJSON(field);
       if(fieldValidationData != null){
