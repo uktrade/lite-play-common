@@ -1,7 +1,7 @@
 This build created from:
 
  * govuk_frontend_toolkit   v5.0.0
- * govuk_elements           v2.1.0
+ * govuk_elements           v2.2.0
  * govuk_template           v0.19.0
 
 SASS merge (elements/toolkit)
