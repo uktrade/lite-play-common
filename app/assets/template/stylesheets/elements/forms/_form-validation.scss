@@ -2,8 +2,7 @@
 // ==========================================================================
 
 // Use error to add a red border to the left of a .form-group
-.error,
-.error-summary {
+.error {
 
   // Ensure the .error class is applied to .form-group, otherwise box-sizing(border-box) will need to be used
   // @include box-sizing(border-box);
