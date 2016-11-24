@@ -41,7 +41,7 @@ public abstract class CommonRedisDao {
    * @param fieldName Hash field to be written to.
    * @param value String value to write.
    */
-  public final void writeString(String fieldName, String value) {
+  protected final void writeString(String fieldName, String value) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
       write(fieldName, value);
@@ -89,7 +89,7 @@ public abstract class CommonRedisDao {
    * @param fieldName Field to read.
    * @return Field value, or null if not defined.
    */
-  public final String readString(String fieldName) {
+  protected final String readString(String fieldName) {
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     try (Jedis jedis = pool.getResource()) {
@@ -104,7 +104,7 @@ public abstract class CommonRedisDao {
    * Deletes a simple string value from the given field in the transaction data hash.
    * @param fieldName Field to read.
    */
-  public final void deleteString(String fieldName) {
+  protected final void deleteString(String fieldName) {
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     try (Jedis jedis = pool.getResource()) {
