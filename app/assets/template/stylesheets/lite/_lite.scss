@@ -151,3 +151,9 @@ a.not-visited:visited {
 .font-weight-normal {
   font-weight: normal;
 }
+
+table.top-align-cells {
+  td, th {
+    vertical-align: top;
+  }
+}
