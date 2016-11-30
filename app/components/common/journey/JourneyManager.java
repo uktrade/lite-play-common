@@ -63,6 +63,11 @@ public class JourneyManager {
     this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyNameToDefinitionMap);
   }
 
+  public String getCurrentInternalStageName() {
+    Journey journey = getJourneyFromRequest();
+    return getDefinition(journey).resolveStageFromHash(journey.getCurrentStageHash()).getInternalName();
+  }
+
   public CompletionStage<Result> startJourney(String journeyName) {
     String startStageHash = getDefinition(journeyName).getStartStage().getHash();
 
