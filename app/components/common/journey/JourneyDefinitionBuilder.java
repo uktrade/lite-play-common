@@ -62,7 +62,12 @@ public abstract class JourneyDefinitionBuilder {
     });
   }
 
-  final Collection<JourneyDefinition> buildAll() {
+  /**
+   * Builds all the JourneyDefinitions known to this builder. Typically this method should only be called by the
+   * JourneyManager.
+   * @return All built JourneyDefinitions.
+   */
+  public final Collection<JourneyDefinition> buildAll() {
 
     journeys();
 
