@@ -2,6 +2,8 @@ package components.common.journey;
 
 import com.google.common.collect.Table;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -173,4 +175,31 @@ public class JourneyDefinition {
       return prevStage.getDisplayName();
     }
   }
+
+  /**
+   * @return A list of all transitions in this JourneyDefinition, expressed as GraphViewTransition objects. Events with
+   * branching logic are represented as multiple transitions with distinct condition values.
+   */
+  List<GraphViewTransition> asGraphViewTransitions() {
+
+    List<GraphViewTransition> allTransitions = new ArrayList<>();
+
+    for (Table.Cell<JourneyStage, CommonJourneyEvent, TransitionAction> cell : stageTransitionMap.cellSet()) {
+
+      TransitionAction action = cell.getValue();
+      if (action instanceof TransitionAction.Branch) {
+        //For a branch, create a transition to represent each condition
+        for (Map.Entry<String, TransitionAction> branchOption : ((TransitionAction.Branch) action).resultMap.entrySet()) {
+          JourneyStage newStage = resolveMoveAction(cell.getRowKey(), branchOption.getValue(), cell.getColumnKey()).getNewStage();
+          allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), branchOption.getKey()));
+        }
+      } else {
+        JourneyStage newStage = resolveMoveAction(cell.getRowKey(), cell.getValue(), cell.getColumnKey()).getNewStage();
+        allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), null));
+      }
+    }
+
+    return allTransitions;
+  }
+
 }
