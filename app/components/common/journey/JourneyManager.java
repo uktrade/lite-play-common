@@ -84,8 +84,7 @@ public class JourneyManager {
   private CompletionStage<Result> stageAsResult(JourneyStage stage) {
     if (stage.isCallable()) {
       return contextParamManager.addParamsAndRedirect(stage.getEntryCall());
-    }
-    else {
+    } else {
       return stage.getFormRenderSupplier().get();
     }
   }
@@ -94,8 +93,7 @@ public class JourneyManager {
     JourneyDefinition journeyDefinition = journeyNameToDefinitionMap.get(journeyName);
     if (journeyDefinition == null) {
       throw new JourneyManagerException("Unknown journey name " + journeyName);
-    }
-    else {
+    } else {
       return journeyDefinition;
     }
   }
@@ -147,8 +145,7 @@ public class JourneyManager {
       callUri = updateJourneyParamOnUri(callUri, journey.serialiseToString());
 
       return callUri;
-    }
-    else {
+    } else {
       throw new JourneyException(nextStage.getInternalName() + " is not callable (must be defined with a Call in JourneyDefinition)");
     }
   }
@@ -197,12 +194,10 @@ public class JourneyManager {
 
       JourneyStage newPreviousStage = journeyDefinition.resolveStageFromHash(previousStageHash);
       setBackLinkPrompt(newPreviousStage.getDisplayName());
-    }
-    else if (journeyDefinition.getExitBackLink().isPresent()) {
+    } else if (journeyDefinition.getExitBackLink().isPresent()) {
       String exitPrompt = journeyDefinition.getExitBackLink().get().getPrompt();
       setBackLinkPrompt(exitPrompt);
-    }
-    else {
+    } else {
       //don't show the back link if no back history is available
       hideBackLink();
     }
@@ -244,16 +239,14 @@ public class JourneyManager {
 
       return stageAsResult(stage);
 
-    }
-    else if (journeyDefinition.getExitBackLink().isPresent()) {
+    } else if (journeyDefinition.getExitBackLink().isPresent()) {
       //We are exiting the current journey - wipe context info
       journeyContextParamProvider.updateParamValueOnContext("");
       hideBackLink();
 
       BackLink exitBackLink = journeyDefinition.getExitBackLink().get();
       return contextParamManager.addParamsAndRedirect(exitBackLink.getCall());
-    }
-    else {
+    } else {
       throw new RuntimeException("Cannot go back any further");
     }
   }
@@ -265,8 +258,7 @@ public class JourneyManager {
     //If no journey parameter is available on this request, don't show a back link
     if (journey != null) {
       setBackLinkOnContext(journey);
-    }
-    else {
+    } else {
       hideBackLink();
     }
   }

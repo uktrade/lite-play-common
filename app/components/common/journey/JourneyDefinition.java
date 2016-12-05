@@ -63,8 +63,7 @@ public class JourneyDefinition {
 
     if (journeyStage == null) {
       throw new JourneyException(String.format("Stage '%s' is not defined in this journey", hash));
-    }
-    else {
+    } else {
       return journeyStage;
     }
   }
@@ -88,8 +87,7 @@ public class JourneyDefinition {
       JourneyStage destinationStage = moveStageAction.getDestinationStage();
 
       return new TransitionResultImpl(currentStage, destinationStage);
-    }
-    else {
+    } else {
       //TODO - handle journey end
       throw new JourneyException("Unknown action type " + transitionAction.getClass().getName(), currentStage, event);
     }
@@ -104,8 +102,7 @@ public class JourneyDefinition {
     TransitionAction transitionAction = stageTransitionMap.get(currentStage, event);
     if (transitionAction == null) {
       throw new JourneyException("No transition available for %s, %s", currentStage, event);
-    }
-    else {
+    } else {
       if (transitionAction instanceof TransitionAction.Branch) {
         TransitionAction.Branch branch = (TransitionAction.Branch) transitionAction;
 
@@ -135,12 +132,10 @@ public class JourneyDefinition {
 
         if (conditionAction != null) {
           return resolveMoveAction(currentStage, conditionAction, event);
-        }
-        else {
+        } else {
           throw new JourneyException("Branch not matched with argument " + transitionArgument, currentStage, event);
         }
-      }
-      else {
+      } else {
         return resolveMoveAction(currentStage, transitionAction, event);
       }
     }

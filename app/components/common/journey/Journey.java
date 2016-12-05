@@ -46,8 +46,7 @@ public class Journey {
 
     if (!journeyString.contains(JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR)) {
       throw new JourneyManagerException("Invalid journey string, missing underscore character");
-    }
-    else {
+    } else {
       String[] journeyStringSplit = journeyString.split(JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR, 2);
       String journeyName = journeyStringSplit[0];
       String journeyHistory = journeyStringSplit[1];

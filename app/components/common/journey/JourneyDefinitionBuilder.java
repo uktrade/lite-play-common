@@ -73,8 +73,7 @@ public abstract class JourneyDefinitionBuilder {
 
     if (definedJourneys.size() == 0) {
       throw new JourneyDefinitionException("No journeys have been defined in this Builder");
-    }
-    else {
+    } else {
       return definedJourneys.entrySet().stream().map(e -> build(e.getKey(), e.getValue())).collect(Collectors.toSet());
     }
   }
@@ -115,13 +114,11 @@ public abstract class JourneyDefinitionBuilder {
 
     if (knownStages.containsKey(hash)) {
       throw new JourneyDefinitionException(String.format("Stage %s is already registered (or a hash collision occurred)", name));
-    }
-    else {
+    } else {
       JourneyStage journeyStage;
       if (call != null) {
         journeyStage = new CallableJourneyStage(hash, name, displayName, call);
-      }
-      else {
+      } else {
         journeyStage = new RenderedJourneyStage(hash, name, displayName, formRenderSupplier);
       }
 
@@ -147,8 +144,7 @@ public abstract class JourneyDefinitionBuilder {
     private void addIfNotDefined(JourneyStage stage, CommonJourneyEvent event, ActionBuilderContainer resultBuilderContainer) {
       if (stageTransitionBuilderMap.contains(stage, event)) {
         throw new JourneyDefinitionException(String.format("Transition for %s, %s has already been defined", stage, event));
-      }
-      else {
+      } else {
         stageTransitionBuilderMap.put(stage, event, resultBuilderContainer);
       }
     }
@@ -198,8 +194,7 @@ public abstract class JourneyDefinitionBuilder {
       if (transitionActionBuilder == null) {
         throw new JourneyDefinitionException(String.format("No transition action was defined for %s %s",
             owningStageBuilder.stage, owningStageBuilder.event));
-      }
-      else {
+      } else {
         return transitionActionBuilder.build();
       }
     }
@@ -282,8 +277,7 @@ public abstract class JourneyDefinitionBuilder {
 
       if (!conditionMap.containsKey(criterionValue.toString())) {
         conditionMap.put(criterionValue.toString(), actionBuilder);
-      }
-      else {
+      } else {
         //TODO more contextual error message
         throw new JourneyDefinitionException("Duplicate branch condition value: " + criterionValue.toString());
       }
@@ -295,8 +289,7 @@ public abstract class JourneyDefinitionBuilder {
 
       if (elseCondition == null) {
         elseCondition = actionBuilder;
-      }
-      else {
+      } else {
         throw new JourneyDefinitionException("Otherwise condition has already been defined");
       }
     }
