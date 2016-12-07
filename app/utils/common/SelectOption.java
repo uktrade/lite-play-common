@@ -14,6 +14,12 @@ public class SelectOption {
     this(value, prompt, false);
   }
 
+  /**
+   * Use this constructor if the prompt contains HTML.
+   * @param value
+   * @param prompt
+   * @param isPromptHtml set to true if you can guarantee that the prompt contains safe HTML.
+   */
   public SelectOption(String value, String prompt, boolean isPromptHtml) {
     this.value = value;
     this.prompt = prompt;
