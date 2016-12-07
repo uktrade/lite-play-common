@@ -8,10 +8,16 @@ public class SelectOption {
 
   public final String value;
   public final String prompt;
+  public final boolean isPromptHtml;
 
   public SelectOption(String value, String prompt) {
+    this(value, prompt, false);
+  }
+
+  public SelectOption(String value, String prompt, boolean isPromptHtml) {
     this.value = value;
     this.prompt = prompt;
+    this.isPromptHtml = isPromptHtml;
   }
 
   public static LinkedHashMap<SelectOption, Boolean> fromEmpty(List<SelectOption> allOptions) {

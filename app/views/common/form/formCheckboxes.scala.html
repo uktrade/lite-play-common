@@ -14,7 +14,11 @@
   @for((option, index) <- options.iterator.zipWithIndex) {
     <label class="block-label" for="@field.name@index">
       <input id="@field.name@index" type="checkbox" name="@{field.name}[@index]" value="@option._1.value" @if(option._2) { checked="checked" }>
-      @Html(HtmlFormat.escape(option._1.prompt).toString.replace("\n", "<br/>"))
+      @if(option._1.isPromptHtml) {
+        @Html(HtmlFormat.escape(option._1.prompt).toString.replace("\n", "<br/>"))
+      } else {
+        @option._1.prompt
+      }
     </label>
   }
 </div>

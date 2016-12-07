@@ -3,6 +3,6 @@
 
 @formRadioGroupContainer(field)(prompt, promptCssClass) {
   @for(option <- options) {
-    @formRadio(field, option.prompt, option.value)
+    @formRadio(field, option.prompt, option.value, option.isPromptHtml)
   }
 }
