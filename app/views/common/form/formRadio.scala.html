@@ -1,6 +1,6 @@
-@(field: Form.Field, prompt: Html, optionValue: String, cssClass : String = "")
+@(field: Form.Field, prompt: String, optionValue: String, cssClass : String = "")
 
 <label class="@(("block-label " + cssClass).trim)" for="@field.name@optionValue">
   <input id="@field.name@optionValue" name="@field.name" value="@optionValue" type="radio" @if(field.value != null && field.value.equals(optionValue)){ checked="checked" }>
-  @prompt
+  @Html(HtmlFormat.escape(prompt).toString.replace("\n", "<br/>"))
 </label>
