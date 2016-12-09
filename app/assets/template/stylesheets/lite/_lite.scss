@@ -1,6 +1,7 @@
 @import "js";
-@import "../_conditionals.scss";
-@import "../colours/_palette";
+@import "../conditionals";
+@import "../colours/palette";
+@import "../check-your-answers";
 
 button {
   font-family: inherit;
@@ -156,4 +157,8 @@ table.top-align-cells {
   td, th {
     vertical-align: top;
   }
+}
+
+.change-answer button.link {
+  font-weight: bold;
 }
