@@ -203,7 +203,7 @@ public class JourneyManager {
     }
   }
 
-  private void hideBackLink() {
+  public void hideBackLink() {
     ctx().args.put(JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM, true);
   }
 
