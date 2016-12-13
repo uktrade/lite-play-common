@@ -127,7 +127,7 @@ a.not-visited:visited {
 // Use to apply a default set of classes to content sourced from a service. Typically used to surround @Html()
 // Allows the stored HTML content to be devoid of any styling classes.
 .stored-content-container {
-  ul {
+  ul, ol {
     @extend .list, .list-bullet;
   }
 }
