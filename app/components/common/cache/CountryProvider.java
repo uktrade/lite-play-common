@@ -7,6 +7,8 @@ import models.common.Country;
 import play.Logger;
 import play.cache.CacheApi;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,17 +31,22 @@ public class CountryProvider {
     this.countryCacheKey = countryCacheKey;
   }
 
-  public String getCountryName(String countryRef) {
+  public Country getCountry(String countryRef) {
     if (countryRef == null) {
       return null;
     }
 
-    Map<String, String> countries = getCountries();
+    Map<String, Country> countries = getCountriesMap();
     return countries.get(countryRef);
   }
 
-  public Map<String, String> getCountries() {
-    return cache.get(countryCacheKey);
+  public Collection<Country> getCountries() {
+    Map<String, Country> countries = getCountriesMap();
+    return countries.values();
+  }
+
+  public Map<String, Country> getCountriesMap() {
+    return Collections.unmodifiableMap(cache.get(countryCacheKey));
   }
 
   public void loadCountries() {
