@@ -5,30 +5,23 @@ import com.google.inject.name.Named;
 import components.common.client.CountryServiceClient;
 import models.common.Country;
 import play.Logger;
-import play.cache.CacheApi;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
 public class CountryProvider {
 
-  private final CacheApi cache;
+  private Map<String, Country> cache;
   private final CountryServiceClient countryServiceClient;
-  private final int countryCacheExpiry;
-  private final String countryCacheKey;
 
   @Inject
-  public CountryProvider(CacheApi cache, CountryServiceClient countryServiceClient,
-                         @Named("countryCacheExpiry") int countryCacheExpiry,
-                         @Named("countryCacheKey") String countryCacheKey) {
-    this.cache = cache;
+  public CountryProvider(CountryServiceClient countryServiceClient) {
     this.countryServiceClient = countryServiceClient;
-    this.countryCacheExpiry = countryCacheExpiry;
-    this.countryCacheKey = countryCacheKey;
   }
 
   public Country getCountry(String countryRef) {
@@ -46,21 +39,21 @@ public class CountryProvider {
   }
 
   public Map<String, Country> getCountriesMap() {
-    return Collections.unmodifiableMap(cache.get(countryCacheKey));
+    return Collections.unmodifiableMap(cache);
   }
 
   public void loadCountries() {
+    cache = new HashMap<>();
     Logger.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
       .thenAcceptAsync(c -> {
         if (c.getStatus() == CountryServiceClient.Status.SUCCESS) {
-          Map<String, String> countries = c.getCountries().stream()
-            .collect(toMap(Country::getCountryRef, Country::getCountryName));
-          cache.set(countryCacheKey, countries, countryCacheExpiry);
+          cache = c.getCountries().stream()
+            .collect(toMap(Country::getCountryRef, Function.identity()));
           Logger.info("Successfully refreshed the country cache.");
         } else {
           Logger.error("Country service error - Failed to get countries.");
-          cache.set(countryCacheKey, new HashMap<>(), countryCacheExpiry);
+          cache = new HashMap<>();
         }
       });
   }
