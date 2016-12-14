@@ -37,7 +37,7 @@ public class CountryServiceClient {
                               ObjectMapper objectMapper) {
     this.httpExecutionContext = httpExecutionContext;
     this.wsClient = wsClient;
-    this.countryServiceUrl = countryServiceAddress + "/countries/set/export-control";
+    this.countryServiceUrl = countryServiceAddress;
     this.countryServiceTimeout = countryServiceTimeout;
     this.objectMapper = objectMapper;
   }
