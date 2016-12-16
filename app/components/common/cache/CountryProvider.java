@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
 
 public class CountryProvider {
 
-  private Map<String, Country> cache;
+  private Map<String, Country> cache = new HashMap<>();
   private final CountryServiceClient countryServiceClient;
 
   @Inject
@@ -43,7 +43,7 @@ public class CountryProvider {
   }
 
   public void loadCountries() {
-    cache = new HashMap<>();
+
     Logger.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
       .thenAcceptAsync(countries -> {
@@ -52,8 +52,7 @@ public class CountryProvider {
             .collect(toMap(Country::getCountryRef, Function.identity()));
           Logger.info("Successfully refreshed the country cache.");
         } else {
-          Logger.error("Country service error - Failed to get countries.");
-          cache = new HashMap<>();
+          Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
         }
       });
   }

@@ -1,10 +1,5 @@
 package components.common.client;
 
-import static components.common.client.CountryServiceClient.CountryServiceResponse.failure;
-import static components.common.client.CountryServiceClient.CountryServiceResponse.success;
-import static components.common.client.CountryServiceClient.Status.ERROR;
-import static components.common.client.CountryServiceClient.Status.SUCCESS;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -18,7 +13,6 @@ import play.libs.ws.WSClient;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
 public class CountryServiceClient {
@@ -62,77 +56,6 @@ public class CountryServiceClient {
 
           return new ArrayList<>();
         }, httpExecutionContext.current());
-  }
-
-  public static final class CountryServiceResponse {
-
-    private final Status status;
-    private final List<Country> countries;
-    private final String errorMessage;
-
-    private CountryServiceResponse(List<Country> countries) {
-      this.status = SUCCESS;
-      this.countries = countries;
-      this.errorMessage = null;
-    }
-
-    private CountryServiceResponse(String errorMessage) {
-      this.status = ERROR;
-      this.errorMessage = errorMessage;
-      this.countries = new ArrayList<>();
-    }
-
-    public static CountryServiceResponse success(List<Country> countries) {
-      return new CountryServiceResponse(countries);
-    }
-
-    public static CountryServiceResponse failure(String errorMessage) {
-      return new CountryServiceResponse(errorMessage);
-    }
-
-    public Status getStatus() {
-      return status;
-    }
-
-    public boolean isOk() {
-      return status == SUCCESS && !countries.isEmpty();
-    }
-
-    public List<Country> getCountries() {
-      return countries;
-    }
-
-    public List<Country> getCountriesByRef(List<String> countryRefs) {
-      // Returns in order of countryRefs
-      List<Country> filteredCountries = new ArrayList<>();
-      for (String countryRef : countryRefs) {
-        Optional<Country> countryOptional = countries.stream()
-            .filter(country -> countryRef.equals(country.getCountryRef()))
-            .findFirst();
-        if (countryOptional.isPresent()) {
-          filteredCountries.add(countryOptional.get());
-        }
-      }
-      return filteredCountries;
-    }
-
-    public Optional<Country> getCountryByRef(String countryRef) {
-      if (countryRef == null || countryRef.isEmpty()) {
-        return Optional.empty();
-      }
-      return countries.stream()
-          .filter(country -> countryRef.equals(country.getCountryRef()))
-          .findFirst();
-    }
-
-    public String getErrorMessage() {
-      return errorMessage;
-    }
-
-  }
-
-  public enum Status {
-    SUCCESS, ERROR
   }
 
 }
