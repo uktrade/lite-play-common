@@ -46,9 +46,9 @@ public class CountryProvider {
     cache = new HashMap<>();
     Logger.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
-      .thenAcceptAsync(c -> {
-        if (c.getStatus() == CountryServiceClient.Status.SUCCESS) {
-          cache = c.getCountries().stream()
+      .thenAcceptAsync(countries -> {
+        if (!countries.isEmpty()) {
+          cache = countries.stream()
             .collect(toMap(Country::getCountryRef, Function.identity()));
           Logger.info("Successfully refreshed the country cache.");
         } else {

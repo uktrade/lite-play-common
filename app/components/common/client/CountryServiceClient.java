@@ -42,7 +42,7 @@ public class CountryServiceClient {
     this.objectMapper = objectMapper;
   }
 
-  public CompletionStage<CountryServiceResponse> getCountries() {
+  public CompletionStage<List<Country>> getCountries() {
     return wsClient.url(countryServiceUrl)
         .withRequestFilter(CorrelationId.requestFilter)
         .setRequestTimeout(countryServiceTimeout)
@@ -54,14 +54,13 @@ public class CountryServiceClient {
           } else {
             try {
               String json = result.asJson().toString();
-              List<Country> sites = objectMapper.readValue(json, new TypeReference<List<Country>>() {});
-              return success(sites);
+              return objectMapper.readValue(json, new TypeReference<List<Country>>() {});
             } catch (IOException e) {
               Logger.error("Failed to parse Country service response as JSON.", e);
             }
           }
 
-          return failure("Country service failure.");
+          return new ArrayList<>();
         }, httpExecutionContext.current());
   }
 
