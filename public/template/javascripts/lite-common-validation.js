@@ -5,6 +5,13 @@ var LITECommon = LITECommon || {};
 LITECommon.ClientSideValidation = {
   clientSideDataAttrName: 'data-clientside-validation',
 
+  /**
+   * Handle validation via a submit event by parsing the event and find the triggering element and then calling the
+   * validateForm() function.
+   *
+   * @param event form submit event
+   * @returns {boolean} True if all fields in the form passed validation
+   */
   handleSubmit: function(event) {
     "use strict";
     var $form = $(event.target);
@@ -25,15 +32,15 @@ LITECommon.ClientSideValidation = {
   /**
    * Validate all fields in a form which have data-validation attributes on them describing how the field should be
    * validated.
-   * This method should be raised by the form on submit so that the event parameter target will be the form containing
-   * fields with validation information.
    *
-   * @param event form submit event
+   * @param $form The form element with fields to validate
+   * @param $triggeringElement The element that caused the validation to happen
    * @returns {boolean} True if all fields in the form passed validation
    */
   validateForm: function ($form, $triggeringElement) {
     "use strict";
 
+    // Find grouped
     var validatableElements = [];
     var validationGroup = $triggeringElement.attr('data-validation-group');
     if (validationGroup) {
