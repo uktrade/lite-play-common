@@ -1,6 +1,5 @@
 package components.common.cache;
 
-import com.google.common.collect.ImmutableMap;
 import components.common.client.CountryServiceClient;
 import components.common.client.CountryServiceClient.CountryServiceResponse;
 import models.common.Country;
@@ -13,6 +12,7 @@ import play.cache.CacheApi;
 import play.libs.concurrent.HttpExecutionContext;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -38,29 +38,36 @@ public class CountryProviderTest {
   @Before
   public void setUp() throws Exception {
 
-    Map<String, String> countryMap = ImmutableMap.of(COUNTRY_REF, COUNTRY_NAME);
-    when(cacheApi.get(CountryProvider.CACHE_KEY)).thenReturn(countryMap);
     CountryServiceResponse response = CountryServiceResponse.success(getCountryList());
     when(countryServiceClient.getCountries()).thenReturn(completedFuture(response));
 
-    countryProvider = new CountryProvider(cacheApi, countryServiceClient, 1);
+    countryProvider = new CountryProvider(countryServiceClient);
   }
-
 
   @Test
   public void shouldGetCountryName() throws Exception {
 
-    String countryName = countryProvider.getCountryName(COUNTRY_REF);
+    Country country = countryProvider.getCountry(COUNTRY_REF);
 
-    assertThat(countryName).isEqualTo(COUNTRY_NAME);
+    assertThat(country).isNotNull();
+    assertThat(country.getCountryName()).isEqualTo(COUNTRY_NAME);
+    assertThat(country.getCountryRef()).isEqualTo(COUNTRY_NAME);
   }
 
   @Test
   public void shouldGetCountries() throws Exception {
 
-    Map<String, String> countries = countryProvider.getCountries();
+    Collection<Country> countries = countryProvider.getCountries();
 
-    assertThat(countries.get(COUNTRY_REF)).isEqualTo(COUNTRY_NAME);
+    assertThat(countries).isNotEmpty();
+  }
+
+  @Test
+  public void shouldGetCountriesMap() throws Exception {
+
+    Map<String, Country> countriesMap = countryProvider.getCountriesMap();
+
+    assertThat(countriesMap).isNotEmpty();
   }
 
   private List<Country> getCountryList() {
