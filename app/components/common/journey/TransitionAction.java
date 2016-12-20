@@ -8,13 +8,13 @@ abstract class TransitionAction {
 
   final static class MoveStage extends TransitionAction {
 
-    private final JourneyStage destinationStage;
+    private final CommonStage destinationStage;
 
-    public MoveStage(JourneyStage destinationStage) {
+    public MoveStage(CommonStage destinationStage) {
       this.destinationStage = destinationStage;
     }
 
-    public JourneyStage getDestinationStage() {
+    public CommonStage getDestinationStage() {
       return destinationStage;
     }
   }

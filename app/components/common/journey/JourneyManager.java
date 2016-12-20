@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import components.common.state.ContextParamManager;
 import io.mikael.urlbuilder.UrlBuilder;
 import play.Logger;
+import play.libs.concurrent.HttpExecutionContext;
 import play.mvc.Result;
 
 import java.util.ArrayList;
@@ -33,11 +34,14 @@ public class JourneyManager {
 
   private final ContextParamManager contextParamManager;
 
+  private final HttpExecutionContext httpExecutionContext;
+
   @Inject
   public JourneyManager(JourneySerialiser journeySerialiser, ContextParamManager contextParamManager,
-                        Collection<JourneyDefinitionBuilder> journeyDefinitionBuilders) {
+                        Collection<JourneyDefinitionBuilder> journeyDefinitionBuilders, HttpExecutionContext httpExecutionContext) {
     this.journeySerialiser = journeySerialiser;
     this.contextParamManager = contextParamManager;
+    this.httpExecutionContext = httpExecutionContext;
 
     //Build all JourneyDefinitions from all JourneyDefinitionBuilders
     Collection<JourneyDefinition> journeyDefinitions = journeyDefinitionBuilders.stream()
@@ -102,51 +106,60 @@ public class JourneyManager {
     return getDefinition(journey.getJourneyName());
   }
 
+
+
   private CompletionStage<Result> performTransitionInternal(
-      BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction, CommonJourneyEvent event) {
+      BiFunction<JourneyDefinition, String, EventResult> fireEventAction, CommonJourneyEvent event) {
 
     Journey journey = getJourneyFromRequest();
-
     JourneyDefinition journeyDefinition = getDefinition(journey);
-
     String previousStageName = journeyDefinition.resolveStageFromHash(journey.getCurrentStageHash()).getInternalName();
 
-    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash());
+    return fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash()).getCompletableResult().thenComposeAsync(transitionResult -> {
 
-    journey.nextStage(transitionResult.getNewStage().getHash());
+      journey.nextStage(transitionResult.getNewStage().getHash());
 
-    journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
+      journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-    saveJourney(journey);
+      saveJourney(journey);
 
-    setBackLinkOnContext(journey);
+      setBackLinkOnContext(journey);
 
-    Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
-        journey.getJourneyName(), previousStageName, event.getEventMnemonic(), transitionResult.getNewStage().getInternalName()));
+      Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
+          journey.getJourneyName(), previousStageName, event.getEventMnemonic(), transitionResult.getNewStage().getInternalName()));
 
-    return stageAsResult(transitionResult.getNewStage());
+      return stageAsResult(transitionResult.getNewStage());
+    }, httpExecutionContext.current());
   }
 
 
-  private String uriForTransitionInternal(BiFunction<JourneyDefinition, String, TransitionResult> fireEventAction) {
+  private String uriForTransitionInternal(BiFunction<JourneyDefinition, String, EventResult> fireEventAction) {
 
     Journey journey = getJourneyFromRequest();
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
-    TransitionResult transitionResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash());
+    //Fire the event (parameterised or non-parameterised)
+    EventResult eventResult = fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash());
 
-    JourneyStage nextStage = transitionResult.getNewStage();
-    if (nextStage.isCallable()) {
-      //Set all known context params in the querystring of the callable URI
-      String callUri = contextParamManager.addParamsToCall(nextStage.getEntryCall());
+    //Only allow URL generation if the result is "immediate", i.e. has no intermediate decisions
+    if (eventResult.isImmediate()) {
+      TransitionResult transitionResult = eventResult.getImmediateResult();
 
-      //Update the journey context param so it reflects the stage of the journey the user WILL be on when they click it
-      journey.nextStage(nextStage.getHash());
-      callUri = updateJourneyParamOnUri(callUri, journey.serialiseToString());
+      JourneyStage nextStage = transitionResult.getNewStage();
+      if (nextStage.isCallable()) {
+        //Set all known context params in the querystring of the callable URI
+        String callUri = contextParamManager.addParamsToCall(nextStage.getEntryCall());
 
-      return callUri;
+        //Update the journey context param so it reflects the stage of the journey the user WILL be on when they click it
+        journey.nextStage(nextStage.getHash());
+        callUri = updateJourneyParamOnUri(callUri, journey.serialiseToString());
+
+        return callUri;
+      } else {
+        throw new JourneyException(nextStage.getInternalName() + " is not callable (must be defined with a Call in JourneyDefinition)");
+      }
     } else {
-      throw new JourneyException(nextStage.getInternalName() + " is not callable (must be defined with a Call in JourneyDefinition)");
+      throw new JourneyException("Cannot get a URI for a transition with decision stages");
     }
   }
 
@@ -161,22 +174,22 @@ public class JourneyManager {
 
   public <T extends JourneyEvent> CompletionStage<Result> performTransition(T event) {
 
-    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event), event);
+    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event), event);
   }
 
   public <T extends ParameterisedJourneyEvent<U>, U> CompletionStage<Result> performTransition(T event, U eventArgument) {
 
     return performTransitionInternal(
-        (journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event, eventArgument), event);
+        (journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument), event);
 
   }
 
   public <T extends JourneyEvent> String uriForTransition(T event) {
-    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event));
+    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event));
   }
 
   public <T extends ParameterisedJourneyEvent<U>, U>  String uriForTransition(T event, U eventArgument) {
-    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(stage, event, eventArgument));
+    return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument));
   }
 
   private String updateJourneyParamOnUri(String uri, String newJourney) {

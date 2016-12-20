@@ -1,6 +1,8 @@
 package components.common.journey;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Test class for generating Graphviz digraph syntax from a JourneyDefinition.
@@ -14,6 +16,8 @@ public class GraphvizSerialiser {
         "  node [shape = rectangle, fontsize=10];\n\n");
 
     List<GraphViewTransition> graphViewTransitions = journeyDefinition.asGraphViewTransitions();
+
+    Set<CommonStage> decisionStages = new HashSet<>();
 
     for (GraphViewTransition transition : graphViewTransitions) {
       String edgeLabel;
@@ -34,8 +38,14 @@ public class GraphvizSerialiser {
 
       b.append("  ").append(transition.getStartStage().getInternalName());
       b.append(" -> ").append(transition.getEndStage().getInternalName());
-      b.append(" [ label = \"").append(edgeLabel).append("\", fontsize = 10 ];").append("\n");
+      b.append(" [ label = \"").append(edgeLabel).append("\", fontsize = 10").append(" ];\n");
+
+      if (transition.getEndStage() instanceof DecisionStage) {
+        decisionStages.add(transition.getEndStage());
+      }
     }
+
+    decisionStages.forEach(e -> b.append(e.getInternalName() + " [shape = diamond];\n"));
 
     b.append("}");
 

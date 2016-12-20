@@ -1,12 +1,21 @@
 package components.common.journey;
 
-//@FunctionalInterface
-public interface TransitionResult {
+/**
+ * Result wrapper for a journey transition.
+ */
+class TransitionResult {
 
-  JourneyStage getNewStage();
+  private final JourneyStage newStage;
 
-  JourneyStage getPreviousStage();
+  TransitionResult(JourneyStage newStage) {
+    this.newStage = newStage;
+  }
 
-  String getBackLinkText();
+  /**
+   * @return The stage which should be proceeded to as a result of this transition.
+   */
+  public JourneyStage getNewStage() {
+    return newStage;
+  }
 
 }
