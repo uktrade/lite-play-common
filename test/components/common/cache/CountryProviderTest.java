@@ -42,7 +42,6 @@ public class CountryProviderTest {
   @Before
   public void setUp() throws Exception {
     when(countryServiceClient.getCountries()).thenReturn(completedFuture(getCountryList()));
-
     countryProvider = new CountryProvider(countryServiceClient);
   }
 
@@ -52,16 +51,16 @@ public class CountryProviderTest {
     Country country = countryProvider.getCountry(COUNTRY_REF);
 
     assertThat(country).isNotNull();
-    assertThat(country.getCountryRef()).isEqualTo(COUNTRY_REF);
     assertThat(country.getCountryName()).isEqualTo(COUNTRY_NAME);
+    assertThat(country.getCountryRef()).isEqualTo(COUNTRY_NAME);
   }
 
   @Test
   public void shouldGetCountriesMap() throws Exception {
 
-    Map<String, Country> countries = countryProvider.getCountriesMap();
+    Map<String, Country> countriesMap = countryProvider.getCountriesMap();
 
-    assertThat(countries.get(COUNTRY_REF)).isEqualTo(COUNTRY_NAME);
+    assertThat(countriesMap).isNotEmpty();
   }
 
   @Test
