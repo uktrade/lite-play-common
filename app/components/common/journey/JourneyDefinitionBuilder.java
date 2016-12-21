@@ -43,20 +43,20 @@ public abstract class JourneyDefinitionBuilder {
   protected abstract void journeys();
 
   private static final class JourneyDefinitionOptions {
-    private final JourneyStage startStage;
+    private final CommonStage startStage;
     private final BackLink exitBackLink;
 
-    private JourneyDefinitionOptions(JourneyStage startStage, BackLink exitBackLink) {
+    private JourneyDefinitionOptions(CommonStage startStage, BackLink exitBackLink) {
       this.startStage = startStage;
       this.exitBackLink = exitBackLink;
     }
   }
 
-  protected final void defineJourney(String journeyName, JourneyStage startStage) {
+  protected final void defineJourney(String journeyName, CommonStage startStage) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, null));
   }
 
-  protected final void defineJourney(String journeyName, JourneyStage startStage, BackLink exitBackLink) {
+  protected final void defineJourney(String journeyName, CommonStage startStage, BackLink exitBackLink) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, exitBackLink));
   }
 

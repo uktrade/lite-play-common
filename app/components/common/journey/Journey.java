@@ -77,7 +77,7 @@ public class Journey {
     }
   }
 
-  public static Journey createJourney(String journeyName, String initialStateHash) {
-    return new Journey(journeyName, new ArrayDeque<>(Collections.singletonList(initialStateHash)));
+  public static Journey createJourney(String journeyName) {
+    return new Journey(journeyName, new ArrayDeque<>());
   }
 }

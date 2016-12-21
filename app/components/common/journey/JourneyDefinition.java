@@ -28,13 +28,13 @@ public class JourneyDefinition {
 
   private final Map<String, JourneyStage> registeredStages;
 
-  private final JourneyStage startStage;
+  private final CommonStage startStage;
 
   private final BackLink exitBackLink;
 
   JourneyDefinition(String journeyName, Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap,
                     Map<DecisionStage, DecisionLogic> decisionLogicMap, Map<String, JourneyStage> registeredStages,
-                    JourneyStage startStage, BackLink exitBackLink) {
+                    CommonStage startStage, BackLink exitBackLink) {
     this.journeyName = journeyName;
     this.stageTransitionMap = stageTransitionMap;
     this.decisionLogicMap = decisionLogicMap;
@@ -62,7 +62,7 @@ public class JourneyDefinition {
     return journeyName;
   }
 
-  JourneyStage getStartStage() {
+  CommonStage getStartStage() {
     return startStage;
   }
 
@@ -100,6 +100,15 @@ public class JourneyDefinition {
     JourneyStage currentStage = resolveStageFromHash(currentStageHash);
 
     MoveAction moveAction = doMoveOrBranch(event, eventArgument, currentStage);
+    return convertMoveToResult(httpExecutionContext, moveAction);
+  }
+
+  public EventResult startJourney(HttpExecutionContext httpExecutionContext) {
+    MoveAction moveAction = new MoveAction(startStage, MoveAction.Direction.FORWARD);
+    return convertMoveToResult(httpExecutionContext, moveAction);
+  }
+
+  private EventResult convertMoveToResult(HttpExecutionContext httpExecutionContext, MoveAction moveAction) {
     CommonStage nextStage = moveAction.getDestinationStage();
 
     if (nextStage instanceof JourneyStage) {
@@ -108,15 +117,14 @@ public class JourneyDefinition {
     }
     else {
       //For decisions, build up a chain of 1 or more CompletableFutures to make the decisions and return a non-immediate EventResult
-      CompletionStage<TransitionResult> resultCompletionStage = buildDecisionChain(httpExecutionContext, currentStage, moveAction, event)
+      CompletionStage<TransitionResult> resultCompletionStage = buildDecisionChain(httpExecutionContext, moveAction)
           .thenApply(e -> new TransitionResult((JourneyStage) e.getDestinationStage(), e.getDirection()));
 
       return new EventResult(resultCompletionStage);
     }
   }
 
-  private CompletionStage<MoveAction> buildDecisionChain(HttpExecutionContext httpExecutionContext, JourneyStage initialStage,
-                                                         MoveAction moveAction, CommonJourneyEvent event) {
+  private CompletionStage<MoveAction> buildDecisionChain(HttpExecutionContext httpExecutionContext, MoveAction moveAction) {
 
     if (moveAction.getDestinationStage() instanceof DecisionStage) {
       DecisionStage decisionStage = (DecisionStage) moveAction.getDestinationStage();
@@ -125,7 +133,7 @@ public class JourneyDefinition {
       //Recurse through DecisionStages, building up the chain until a JourneyStage is hit
       return decisionLogic.getDecider().decide()
           .thenApplyAsync(e -> doDecision(decisionStage, decisionLogic, e), httpExecutionContext.current())
-          .thenComposeAsync(e -> buildDecisionChain(httpExecutionContext, initialStage, e, event), httpExecutionContext.current());
+          .thenComposeAsync(e -> buildDecisionChain(httpExecutionContext, e), httpExecutionContext.current());
 
     } else {
       //End the chain when a JourneyStage is hit

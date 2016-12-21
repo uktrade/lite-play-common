@@ -45,7 +45,14 @@ public class GraphvizSerialiser {
       }
     }
 
-    decisionStages.forEach(e -> b.append(e.getInternalName() + " [shape = diamond];\n"));
+    if (journeyDefinition.getStartStage() instanceof DecisionStage) {
+      decisionStages.add(journeyDefinition.getStartStage());
+    }
+
+    decisionStages.forEach(e -> b.append("  ").append(e.getInternalName()).append(" [shape = diamond];\n"));
+
+    b.append("  start -> ").append(journeyDefinition.getStartStage().getInternalName()).append(";\n");
+    b.append("  start [shape = ellipse];\n");
 
     b.append("}");
 

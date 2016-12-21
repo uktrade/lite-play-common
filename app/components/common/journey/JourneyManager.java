@@ -73,16 +73,15 @@ public class JourneyManager {
   }
 
   public CompletionStage<Result> startJourney(String journeyName) {
-    String startStageHash = getDefinition(journeyName).getStartStage().getHash();
 
-    Journey newJourney = Journey.createJourney(journeyName, startStageHash);
+    Journey newJourney = Journey.createJourney(journeyName);
 
-    journeyContextParamProvider.updateParamValueOnContext(newJourney.serialiseToString());
+    JourneyDefinition journeyDefinition = getDefinition(journeyName);
 
-    //Back link may need hiding or setting to the journey's exit link if it has one
-    setBackLinkOnContext(newJourney);
+    EventResult startResult = journeyDefinition.startJourney(httpExecutionContext);
 
-    return stageAsResult(getDefinition(journeyName).getStartStage());
+    return startResult.getCompletableResult().thenComposeAsync(t -> applyTransitionResult(t, "<START>", newJourney, "<none>"),
+        httpExecutionContext.current());
   }
 
   private CompletionStage<Result> stageAsResult(JourneyStage stage) {
@@ -118,27 +117,41 @@ public class JourneyManager {
   }
 
   private CompletionStage<Result> performTransitionInternal(
-      BiFunction<JourneyDefinition, String, EventResult> fireEventAction, CommonJourneyEvent event) {
+      BiFunction<JourneyDefinition, String, EventResult> fireEventAction, String eventMnemonic) {
 
     Journey journey = getJourneyFromRequest();
     JourneyDefinition journeyDefinition = getDefinition(journey);
     String previousStageName = journeyDefinition.resolveStageFromHash(journey.getCurrentStageHash()).getInternalName();
 
-    return fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash()).getCompletableResult().thenComposeAsync(transitionResult -> {
+    //Run the parameterised or non-parameterised event, then update the various journey serialisation points (context param/DAO) with new journey info
+    return fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash()).getCompletableResult()
+        .thenComposeAsync(transitionResult -> applyTransitionResult(transitionResult, eventMnemonic, journey, previousStageName),
+            httpExecutionContext.current());
+  }
 
-      applyTransitionResultToJourney(journey, transitionResult);
+  /**
+   * Updates the journey state (back link and journey history string) on the current HttpContext to reflect the given transition.
+   * Also saves the journey using the current serialiser.
+   * @param transitionResult Transition which has just occurred.
+   * @param eventMnemonic For logging.
+   * @param journey The current Journey state.
+   * @param previousStageName For logging.
+   * @return A completable JourneyStage result (i.e. call or render)
+   */
+  private CompletionStage<Result> applyTransitionResult(TransitionResult transitionResult, String eventMnemonic,
+                                                        Journey journey, String previousStageName) {
+    applyTransitionResultToJourney(journey, transitionResult);
 
-      journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
+    journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
-      saveJourney(journey);
+    saveJourney(journey);
 
-      setBackLinkOnContext(journey);
+    setBackLinkOnContext(journey);
 
-      Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
-          journey.getJourneyName(), previousStageName, event.getEventMnemonic(), transitionResult.getNewStage().getInternalName()));
+    Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
+        journey.getJourneyName(), previousStageName, eventMnemonic, transitionResult.getNewStage().getInternalName()));
 
-      return stageAsResult(transitionResult.getNewStage());
-    }, httpExecutionContext.current());
+    return stageAsResult(transitionResult.getNewStage());
   }
 
 
@@ -183,13 +196,13 @@ public class JourneyManager {
 
   public <T extends JourneyEvent> CompletionStage<Result> performTransition(T event) {
 
-    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event), event);
+    return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event), event.getEventMnemonic());
   }
 
   public <T extends ParameterisedJourneyEvent<U>, U> CompletionStage<Result> performTransition(T event, U eventArgument) {
 
     return performTransitionInternal(
-        (journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument), event);
+        (journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument), event.getEventMnemonic());
 
   }
 
