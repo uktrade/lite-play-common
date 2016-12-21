@@ -6,9 +6,11 @@ package components.common.journey;
 class TransitionResult {
 
   private final JourneyStage newStage;
+  private final MoveAction.Direction direction;
 
-  TransitionResult(JourneyStage newStage) {
+  TransitionResult(JourneyStage newStage, MoveAction.Direction direction) {
     this.newStage = newStage;
+    this.direction = direction;
   }
 
   /**
@@ -18,4 +20,7 @@ class TransitionResult {
     return newStage;
   }
 
+  public MoveAction.Direction getDirection() {
+    return direction;
+  }
 }

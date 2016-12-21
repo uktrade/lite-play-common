@@ -86,15 +86,11 @@ public class JourneyDefinition {
     return fireEventInternal(httpExecutionContext, currentStageHash, event, eventArgument);
   }
 
-  private CommonStage resolveMoveAction(CommonStage currentStage, TransitionAction transitionAction,
-                                        CommonJourneyEvent event) {
-
-    if (transitionAction instanceof TransitionAction.MoveStage) {
-      TransitionAction.MoveStage moveStageAction = ((TransitionAction.MoveStage) transitionAction);
-      return moveStageAction.getDestinationStage();
+  private MoveAction asMoveAction(TransitionAction transitionAction) {
+    if (transitionAction instanceof MoveAction) {
+      return ((MoveAction) transitionAction);
     } else {
-      //TODO - handle journey end
-      throw new JourneyException("Unknown action type " + transitionAction.getClass().getName(), currentStage, event);
+      throw new JourneyException("Unknown action type " + transitionAction.getClass().getName());
     }
   }
 
@@ -103,26 +99,27 @@ public class JourneyDefinition {
 
     JourneyStage currentStage = resolveStageFromHash(currentStageHash);
 
-    CommonStage nextStage = doMoveOrBranch(event, eventArgument, currentStage);
+    MoveAction moveAction = doMoveOrBranch(event, eventArgument, currentStage);
+    CommonStage nextStage = moveAction.getDestinationStage();
 
     if (nextStage instanceof JourneyStage) {
       //If the next stage is not a decision, we can return an "immediate" EventResult which does not require async handling
-      return new EventResult(new TransitionResult((JourneyStage) nextStage));
+      return new EventResult(new TransitionResult((JourneyStage) nextStage, moveAction.getDirection()));
     }
     else {
       //For decisions, build up a chain of 1 or more CompletableFutures to make the decisions and return a non-immediate EventResult
-      CompletionStage<TransitionResult> resultCompletionStage = buildDecisionChain(httpExecutionContext, currentStage, nextStage, event)
-          .thenApply(e -> new TransitionResult((JourneyStage) e));
+      CompletionStage<TransitionResult> resultCompletionStage = buildDecisionChain(httpExecutionContext, currentStage, moveAction, event)
+          .thenApply(e -> new TransitionResult((JourneyStage) e.getDestinationStage(), e.getDirection()));
 
       return new EventResult(resultCompletionStage);
     }
   }
 
-  private CompletionStage<CommonStage> buildDecisionChain(HttpExecutionContext httpExecutionContext, JourneyStage initialStage,
-                                                          CommonStage stage, CommonJourneyEvent event) {
+  private CompletionStage<MoveAction> buildDecisionChain(HttpExecutionContext httpExecutionContext, JourneyStage initialStage,
+                                                         MoveAction moveAction, CommonJourneyEvent event) {
 
-    if (stage instanceof DecisionStage) {
-      DecisionStage decisionStage = (DecisionStage) stage;
+    if (moveAction.getDestinationStage() instanceof DecisionStage) {
+      DecisionStage decisionStage = (DecisionStage) moveAction.getDestinationStage();
       DecisionLogic decisionLogic = decisionLogicMap.get(decisionStage);
 
       //Recurse through DecisionStages, building up the chain until a JourneyStage is hit
@@ -132,11 +129,11 @@ public class JourneyDefinition {
 
     } else {
       //End the chain when a JourneyStage is hit
-      return CompletableFuture.completedFuture(stage);
+      return CompletableFuture.completedFuture(moveAction);
     }
   }
 
-  private CommonStage doDecision(DecisionStage stage, DecisionLogic decisionLogic, Object deciderResult) {
+  private MoveAction doDecision(DecisionStage stage, DecisionLogic decisionLogic, Object deciderResult) {
     //Convert raw decision result using the converter function (could just be identity for simple cases)
     Object conversionResult = decisionLogic.getDecisionResultConverter().apply(deciderResult);
     Logger.debug("Journey decision: stage {} - raw result {}, converted to {}", stage.getInternalName(), deciderResult, conversionResult);
@@ -152,13 +149,13 @@ public class JourneyDefinition {
     }
 
     //Find the associated move action for the matched when() clause
-    CommonStage resultStage = resolveMoveAction(stage, transitionAction, null);
-    Logger.debug("Journey decision: resolved next stage {}", resultStage.getInternalName());
+    MoveAction resultMoveAction = asMoveAction(transitionAction);
+    Logger.debug("Journey decision: resolved next stage {}", resultMoveAction.getDestinationStage().getInternalName());
 
-    return resultStage;
+    return resultMoveAction;
   }
 
-  private CommonStage doMoveOrBranch(CommonJourneyEvent event, Object eventArgument, JourneyStage currentStage) {
+  private MoveAction doMoveOrBranch(CommonJourneyEvent event, Object eventArgument, JourneyStage currentStage) {
 
     //TODO validation: transition cannot be a loop
 
@@ -166,8 +163,8 @@ public class JourneyDefinition {
     if (transitionAction == null) {
       throw new JourneyException("No transition available for %s, %s", currentStage, event);
     } else {
-      if (transitionAction instanceof TransitionAction.Branch) {
-        TransitionAction.Branch branch = (TransitionAction.Branch) transitionAction;
+      if (transitionAction instanceof BranchAction) {
+        BranchAction branch = (BranchAction) transitionAction;
 
         Object transitionArgument;
         if (eventArgument != null) {
@@ -194,12 +191,12 @@ public class JourneyDefinition {
         conditionAction = conditionAction == null ? branch.elseTransition : conditionAction;
 
         if (conditionAction != null) {
-          return resolveMoveAction(currentStage, conditionAction, event);
+          return asMoveAction(conditionAction);
         } else {
           throw new JourneyException("Branch not matched with argument " + transitionArgument, currentStage, event);
         }
       } else {
-        return resolveMoveAction(currentStage, transitionAction, event);
+        return asMoveAction(transitionAction);
       }
     }
   }
@@ -219,21 +216,21 @@ public class JourneyDefinition {
     for (Table.Cell<JourneyStage, CommonJourneyEvent, TransitionAction> cell : stageTransitionMap.cellSet()) {
 
       TransitionAction action = cell.getValue();
-      if (action instanceof TransitionAction.Branch) {
+      if (action instanceof BranchAction) {
         //For a branch, create a transition to represent each condition
-        for (Map.Entry<String, TransitionAction> branchOption : ((TransitionAction.Branch) action).resultMap.entrySet()) {
-          CommonStage newStage = resolveMoveAction(cell.getRowKey(), branchOption.getValue(), cell.getColumnKey());
+        for (Map.Entry<String, TransitionAction> branchOption : ((BranchAction) action).resultMap.entrySet()) {
+          CommonStage newStage = asMoveAction(branchOption.getValue()).getDestinationStage();
           allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), branchOption.getKey()));
         }
       } else {
-        CommonStage newStage = resolveMoveAction(cell.getRowKey(), cell.getValue(), cell.getColumnKey());
+        CommonStage newStage = asMoveAction(cell.getValue()).getDestinationStage();
         allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), null));
       }
     }
 
     decisionLogicMap.forEach((stage, decisionLogic) -> {
       decisionLogic.getConditionMap().forEach((conditionValue, action) -> {
-        allTransitions.add(new GraphViewTransition(stage, resolveMoveAction(null, action, null), conditionValue, null));
+        allTransitions.add(new GraphViewTransition(stage, asMoveAction(action).getDestinationStage(), conditionValue, null));
       });
     });
 

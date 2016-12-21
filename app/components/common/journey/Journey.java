@@ -1,6 +1,7 @@
 package components.common.journey;
 
 import org.apache.commons.lang3.StringUtils;
+import play.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -26,8 +27,26 @@ public class Journey {
     return journeyName + JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR +  String.join(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR, historyQueue);
   }
 
-  public void nextStage(String stageHash) {
+  public void pushStage(String stageHash) {
     historyQueue.addLast(stageHash);
+  }
+
+  public void popBackToStage(String targetStageHash) {
+    //Always discard the current stage (in case it's also the target stage)
+    historyQueue.pollLast();
+
+    //Remove stages from the journey until the target is found (note this may deplete the entire journey)
+    String poppedStageHash;
+    do {
+      poppedStageHash = historyQueue.pollLast();
+    } while (poppedStageHash != null && !targetStageHash.equals(poppedStageHash));
+
+    if (historyQueue.isEmpty()) {
+      Logger.warn("Journey pop back to {} depleted the history queue", targetStageHash);
+    }
+
+    //The target stage should now the latest stage in the journey
+    historyQueue.addLast(targetStageHash);
   }
 
   public String getJourneyName() {
@@ -45,7 +64,7 @@ public class Journey {
     }
 
     if (!journeyString.contains(JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR)) {
-      throw new JourneyManagerException("Invalid journey string, missing underscore character");
+      throw new JourneyManagerException("Invalid journey string, missing ~ character");
     } else {
       String[] journeyStringSplit = journeyString.split(JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR, 2);
       String journeyName = journeyStringSplit[0];

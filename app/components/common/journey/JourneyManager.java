@@ -106,7 +106,16 @@ public class JourneyManager {
     return getDefinition(journey.getJourneyName());
   }
 
+  private void applyTransitionResultToJourney(Journey journey, TransitionResult transitionResult) {
 
+    if (transitionResult.getDirection() == MoveAction.Direction.FORWARD) {
+      journey.pushStage(transitionResult.getNewStage().getHash());
+    } else if (transitionResult.getDirection() == MoveAction.Direction.BACKWARD) {
+      journey.popBackToStage(transitionResult.getNewStage().getHash());
+    } else {
+      throw new JourneyManagerException("Unknown move direction");
+    }
+  }
 
   private CompletionStage<Result> performTransitionInternal(
       BiFunction<JourneyDefinition, String, EventResult> fireEventAction, CommonJourneyEvent event) {
@@ -117,7 +126,7 @@ public class JourneyManager {
 
     return fireEventAction.apply(journeyDefinition, journey.getCurrentStageHash()).getCompletableResult().thenComposeAsync(transitionResult -> {
 
-      journey.nextStage(transitionResult.getNewStage().getHash());
+      applyTransitionResultToJourney(journey, transitionResult);
 
       journeyContextParamProvider.updateParamValueOnContext(journey.serialiseToString());
 
@@ -151,7 +160,7 @@ public class JourneyManager {
         String callUri = contextParamManager.addParamsToCall(nextStage.getEntryCall());
 
         //Update the journey context param so it reflects the stage of the journey the user WILL be on when they click it
-        journey.nextStage(nextStage.getHash());
+        applyTransitionResultToJourney(journey, transitionResult);
         callUri = updateJourneyParamOnUri(callUri, journey.serialiseToString());
 
         return callUri;

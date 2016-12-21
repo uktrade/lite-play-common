@@ -2,6 +2,7 @@ package components.common.journey;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import components.common.journey.MoveAction.Direction;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.mvc.Call;
 import play.mvc.Result;
@@ -399,7 +400,7 @@ public abstract class JourneyDefinitionBuilder {
       }
 
       //TODO fix casting issue
-      return new TransitionAction.Branch(transitionArgumentSupplier, (Function<Object, Object>) eventArgumentConverter,
+      return new BranchAction(transitionArgumentSupplier, (Function<Object, Object>) eventArgumentConverter,
           transitionActionMap, elseConditionAction);
     }
   }
@@ -409,7 +410,17 @@ public abstract class JourneyDefinitionBuilder {
     return new TransitionActionBuilder() {
       @Override
       protected TransitionAction build() {
-        return new TransitionAction.MoveStage(stage);
+        return new MoveAction(stage, Direction.FORWARD);
+      }
+    };
+  }
+
+  protected static TransitionActionBuilder backTo(JourneyStage stage) {
+
+    return new TransitionActionBuilder() {
+      @Override
+      protected TransitionAction build() {
+        return new MoveAction(stage, Direction.BACKWARD);
       }
     };
   }
