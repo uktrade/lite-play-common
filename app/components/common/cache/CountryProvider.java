@@ -1,7 +1,7 @@
 package components.common.cache;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import components.common.client.CountryServiceClient;
 import models.common.Country;
 import play.Logger;
@@ -55,5 +55,10 @@ public class CountryProvider {
           Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
         }
       });
+  }
+
+  @VisibleForTesting
+  void setCache(Map<String, Country> cache) {
+    this.cache = cache;
   }
 }
