@@ -1,11 +1,8 @@
 package components.common.client;
 
-import static components.common.client.CountryServiceClient.Status.SUCCESS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static play.mvc.Results.ok;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import models.common.Country;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.junit.After;
 import org.junit.Before;
@@ -19,6 +16,11 @@ import play.routing.RoutingDsl;
 import play.server.Server;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static play.mvc.Results.ok;
 
 public class CountryServiceClientTest {
 
@@ -49,10 +51,12 @@ public class CountryServiceClientTest {
 
   @Test
   public void shouldGetCompanyDetails() throws Exception {
-    CountryServiceClient.CountryServiceResponse response = client.getCountries().toCompletableFuture().get();
+    CompletionStage<List<Country>> completionStage = client.getCountries();
 
-    assertThat(response.getStatus()).isEqualTo(SUCCESS);
-    assertThat(response.getCountries().size()).isEqualTo(18);
+    List<Country> countries = completionStage.toCompletableFuture().get();
+
+    assertThat(countries).isNotEmpty();
+    assertThat(countries.size()).isEqualTo(18);
   }
 
 }
