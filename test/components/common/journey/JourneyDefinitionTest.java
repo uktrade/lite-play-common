@@ -6,6 +6,9 @@ import static components.common.journey.JourneyDefinitionTest.EventEnum.EV3;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import play.libs.concurrent.HttpExecutionContext;
+
+import java.util.concurrent.ExecutionException;
 
 public class JourneyDefinitionTest {
 
@@ -20,6 +23,7 @@ public class JourneyDefinitionTest {
   private final JourneyEvent EVENT_1 = new JourneyEvent("E1");
   private final JourneyEvent EVENT_2 = new JourneyEvent("E2");
   private final JourneyEvent EVENT_3 = new JourneyEvent("E3");
+  private HttpExecutionContext httpExecutionContext = new HttpExecutionContext(Runnable::run);
 
   enum EventEnum {
     EV1, EV2, EV3;
@@ -42,7 +46,7 @@ public class JourneyDefinitionTest {
   }
 
   @Test
-  public void testBasicDefinition() {
+  public void testBasicDefinition() throws ExecutionException, InterruptedException {
 
     class TestBuilder extends BaseStageBuilder {
       @Override
@@ -62,13 +66,13 @@ public class JourneyDefinitionTest {
 
     JourneyDefinition journeyDefinition =  new TestBuilder().buildAll().iterator().next();
 
-    TransitionResult transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), EVENT_1);
+    TransitionResult transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), EVENT_1).getImmediateResult();
 
     assertEquals(STAGE_2, transitionResult.getNewStage());
   }
 
   @Test
-  public void testParamBranchDefinition() {
+  public void testParamBranchDefinition() throws ExecutionException, InterruptedException {
 
     class TestBuilder extends BaseStageBuilder {
       @Override
@@ -86,19 +90,19 @@ public class JourneyDefinitionTest {
 
     JourneyDefinition journeyDefinition = new TestBuilder().buildAll().iterator().next();
 
-    TransitionResult transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1);
+    TransitionResult transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1).getImmediateResult();
     assertEquals(STAGE_2, transitionResult.getNewStage());
 
-    transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV2);
+    transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV2).getImmediateResult();
     assertEquals(STAGE_3, transitionResult.getNewStage());
 
-    transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV3);
+    transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV3).getImmediateResult();
     assertEquals(STAGE_4, transitionResult.getNewStage());
 
   }
 
   @Test
-  public void testParamBranchDefinition_withConverter() {
+  public void testParamBranchDefinition_withConverter() throws ExecutionException, InterruptedException {
 
     class TestBuilder extends BaseStageBuilder {
       @Override
@@ -116,13 +120,13 @@ public class JourneyDefinitionTest {
 
     JourneyDefinition journeyDefinition = new TestBuilder().buildAll().iterator().next();
 
-    TransitionResult transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1);
+    TransitionResult transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1).getImmediateResult();
     assertEquals(STAGE_2, transitionResult.getNewStage());
 
-    transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV2);
+    transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV2).getImmediateResult();
     assertEquals(STAGE_3, transitionResult.getNewStage());
 
-    transitionResult = journeyDefinition.fireEvent(STAGE_1.getHash(), ENUM_PARAM_EVENT, EV3);
+    transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV3).getImmediateResult();
     assertEquals(STAGE_4, transitionResult.getNewStage());
 
   }

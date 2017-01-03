@@ -2,6 +2,7 @@ package components.common.journey;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import components.common.journey.MoveAction.Direction;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.mvc.Call;
 import play.mvc.Result;
@@ -24,6 +25,9 @@ public abstract class JourneyDefinitionBuilder {
   /** Transitions (stage + event) mapped to defined branching/transition logic  */
   private final Table<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> stageTransitionBuilderMap = HashBasedTable.create();
 
+  /** All decision stages and their configured branching logic */
+  private final Map<DecisionStage, DecisionBuilder> decisionBuilders = new HashMap<>();
+
   /** Stage names to registered Stages */
   private final Map<String, JourneyStage> knownStages = new HashMap<>();
 
@@ -39,20 +43,20 @@ public abstract class JourneyDefinitionBuilder {
   protected abstract void journeys();
 
   private static final class JourneyDefinitionOptions {
-    private final JourneyStage startStage;
+    private final CommonStage startStage;
     private final BackLink exitBackLink;
 
-    private JourneyDefinitionOptions(JourneyStage startStage, BackLink exitBackLink) {
+    private JourneyDefinitionOptions(CommonStage startStage, BackLink exitBackLink) {
       this.startStage = startStage;
       this.exitBackLink = exitBackLink;
     }
   }
 
-  protected final void defineJourney(String journeyName, JourneyStage startStage) {
+  protected final void defineJourney(String journeyName, CommonStage startStage) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, null));
   }
 
-  protected final void defineJourney(String journeyName, JourneyStage startStage, BackLink exitBackLink) {
+  protected final void defineJourney(String journeyName, CommonStage startStage, BackLink exitBackLink) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, exitBackLink));
   }
 
@@ -82,6 +86,7 @@ public abstract class JourneyDefinitionBuilder {
 
     Table<JourneyStage, CommonJourneyEvent, TransitionAction> stageTransitionMap = HashBasedTable.create();
 
+    //Build transitions
     for (Table.Cell<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> cell : stageTransitionBuilderMap.cellSet()) {
       ActionBuilderContainer value = cell.getValue();
       if (value == null) {
@@ -92,7 +97,12 @@ public abstract class JourneyDefinitionBuilder {
       stageTransitionMap.put(cell.getRowKey(), cell.getColumnKey(), transitionAction);
     }
 
-    return new JourneyDefinition(journeyName, stageTransitionMap, knownStages, options.startStage, options.exitBackLink);
+    //Build decisions
+    Map<DecisionStage, DecisionLogic> decisionLogicMap = decisionBuilders.entrySet()
+        .stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
+
+    return new JourneyDefinition(journeyName, stageTransitionMap, decisionLogicMap, knownStages, options.startStage, options.exitBackLink);
   }
 
   protected final JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
@@ -128,8 +138,38 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
+  /**
+   * Defines a decision stage where the result of a Decider is used directly as the decision argument.
+   * @param name Internal name of the stage, for use in logging and debugging. e.g. "hasSoftwareControls".
+   * @param decider Decider which produces the argument value to be used when making the decision.
+   * @param <T> Type produced by the decider, for use in branching logic. Requires a comparable toString value.
+   * @return New DecisionStage.
+   */
+  protected final <T> DecisionStage<T> defineDecisionStage(String name, Decider<T> decider) {
+    return new DecisionStage<>(name, decider, Function.identity());
+  }
+
+  /**
+   * Defines a decision stage with a converter, which takes the result of the Decider and converts it to a different
+   * type. This means Deciders can be generic and individual decision stages can specialise their decision handling
+   * as appropriate.
+   * @param name Internal name of the stage, for use in logging and debugging. e.g. "hasSoftwareControls".
+   * @param decider Decider which is used to produce an initial result object.
+   * @param converter Function to convert the decider's result into another result type.
+   * @param <T> Type produced by the Decider.
+   * @param <U> Type produced by the converter, for use in branching logic. Requires a comparable toString value.
+   * @return New DecisionStage.
+   */
+  protected final <T, U> DecisionStage<U> defineDecisionStage(String name, Decider<T> decider, Function<T, U> converter) {
+    return new DecisionStage<>(name, decider, converter);
+  }
+
   protected final StageBuilder atStage(JourneyStage stage) {
     return new StageBuilder(stage);
+  }
+
+  protected final <T> DecisionBuilder<T> atDecisionStage(DecisionStage<T> stage) {
+    return new DecisionBuilder<>(stage);
   }
 
   protected final class StageBuilder {
@@ -174,6 +214,61 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
+
+  protected final class DecisionBuilder<T> {
+
+    private final DecisionStage<T> stage;
+    private final DecisionBranchBuilder<T> branchBuilder = new DecisionBranchBuilder<>();
+
+    private DecisionBuilder(DecisionStage<T> stage) {
+      this.stage = stage;
+
+      if (decisionBuilders.containsKey(stage)) {
+        throw new JourneyDefinitionException(String.format("Decision for %s has already been defined", stage));
+      }
+      else {
+        decisionBuilders.put(stage, this);
+      }
+    }
+
+    public DecisionBranchBuilder<T> decide() {
+      return branchBuilder;
+    }
+
+    public DecisionLogic build() {
+      Map<String, TransitionAction> transitionActionMap = branchBuilder.conditionMap.entrySet()
+          .stream()
+          .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
+
+      TransitionAction elseCondition = null;
+      if (branchBuilder.elseCondition != null) {
+        elseCondition = branchBuilder.elseCondition.build();
+      }
+      return new DecisionLogic(stage.getDecider(), stage.getConverter(), transitionActionMap, elseCondition);
+    }
+  }
+
+  protected final class DecisionBranchBuilder<T> {
+
+    private final Map<String, TransitionActionBuilder> conditionMap = new HashMap<>();
+    private TransitionActionBuilder elseCondition = null;
+
+    public DecisionBranchBuilder<T> when(T criterionValue, TransitionActionBuilder actionBuilder) {
+      conditionMap.merge(criterionValue.toString(), actionBuilder,
+          (k,v) -> {throw new JourneyDefinitionException(String.format("Action for branch value %s already defined", criterionValue));});
+
+      return this;
+    }
+
+    public void otherwise(TransitionActionBuilder actionBuilder) {
+      if (elseCondition != null) {
+        throw new JourneyDefinitionException("otherwise() already defined for this decision branch");
+      }
+      else {
+        elseCondition = actionBuilder;
+      }
+    }
+  }
 
   protected static abstract class ActionBuilderContainer {
 
@@ -295,7 +390,9 @@ public abstract class JourneyDefinitionBuilder {
     }
 
     private TransitionAction build() {
-      Map<String, TransitionAction> transitionActionMap = conditionMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
+      Map<String, TransitionAction> transitionActionMap = conditionMap.entrySet()
+          .stream()
+          .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
 
       TransitionAction elseConditionAction = null;
       if (elseCondition != null) {
@@ -303,16 +400,27 @@ public abstract class JourneyDefinitionBuilder {
       }
 
       //TODO fix casting issue
-      return new TransitionAction.Branch(transitionArgumentSupplier, (Function<Object, Object>) eventArgumentConverter, transitionActionMap, elseConditionAction);
+      return new BranchAction(transitionArgumentSupplier, (Function<Object, Object>) eventArgumentConverter,
+          transitionActionMap, elseConditionAction);
     }
   }
 
-  protected static TransitionActionBuilder moveTo(JourneyStage stage) {
+  protected static TransitionActionBuilder moveTo(CommonStage stage) {
 
     return new TransitionActionBuilder() {
       @Override
       protected TransitionAction build() {
-        return new TransitionAction.MoveStage(stage);
+        return new MoveAction(stage, Direction.FORWARD);
+      }
+    };
+  }
+
+  protected static TransitionActionBuilder backTo(JourneyStage stage) {
+
+    return new TransitionActionBuilder() {
+      @Override
+      protected TransitionAction build() {
+        return new MoveAction(stage, Direction.BACKWARD);
       }
     };
   }
