@@ -67,8 +67,10 @@ public class JourneyDefinitionTest {
     JourneyDefinition journeyDefinition =  new TestBuilder().buildAll().iterator().next();
 
     TransitionResult transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_1.getHash(), EVENT_1).getImmediateResult();
-
     assertEquals(STAGE_2, transitionResult.getNewStage());
+
+    transitionResult = journeyDefinition.fireEvent(httpExecutionContext, STAGE_2.getHash(), EVENT_2).getImmediateResult();
+    assertEquals(STAGE_3, transitionResult.getNewStage());
   }
 
   @Test

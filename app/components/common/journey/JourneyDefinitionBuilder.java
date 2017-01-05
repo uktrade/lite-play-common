@@ -8,12 +8,16 @@ import play.mvc.Call;
 import play.mvc.Result;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Builder for defining one or more Journeys. Consumers should extend this class and implement the {@link #journeys} method
@@ -29,7 +33,7 @@ public abstract class JourneyDefinitionBuilder {
   private final Map<DecisionStage, DecisionBuilder> decisionBuilders = new HashMap<>();
 
   /** Stage names to registered Stages */
-  private final Map<String, JourneyStage> knownStages = new HashMap<>();
+  private final Map<String, CommonStage> knownStages = new HashMap<>();
 
   /** Names to start stages/back links */
   private final Map<String, JourneyDefinitionOptions> definedJourneys = new HashMap<>();
@@ -52,15 +56,31 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
+  /**
+   * Defines a journey which will be created by this Builder. All the transitions defined in the Builder will be available,
+   * but the journey will start on the given stage. Using this signature, the first stage of the journey will not have a
+   * back link.
+   * @param journeyName Name of the journey (use a String constant).
+   * @param startStage Stage which the journey will start on.
+   */
   protected final void defineJourney(String journeyName, CommonStage startStage) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, null));
   }
 
+  /**
+   * Defines a journey which will be created by this Builder. All the transitions defined in the Builder will be available,
+   * but the journey will start on the given stage. The user will be able to exit the journey using the given BackLink.
+   * @param journeyName Name of the journey (use a String constant).
+   * @param startStage Stage which the journey will start on.
+   * @param exitBackLink BackLink which will be presented to the user on the initial stage of the journey.
+   */
   protected final void defineJourney(String journeyName, CommonStage startStage, BackLink exitBackLink) {
     defineJourney(journeyName, new JourneyDefinitionOptions(startStage, exitBackLink));
   }
 
   private void defineJourney(String journeyName, JourneyDefinitionOptions journeyDefinitionOptions) {
+    assertStageKnown(journeyDefinitionOptions.startStage);
+
     definedJourneys.merge(journeyName, journeyDefinitionOptions, (a, b) -> {
       throw new JourneyDefinitionException("Journey " + journeyName + " is already defined in this Builder");
     });
@@ -90,7 +110,8 @@ public abstract class JourneyDefinitionBuilder {
     for (Table.Cell<JourneyStage, CommonJourneyEvent, ActionBuilderContainer> cell : stageTransitionBuilderMap.cellSet()) {
       ActionBuilderContainer value = cell.getValue();
       if (value == null) {
-        throw new JourneyDefinitionException(String.format("Null ActionBuilderContainer found in table row %s column %s", cell.getRowKey(), cell.getColumnKey()));
+        throw new JourneyDefinitionException(String.format("Null ActionBuilderContainer found in table row %s column %s",
+            cell.getRowKey(), cell.getColumnKey()));
       }
 
       TransitionAction transitionAction = value.build();
@@ -102,29 +123,112 @@ public abstract class JourneyDefinitionBuilder {
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
 
-    return new JourneyDefinition(journeyName, stageTransitionMap, decisionLogicMap, knownStages, options.startStage, options.exitBackLink);
+    //Validate that all stages referenced by transition actions are registered
+    validateStages(stageTransitionMap.values(), decisionLogicMap.values());
+
+    //Filter out decision stages to create a map of stage hashes to JourneyStages
+    Map<String, JourneyStage> knownJourneyStages = knownStages.values().stream()
+        .filter(e -> e instanceof JourneyStage)
+        .map(e -> (JourneyStage) e)
+        .collect(Collectors.toMap(JourneyStage::getHash, Function.identity(), (a, b) -> {
+          throw new JourneyDefinitionException(String.format("Hash collision caused by stages %s and %s ",
+              a.getInternalName(), b.getInternalName()));
+        }));
+
+    return new JourneyDefinition(journeyName, stageTransitionMap, decisionLogicMap, knownJourneyStages,
+        options.startStage, options.exitBackLink);
   }
 
+  /**
+   * Validates that all TransitionActions in the JourneyDefinition about to be built are registered on this Builder.
+   */
+  private void validateStages(Collection<TransitionAction> standardTransitionActions, Collection<DecisionLogic> decisions) {
+    // Flatten TransitionActions (moves/branches) into their ultimate destination stages. These may come from standard
+    // transitions, or the branch map/else condition of decision stages. Concat the 3 sources together so only one stream
+    // needs to be searched.
+    Set<CommonStage> unregisteredStages = Stream.of(
+          stagesFromActions(standardTransitionActions).stream(),
+          decisions.stream().flatMap(e -> stagesFromActions(e.getConditionMap().values()).stream()),
+          decisions.stream()
+              .filter(e -> e.getElseCondition() != null)
+              .flatMap(e -> stagesFromActions(Collections.singleton(e.getElseCondition())).stream())
+        )
+        .flatMap(Function.identity())
+        .filter(e -> !knownStages.containsKey(e.getInternalName()))
+        .collect(Collectors.toSet());
+
+    if (unregisteredStages.size() > 0) {
+      String unregistered = unregisteredStages.stream()
+          .map(CommonStage::getInternalName)
+          .sorted()
+          .collect(Collectors.joining(", "));
+
+      throw new JourneyDefinitionException("Stages are not registered: " + unregistered);
+    }
+  }
+
+  /**
+   * Extracts the destination stages from the given actions. For BranchActions, the destinations are taken from the branch
+   * map or else conditions. For MoveActions the destination is taken directly. This method is called recursively as
+   * BranchActions contain MoveActions.
+   * @param actions TransitionAction to extract stages from.
+   * @return Stages which the TransitionActions eventually resolve to.
+   */
+  private static Collection<CommonStage> stagesFromActions(Collection<TransitionAction> actions) {
+    Collection<CommonStage> stages = new HashSet<>();
+    for (TransitionAction action : actions) {
+      if (action instanceof BranchAction) {
+        BranchAction branchAction = ((BranchAction) action);
+        stages.addAll(stagesFromActions(branchAction.resultMap.values()));
+        if (branchAction.elseTransition != null) {
+          stages.addAll(stagesFromActions(Collections.singleton(branchAction.elseTransition)));
+        }
+      } else if (action instanceof MoveAction) {
+        stages.add(((MoveAction) action).getDestinationStage());
+      } else {
+        throw new JourneyDefinitionException("Unknown TransitionAction type");
+      }
+    }
+    return stages;
+  }
+
+  /**
+   * Defines a stage for this journey which will perform arbitrary processing to generate a <tt>Result</tt> to send to the user.
+   * Typically this will be a call to a controller's render method. Only use this signature if it is not possible to
+   * provide a direct route to the desired form using a <tt>Call</tt> - this is preferred as it allows stages to be linked
+   * to directly.
+   * @param name Internal stage name, for debugging and logging.
+   * @param displayName Name displayed to the user on a BackLink.
+   * @param formRenderSupplier Supplier which can produce a Play Result.
+   * @return A new Stage. This object must be used when defining transitions.
+   */
   protected final JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
     return defineStage(name, displayName, null, formRenderSupplier);
   }
 
+  /**
+   * Defines a stage for this journey using a <tt>Call</tt> which the user is redirected to. This is the preferred way to
+   * define a stage.
+   * @param name Internal stage name, for debugging and logging.
+   * @param displayName Name displayed to the user on a BackLink.
+   * @param call Call which will render the stage.
+   * @return A new Stage. This object must be used when defining transitions.
+   */
   protected final JourneyStage defineStage(String name, String displayName, Call call) {
     return defineStage(name, displayName, call, null);
   }
 
   private JourneyStage defineStage(String name, String displayName, Call call,
                                    Supplier<CompletionStage<Result>> formRenderSupplier) {
-
     if (!(call != null ^ formRenderSupplier != null)) {
       throw new IllegalArgumentException("Call and formRendererSupplier are mutually exclusive arguments");
     }
 
-    String hash = DigestUtils.sha1Hex(name).substring(0, 5);
-
-    if (knownStages.containsKey(hash)) {
-      throw new JourneyDefinitionException(String.format("Stage %s is already registered (or a hash collision occurred)", name));
+    if (knownStages.containsKey(name)) {
+      throw new JourneyDefinitionException(String.format("Stage named %s is already registered", name));
     } else {
+      String hash = DigestUtils.sha1Hex(name).substring(0, 5);
+
       JourneyStage journeyStage;
       if (call != null) {
         journeyStage = new CallableJourneyStage(hash, name, displayName, call);
@@ -132,7 +236,7 @@ public abstract class JourneyDefinitionBuilder {
         journeyStage = new RenderedJourneyStage(hash, name, displayName, formRenderSupplier);
       }
 
-      knownStages.put(hash, journeyStage);
+      knownStages.put(name, journeyStage);
 
       return journeyStage;
     }
@@ -146,7 +250,7 @@ public abstract class JourneyDefinitionBuilder {
    * @return New DecisionStage.
    */
   protected final <T> DecisionStage<T> defineDecisionStage(String name, Decider<T> decider) {
-    return new DecisionStage<>(name, decider, Function.identity());
+    return defineDecisionStage(name, decider, Function.identity());
   }
 
   /**
@@ -161,15 +265,38 @@ public abstract class JourneyDefinitionBuilder {
    * @return New DecisionStage.
    */
   protected final <T, U> DecisionStage<U> defineDecisionStage(String name, Decider<T> decider, Function<T, U> converter) {
-    return new DecisionStage<>(name, decider, converter);
+    DecisionStage<U> decisionStage = new DecisionStage<>(name, decider, converter);
+
+    knownStages.merge(name, decisionStage,
+        (a, b) -> { throw new JourneyDefinitionException("Duplicate definition of decision stage with name " + name); });
+
+    return decisionStage;
   }
 
+  /**
+   * Initial step of a fluent interface chain. Starts defining a transition for the given stage.
+   * @param stage Must be registered on this Builder.
+   * @return Fluent interface step.
+   */
   protected final StageBuilder atStage(JourneyStage stage) {
+    assertStageKnown(stage);
     return new StageBuilder(stage);
   }
 
+  /**
+   * Initial step of a fluent interface chain. Starts defining a transition for the given decision stage.
+   * @param stage Must be registered on this Builder.
+   * @return Fluent interface step.
+   */
   protected final <T> DecisionBuilder<T> atDecisionStage(DecisionStage<T> stage) {
+    assertStageKnown(stage);
     return new DecisionBuilder<>(stage);
+  }
+
+  private void assertStageKnown(CommonStage stage) {
+    if (!knownStages.containsKey(stage.getInternalName())) {
+      throw new JourneyDefinitionException("Unknown stage " + stage.getInternalName());
+    }
   }
 
   protected final class StageBuilder {
@@ -189,6 +316,11 @@ public abstract class JourneyDefinitionBuilder {
       }
     }
 
+    /**
+     * Intermediate fluent interface step. Specifies the JourneyEvent to define an action for.
+     * @param event Any JourneyEvent.
+     * @return Fluent interface step.
+     */
     public NoParamEventBuilder onEvent(JourneyEvent event) {
 
       this.event = event;
@@ -198,15 +330,14 @@ public abstract class JourneyDefinitionBuilder {
       return eventBuilder;
     }
 
+    /**
+     * Intermediate fluent interface step. Specifies the ParameterisedJourneyEvent to define an action for.
+     * @param event Any ParameterisedJourneyEvent.
+     * @return Fluent interface step.
+     */
     public <T> ParamEventBuilder<T> onEvent(ParameterisedJourneyEvent<T> event) {
 
       this.event = event;
-
-      if (!event.getParamType().isAssignableFrom(String.class) && event.getParamType().isAssignableFrom(Number.class) &&
-          !event.getParamType().isAssignableFrom(Enum.class) && !event.getParamType().isAssignableFrom(Boolean.class)) {
-        throw new JourneyDefinitionException("Parameter type must be an Enum, String, Number or Boolean for event " +
-            event);
-      }
 
       ParamEventBuilder<T> eventBuilder = new ParamEventBuilder<>(this);
       addIfNotDefined(stage, event, eventBuilder);
@@ -225,18 +356,22 @@ public abstract class JourneyDefinitionBuilder {
 
       if (decisionBuilders.containsKey(stage)) {
         throw new JourneyDefinitionException(String.format("Decision for %s has already been defined", stage));
-      }
-      else {
+      } else {
         decisionBuilders.put(stage, this);
       }
     }
 
+    /**
+     * Intermediate fluent interface step. Starts defining the branches for a decision value produced by the current
+     * DecisionStage's Decider.
+     * @return Fluent interface step.
+     */
     public DecisionBranchBuilder<T> decide() {
       return branchBuilder;
     }
 
-    public DecisionLogic build() {
-      Map<String, TransitionAction> transitionActionMap = branchBuilder.conditionMap.entrySet()
+    private DecisionLogic build() {
+      Map<Object, TransitionAction> transitionActionMap = branchBuilder.conditionMap.entrySet()
           .stream()
           .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
 
@@ -250,16 +385,27 @@ public abstract class JourneyDefinitionBuilder {
 
   protected final class DecisionBranchBuilder<T> {
 
-    private final Map<String, TransitionActionBuilder> conditionMap = new HashMap<>();
+    private final Map<Object, TransitionActionBuilder> conditionMap = new HashMap<>();
     private TransitionActionBuilder elseCondition = null;
 
+    /**
+     * Defines a journey branch for a certain value produced by a Decider.
+     * @param criterionValue Value to match on (using Object.equals)
+     * @param actionBuilder Action to undertake (e.g. <tt>moveTo(nextStage)</tt>)
+     * @return Self-reference for method chaining.
+     */
     public DecisionBranchBuilder<T> when(T criterionValue, TransitionActionBuilder actionBuilder) {
-      conditionMap.merge(criterionValue.toString(), actionBuilder,
+      conditionMap.merge(criterionValue, actionBuilder,
           (k,v) -> {throw new JourneyDefinitionException(String.format("Action for branch value %s already defined", criterionValue));});
 
       return this;
     }
 
+    /**
+     * Defines a catch-all branch in case no other <tt>when()</tt> conditions were matched. This is a terminal step of
+     * a decision definition.
+     * @param actionBuilder Action to undertake (e.g. <tt>moveTo(nextStage)</tt>)
+     */
     public void otherwise(TransitionActionBuilder actionBuilder) {
       if (elseCondition != null) {
         throw new JourneyDefinitionException("otherwise() already defined for this decision branch");
@@ -274,12 +420,17 @@ public abstract class JourneyDefinitionBuilder {
 
     private final StageBuilder owningStageBuilder;
 
-    protected TransitionActionBuilder transitionActionBuilder = null; //could be 2 mutually exclusive fields
+    protected TransitionActionBuilder transitionActionBuilder = null;
 
     protected ActionBuilderContainer(StageBuilder owningStageBuilder) {
       this.owningStageBuilder = owningStageBuilder;
     }
 
+    /**
+     * Terminal fluent interface step. Specifies an unconditional action which should always be performed for the
+     * current event.
+     * @param transitionActionBuilder Action to undertake (e.g. <tt>moveTo(nextStage)</tt>)
+     */
     public void then(TransitionActionBuilder transitionActionBuilder) {
       this.transitionActionBuilder = transitionActionBuilder;
     }
@@ -295,7 +446,7 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
-  private static class BranchActionBuilder extends TransitionActionBuilder {
+  private static class BranchActionBuilder implements TransitionActionBuilder {
 
     private final BranchBuilder<?, ?> branchBuilder;
 
@@ -304,7 +455,7 @@ public abstract class JourneyDefinitionBuilder {
     }
 
     @Override
-    protected TransitionAction build() {
+    public TransitionAction build() {
       return branchBuilder.build();
     }
   }
@@ -314,14 +465,7 @@ public abstract class JourneyDefinitionBuilder {
     public NoParamEventBuilder(StageBuilder owningStageBuilder) {
       super(owningStageBuilder);
     }
-
-    public <T> BranchBuilder<T, T> branchWith(Supplier<T> paramSupplier) {
-      BranchBuilder<T, T> branchBuilder = new BranchBuilder<>(paramSupplier);
-      transitionActionBuilder = new BranchActionBuilder(branchBuilder);
-      return branchBuilder;
-    }
   }
-
 
   protected static final class ParamEventBuilder<T> extends ActionBuilderContainer {
 
@@ -329,12 +473,22 @@ public abstract class JourneyDefinitionBuilder {
       super(owningStageBuilder);
     }
 
+    /**
+     * Intermediate fluent interface step. Starts defining branching logic based on the value of the current event's parameter.
+     * @return Fluent interface step.
+     */
     public BranchBuilder<T, T> branch() {
       BranchBuilder<T, T> branchBuilder = new BranchBuilder<>(Function.identity());
       transitionActionBuilder = new BranchActionBuilder(branchBuilder);
       return branchBuilder;
     }
 
+    /**
+     * Intermediate fluent interface step. Starts defining branching logic based on the converted value of an event parameter.
+     * @param paramConverter Function for converting the event parameter to a different value (e.g. convert an enum to a
+     *                       boolean for brevity).
+     * @return Fluent interface step.
+     */
     public <U> BranchBuilder<T, U> branchWith(Function<T, U> paramConverter) {
       BranchBuilder<T, U> branchBuilder = new BranchBuilder<>(paramConverter);
       transitionActionBuilder = new BranchActionBuilder(branchBuilder);
@@ -342,10 +496,9 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
-  private static abstract class TransitionActionBuilder {
-    protected abstract TransitionAction build();
+  private interface TransitionActionBuilder {
+    TransitionAction build();
   }
-
 
   /**
    * @param <E> Event argument type
@@ -355,7 +508,7 @@ public abstract class JourneyDefinitionBuilder {
 
     private final Function<E, T> eventArgumentConverter;
     private final Supplier<T> transitionArgumentSupplier;
-    private final Map<String, TransitionActionBuilder> conditionMap = new HashMap<>();
+    private final Map<Object, TransitionActionBuilder> conditionMap = new HashMap<>();
     private TransitionActionBuilder elseCondition = null;
 
     public BranchBuilder(Function<E, T> eventArgumentConverter) {
@@ -368,20 +521,29 @@ public abstract class JourneyDefinitionBuilder {
       this.transitionArgumentSupplier = paramProvider;
     }
 
+    /**
+     * Defines a journey branch for a certain event parameter value.
+     * @param criterionValue Value to match on (using Object.equals).
+     * @param actionBuilder Action to undertake (e.g. <tt>moveTo(nextStage)</tt>)
+     * @return Self-reference for method chaining.
+     */
     public BranchBuilder<E, T> when(T criterionValue, TransitionActionBuilder actionBuilder) {
 
-      if (!conditionMap.containsKey(criterionValue.toString())) {
-        conditionMap.put(criterionValue.toString(), actionBuilder);
+      if (!conditionMap.containsKey(criterionValue)) {
+        conditionMap.put(criterionValue, actionBuilder);
       } else {
-        //TODO more contextual error message
-        throw new JourneyDefinitionException("Duplicate branch condition value: " + criterionValue.toString());
+        throw new JourneyDefinitionException("Duplicate branch condition value: " + criterionValue);
       }
 
       return this;
     }
 
+    /**
+     * Defines a catch-all branch in case no other <tt>when()</tt> conditions were matched. This is a terminal step of
+     * a decision definition.
+     * @param actionBuilder Action to undertake (e.g. <tt>moveTo(nextStage)</tt>)
+     */
     public void otherwise(TransitionActionBuilder actionBuilder) {
-
       if (elseCondition == null) {
         elseCondition = actionBuilder;
       } else {
@@ -390,7 +552,7 @@ public abstract class JourneyDefinitionBuilder {
     }
 
     private TransitionAction build() {
-      Map<String, TransitionAction> transitionActionMap = conditionMap.entrySet()
+      Map<Object, TransitionAction> transitionActionMap = conditionMap.entrySet()
           .stream()
           .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
 
@@ -399,29 +561,29 @@ public abstract class JourneyDefinitionBuilder {
         elseConditionAction = elseCondition.build();
       }
 
-      //TODO fix casting issue
-      return new BranchAction(transitionArgumentSupplier, (Function<Object, Object>) eventArgumentConverter,
-          transitionActionMap, elseConditionAction);
+      //Do a safe cast from <T, U> to <Object, Object>
+      @SuppressWarnings("unchecked")
+      Function<Object, Object> upcastConverter = (Function<Object, Object>) this.eventArgumentConverter;
+
+      return new BranchAction(transitionArgumentSupplier, upcastConverter, transitionActionMap, elseConditionAction);
     }
   }
 
+  /**
+   * Defines an action which moves the user forward to the given stage.
+   * @param stage Stage to go to.
+   * @return Fluent interface chain component which should be passed to a transition definition method.
+   */
   protected static TransitionActionBuilder moveTo(CommonStage stage) {
-
-    return new TransitionActionBuilder() {
-      @Override
-      protected TransitionAction build() {
-        return new MoveAction(stage, Direction.FORWARD);
-      }
-    };
+    return () -> new MoveAction(stage, Direction.FORWARD);
   }
 
+  /**
+   * Defines an action which moves the user backwards (i.e. pops history) to the given stage.
+   * @param stage Stage to go back to.
+   * @return Fluent interface chain component which should be passed to a transition definition method.
+   */
   protected static TransitionActionBuilder backTo(JourneyStage stage) {
-
-    return new TransitionActionBuilder() {
-      @Override
-      protected TransitionAction build() {
-        return new MoveAction(stage, Direction.BACKWARD);
-      }
-    };
+    return () -> new MoveAction(stage, Direction.BACKWARD);
   }
 }

@@ -10,10 +10,10 @@ class DecisionLogic {
 
   private final Decider<Object> decider;
   private final Function<Object, Object> decisionResultConverter;
-  private final Map<String, TransitionAction> conditionMap;
+  private final Map<Object, TransitionAction> conditionMap;
   private final TransitionAction elseCondition;
 
-  public DecisionLogic(Decider<?> decider, Function<?, ?> decisionResultConverter, Map<String, TransitionAction> conditionMap,
+  public DecisionLogic(Decider<?> decider, Function<?, ?> decisionResultConverter, Map<Object, TransitionAction> conditionMap,
                        TransitionAction elseCondition) {
     this.decider = (Decider<Object>) decider;
     this.decisionResultConverter = (Function<Object, Object>) decisionResultConverter;
@@ -29,7 +29,7 @@ class DecisionLogic {
     return decisionResultConverter;
   }
 
-  public Map<String, TransitionAction> getConditionMap() {
+  public Map<Object, TransitionAction> getConditionMap() {
     return conditionMap;
   }
 

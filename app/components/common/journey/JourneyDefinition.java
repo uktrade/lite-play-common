@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 
 /**
  * EVENT argument = argument provided when an event fires
@@ -41,21 +39,6 @@ public class JourneyDefinition {
     this.registeredStages = registeredStages;
     this.startStage = startStage;
     this.exitBackLink = exitBackLink;
-
-    //Validate that all stages referenced by transitions are registered
-    Set<JourneyStage> unregisteredStages = stageTransitionMap.rowKeySet()
-        .stream()
-        .filter(e -> !registeredStages.containsKey(e.getHash()))
-        .collect(Collectors.toSet());
-
-    //TODO check destination stages are also registered
-    if (unregisteredStages.size() > 0) {
-      String unregistered = unregisteredStages.stream()
-          .map(JourneyStage::getInternalName)
-          .collect(Collectors.joining(", "));
-
-      throw new JourneyException("Stages are not registered: " + unregistered);
-    }
   }
 
   public String getJourneyName() {
@@ -114,8 +97,7 @@ public class JourneyDefinition {
     if (nextStage instanceof JourneyStage) {
       //If the next stage is not a decision, we can return an "immediate" EventResult which does not require async handling
       return new EventResult(new TransitionResult((JourneyStage) nextStage, moveAction.getDirection()));
-    }
-    else {
+    } else {
       //For decisions, build up a chain of 1 or more CompletableFutures to make the decisions and return a non-immediate EventResult
       CompletionStage<TransitionResult> resultCompletionStage = buildDecisionChain(httpExecutionContext, moveAction)
           .thenApply(e -> new TransitionResult((JourneyStage) e.getDestinationStage(), e.getDirection()));
@@ -147,7 +129,7 @@ public class JourneyDefinition {
     Logger.debug("Journey decision: stage {} - raw result {}, converted to {}", stage.getInternalName(), deciderResult, conversionResult);
 
     //Find then when() clause which matches the decider result value
-    TransitionAction transitionAction = decisionLogic.getConditionMap().get(conversionResult.toString());
+    TransitionAction transitionAction = decisionLogic.getConditionMap().get(conversionResult);
     if (transitionAction == null) {
       if (decisionLogic.getElseCondition() != null) {
         transitionAction = decisionLogic.getElseCondition();
@@ -189,12 +171,11 @@ public class JourneyDefinition {
           transitionArgument = branch.transitionArgumentSupplier.get();
         }
 
-        //TODO may not be needed?
         if (transitionArgument == null) {
           throw new JourneyException("Transition argument cannot be null", currentStage, event);
         }
 
-        TransitionAction conditionAction = branch.resultMap.get(transitionArgument.toString());
+        TransitionAction conditionAction = branch.resultMap.get(transitionArgument);
 
         conditionAction = conditionAction == null ? branch.elseTransition : conditionAction;
 
@@ -226,9 +207,9 @@ public class JourneyDefinition {
       TransitionAction action = cell.getValue();
       if (action instanceof BranchAction) {
         //For a branch, create a transition to represent each condition
-        for (Map.Entry<String, TransitionAction> branchOption : ((BranchAction) action).resultMap.entrySet()) {
+        for (Map.Entry<Object, TransitionAction> branchOption : ((BranchAction) action).resultMap.entrySet()) {
           CommonStage newStage = asMoveAction(branchOption.getValue()).getDestinationStage();
-          allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), branchOption.getKey()));
+          allTransitions.add(new GraphViewTransition(cell.getRowKey(), newStage, cell.getColumnKey().getEventMnemonic(), branchOption.getKey().toString()));
         }
       } else {
         CommonStage newStage = asMoveAction(cell.getValue()).getDestinationStage();
@@ -238,7 +219,7 @@ public class JourneyDefinition {
 
     decisionLogicMap.forEach((stage, decisionLogic) -> {
       decisionLogic.getConditionMap().forEach((conditionValue, action) -> {
-        allTransitions.add(new GraphViewTransition(stage, asMoveAction(action).getDestinationStage(), conditionValue, null));
+        allTransitions.add(new GraphViewTransition(stage, asMoveAction(action).getDestinationStage(), conditionValue.toString(), null));
       });
     });
 

@@ -170,7 +170,7 @@ atStage(categoryPlantsAnimals)
 ```
 
 Enumerate your branch conditions by chaining `when()` method calls together. The event argument is compared to the first
-argument of the `when()` method using `Object.equals()` - the first matching condition is invoked.
+argument of the `when()` method using `Object.equals()`.
 
 It is recommended that you use an `Enum` as the parameter type for your `ParamterisedJourneyEvent`s, as this keeps the code
 cleaner and means the `JourneyDefinitionBuilder` can assert that all branch cases are accounted for.
@@ -195,7 +195,8 @@ The lambda passed to `branchWith()` should be a pure function with no side-effec
 ### Defining decision transitions
 
 Use `atDecisionStage()` to define the outcome of a decision stage, based on the result from a `Decider` (which may have
-been converted by a converter function). This uses the same `when()`/`otherwise()` syntax as event branching.
+been converted by a converter function). This uses the same `when()`/`otherwise()` syntax as event branching. Values are
+compared using `Object.equals()`.
 
 ``` java
 atDecisionStage(decontrolsDecision)
@@ -224,7 +225,7 @@ More complex logic which requires additional lookups etc should be done in a `De
 
 ### Example Controller use
 
-The following example demonstrates how `JourneyManager` being used to determine the next controller in the journey after
+The following example demonstrates the `JourneyManager` being used to determine the next controller in the journey after
 the incoming form has been successfully validated.
 
 ``` java 

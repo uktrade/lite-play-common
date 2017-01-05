@@ -9,11 +9,11 @@ final class BranchAction implements TransitionAction {
   final Supplier<?> transitionArgumentSupplier;
   final Function<Object, ?> eventArgumentConverter;
 
-  final Map<String, TransitionAction> resultMap;
+  final Map<Object, TransitionAction> resultMap;
   final TransitionAction elseTransition;
 
-  BranchAction(Supplier<?> transitionArgumentSupplier, Function<? super Object, ?> eventArgumentConverter, Map<String,
-      TransitionAction> resultMap, TransitionAction elseTransition) {
+  BranchAction(Supplier<?> transitionArgumentSupplier, Function<? super Object, ?> eventArgumentConverter,
+               Map<Object, TransitionAction> resultMap, TransitionAction elseTransition) {
     this.transitionArgumentSupplier = transitionArgumentSupplier;
     this.eventArgumentConverter = eventArgumentConverter;
     this.resultMap = resultMap;
