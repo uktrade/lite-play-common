@@ -12,9 +12,7 @@ import play.i18n.Messages;
 import play.mvc.Call;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,7 +35,7 @@ public class ViewUtil {
    * @return Null, if no validation conditions for the field or some JSON describing the validation required
    */
   public static String fieldValidationJSON(Form.Field field) {
-    List<String> fieldValidation = new ArrayList<>();
+    Map<String, Object> fieldValidation = new HashMap<>();
 
     try {
       // Reflect through field.form.backedType to get the original Java form class
@@ -51,143 +49,59 @@ public class ViewUtil {
             // For the various annotation classes that could be applied to the field for validation populate a map with information describing the validation condition
             Constraints.Required required = f.getAnnotation(Constraints.Required.class);
             if (required != null) {
-              fieldValidation.add(getRequiredValidationJSON(Messages.get(required.message())));
+              fieldValidation.putAll(ValidationUtil.getRequiredValidationMap(Messages.get(required.message())));
             }
 
             Constraints.Email email = f.getAnnotation(Constraints.Email.class);
             if (email != null) {
-              fieldValidation.add(getEmailValidationJSON(Messages.get(email.message())));
+              fieldValidation.putAll(ValidationUtil.getEmailValidationMap(Messages.get(email.message())));
             }
 
             Constraints.Pattern pattern = f.getAnnotation(Constraints.Pattern.class);
             if (pattern != null) {
-              fieldValidation.add(getPatternValidationJSON(Messages.get(pattern.message())));
+              fieldValidation.putAll(ValidationUtil.getPatternValidationMap(Messages.get(pattern.message())));
             }
 
             Constraints.Max max = f.getAnnotation(Constraints.Max.class);
             if (max != null) {
-              fieldValidation.add(getMaxValidationJSON(Messages.get(max.message()), max.value()));
+              fieldValidation.putAll(ValidationUtil.getMaxValidationMap(Messages.get(max.message()), max.value()));
             }
 
             Constraints.Min min = f.getAnnotation(Constraints.Min.class);
             if (min != null) {
-              fieldValidation.add(getMinValidationJSON(Messages.get(min.message()), min.value()));
+              fieldValidation.putAll(ValidationUtil.getMinValidationMap(Messages.get(min.message()), min.value()));
             }
 
             Constraints.MaxLength maxLength = f.getAnnotation(Constraints.MaxLength.class);
             if (maxLength != null) {
-              fieldValidation.add(getMaxLengthValidationJSON(Messages.get(maxLength.message()), maxLength.value()));
+              fieldValidation.putAll(ValidationUtil.getMaxLengthValidationMap(Messages.get(maxLength.message()), maxLength.value()));
             }
 
             Constraints.MinLength minLength = f.getAnnotation(Constraints.MinLength.class);
             if (minLength != null) {
-              fieldValidation.add(getMinLengthValidationJSON(Messages.get(minLength.message()), minLength.value()));
+              fieldValidation.putAll(ValidationUtil.getMinLengthValidationMap(Messages.get(minLength.message()), minLength.value()));
             }
           }
         }
       }
 
-      return "[" + String.join(",", fieldValidation) + "]";
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
+      return javaMapToJSON(fieldValidation);
+    } catch (NoSuchFieldException e) {
+      throw new RuntimeException("Unable to read validation constraints from form field: " + field.name(), e);
     }
   }
 
-  public static String getRequiredValidationJSON(String message) {
-    if (message == null) {
-      message = Messages.get(Constraints.RequiredValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> requiredDetails = new HashMap<>();
-    requiredDetails.put("message", Messages.get(message));
-    validationData.put("required", requiredDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getEmailValidationJSON(String message) {
-    if (message == null) {
-      message = Messages.get(Constraints.EmailValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> emailDetails = new HashMap<>();
-    emailDetails.put("message", Messages.get(message));
-    validationData.put("email", emailDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getPatternValidationJSON(String message) {
-    if (message == null) {
-      message = Messages.get(Constraints.PatternValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> patternDetails = new HashMap<>();
-    patternDetails.put("message", Messages.get(message));
-    validationData.put("pattern", patternDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getMaxValidationJSON(String message, long maxValue) {
-    if (message == null) {
-      message = Messages.get(Constraints.MaxValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> maxDetails = new HashMap<>();
-    maxDetails.put("message", Messages.get(message, null, maxValue));
-    maxDetails.put("limit", maxValue);
-    validationData.put("max", maxDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getMinValidationJSON(String message, long minValue) {
-    if (message == null) {
-      message = Messages.get(Constraints.MinValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> minDetails = new HashMap<>();
-    minDetails.put("message", Messages.get(message, null, minValue));
-    minDetails.put("limit", minValue);
-    validationData.put("min", minDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getMaxLengthValidationJSON(String message, long maxLength) {
-    if (message == null) {
-      message = Messages.get(Constraints.MaxLengthValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> maxLengthDetails = new HashMap<>();
-    maxLengthDetails.put("message", Messages.get(message, null, maxLength));
-    maxLengthDetails.put("limit", maxLength);
-    validationData.put("max", maxLengthDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  public static String getMinLengthValidationJSON(String message, long minLength) {
-    if (message == null) {
-      message = Messages.get(Constraints.MinLengthValidator.message);
-    }
-    Map<String, Object> validationData = new HashMap<>();
-    Map<String, Object> minLengthDetails = new HashMap<>();
-    minLengthDetails.put("message", Messages.get(message, null, minLength));
-    minLengthDetails.put("limit", minLength);
-    validationData.put("min", minLengthDetails);
-
-    return mapToJSONString(validationData);
-  }
-
-  private static String mapToJSONString(Map map) {
+  /**
+   * Convert a java map to a JSON object as a string
+   *
+   * @param map java map to convert to a JSON object
+   * @return String representation of a JSON object with members and values from the map parameter
+   */
+  public static String javaMapToJSON(Map map) {
     try {
       return new ObjectMapper().writeValueAsString(map);
     } catch (JsonProcessingException e) {
-      e.printStackTrace();
-      return null;
+      throw new RuntimeException("Unable to process map to JSON String", e);
     }
   }
 
