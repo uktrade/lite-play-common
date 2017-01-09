@@ -33,12 +33,6 @@ public class CommonGuiceModule extends AbstractModule {
     bind(TransactionIdProvider.class).to(TransactionManager.class);
   }
 
-  @Provides
-  public ContextParamManager provideContextParamManager() {
-    return new ContextParamManager(new JourneyContextParamProvider(), new TransactionContextParamProvider());
-  }
-
-
   private RedisKeyConfig createRedisKeyConfig(Configuration hashConfiguration) {
     return new RedisKeyConfig(configuration.getString("redis.keyPrefix"), hashConfiguration.getString("hashName"),
         hashConfiguration.getInt("ttlSeconds"));
