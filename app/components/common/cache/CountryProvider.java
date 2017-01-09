@@ -1,7 +1,7 @@
 package components.common.cache;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import components.common.client.CountryServiceClient;
 import models.common.Country;
 import play.Logger;
@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
 
 public class CountryProvider {
 
-  private Map<String, Country> cache;
+  private Map<String, Country> cache = new HashMap<>();
   private final CountryServiceClient countryServiceClient;
 
   @Inject
@@ -43,18 +43,22 @@ public class CountryProvider {
   }
 
   public void loadCountries() {
-    cache = new HashMap<>();
+
     Logger.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
-      .thenAcceptAsync(c -> {
-        if (c.getStatus() == CountryServiceClient.Status.SUCCESS) {
-          cache = c.getCountries().stream()
+      .thenAcceptAsync(countries -> {
+        if (!countries.isEmpty()) {
+          cache = countries.stream()
             .collect(toMap(Country::getCountryRef, Function.identity()));
           Logger.info("Successfully refreshed the country cache.");
         } else {
-          Logger.error("Country service error - Failed to get countries.");
-          cache = new HashMap<>();
+          Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
         }
       });
+  }
+
+  @VisibleForTesting
+  void setCache(Map<String, Country> cache) {
+    this.cache = cache;
   }
 }

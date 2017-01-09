@@ -36,7 +36,8 @@ JavaScript
 
 Copy govuk_elements/public/javascripts/vendor/details.polyfill.js to public/template/javascripts/vendor
 
-Copy govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js to public/template/javascripts/govuk
+Copy govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js
+                                              show-hide-content.js to public/template/javascripts/govuk
 
 
 Misc

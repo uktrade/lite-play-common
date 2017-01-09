@@ -5,24 +5,24 @@ package components.common.journey;
  */
 class GraphViewTransition {
 
-  private final JourneyStage startStage;
-  private final JourneyStage endStage;
+  private final CommonStage startStage;
+  private final CommonStage endStage;
 
   private final String eventName;
   private final String conditionValue;
 
-  GraphViewTransition(JourneyStage startStage, JourneyStage endStage, String eventName, String conditionValue) {
+  GraphViewTransition(CommonStage startStage, CommonStage endStage, String eventName, String conditionValue) {
     this.startStage = startStage;
     this.endStage = endStage;
     this.eventName = eventName;
     this.conditionValue = conditionValue;
   }
 
-  public JourneyStage getStartStage() {
+  public CommonStage getStartStage() {
     return startStage;
   }
 
-  public JourneyStage getEndStage() {
+  public CommonStage getEndStage() {
     return endStage;
   }
 

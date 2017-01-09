@@ -51,7 +51,8 @@ button.secondary {
 }
 
 // Fix unwanted button padding in Firefox
-button.secondary::-moz-focus-inner {
+button.secondary::-moz-focus-inner,
+button.link::-moz-focus-inner {
   border: 0;
   padding: 0;
 }
