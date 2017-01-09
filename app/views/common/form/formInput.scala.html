@@ -1,5 +1,5 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "")(label: Html)
+@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
 <div class="form-group @if(field.error.isDefined){ error }">
 
   <label class="form-label" for="@field.id">@label</label>
@@ -14,6 +14,9 @@
     if(fieldValidationData != null){
       HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
     }
+  }
+  @if(validationGroup.isDefined) {
+    @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }/>
   @if(hint.isDefined){
     <label class="form-label" for="@field.id">

@@ -1,13 +1,16 @@
 @import utils.common.ViewUtil
 @import utils.common.SelectOption
-@(field: Form.Field, options: Map[SelectOption, Boolean])
+@(field: Form.Field, options: Map[SelectOption, Boolean], validationGroup: Option[String] = None)
 
 <div id="@field.name" class="form-group"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
-      HtmlFormat.raw("data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+      HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
     }
+  }
+  @if(validationGroup.isDefined) {
+    @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }>
 
   @* Iterator required to preserve ordering *@

@@ -6,32 +6,54 @@ LITECommon.ClientSideValidation = {
   clientSideDataAttrName: 'data-clientside-validation',
 
   /**
-   * Validate all fields in a form which have data-validation attributes on them describing how the field should be
-   * validated.
-   * This method should be raised by the form on submit so that the event parameter target will be the form containing
-   * fields with validation information.
+   * Handle validation via a submit event by parsing the event and find the triggering element and then calling the
+   * validateForm() function.
    *
    * @param event form submit event
    * @returns {boolean} True if all fields in the form passed validation
    */
-  validateForm: function (event) {
+  handleSubmit: function(event) {
     "use strict";
-
     var $form = $(event.target);
 
-    var $activeElement = $(document.activeElement);
+    var $triggeringElement = $(document.activeElement);
     if (
-      $activeElement.length &&
-      $form.has($activeElement) &&
-      $activeElement.is('[data-skip-validation]')
+      $triggeringElement.length &&
+      $form.has($triggeringElement) &&
+      $triggeringElement.is('[data-skip-validation]')
     ) {
       // Skip validation if the active element (typically the element that cause the form submit) contains a data-skip-validation attribute
       return true;
     }
 
+    return LITECommon.ClientSideValidation.validateForm($form, $triggeringElement);
+  },
+
+  /**
+   * Validate all fields in a form which have data-validation attributes on them describing how the field should be
+   * validated.
+   *
+   * @param $form The form element with fields to validate
+   * @param $triggeringElement The element that caused the validation to happen
+   * @returns {boolean} True if all fields in the form passed validation
+   */
+  validateForm: function ($form, $triggeringElement) {
+    "use strict";
+
+    // Find grouped
+    var validatableElements = [];
+    var validationGroup = $triggeringElement.attr('data-validation-group');
+    if (validationGroup) {
+      validatableElements = $form.find("[data-validation-group='" + validationGroup + "']").filter('[data-validation]');
+    }
+    else {
+      validatableElements = $form.find('[data-validation]').not('[data-validation-group]');
+    }
+
+
     var validationFailures = [];
 
-    $form.find('[data-validation]').each(function (i, field) {
+    validatableElements.each(function (i, field) {
       LITECommon.ClientSideValidation._clearFieldClientSideError(field);
 
       var validationRules = $(field).data('validation');
@@ -39,9 +61,9 @@ LITECommon.ClientSideValidation = {
 
       if ('required' in validationRules) {
         validator = validationRules.required;
-        if ($(field).is('textarea, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]')) {
+        if ($(field).is('textarea, select, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]')) {
           // If the field is a text input, check the values length is above 0
-          if ($(field).val().length <= 0) {
+          if (!$(field).val() || $(field).val().length <= 0) {
             validationFailures.push({field: field, message: validator.message});
             LITECommon.ClientSideValidation._addError(field, validator.message);
           }
@@ -248,7 +270,7 @@ $(document).ready(function (){
     // For each form see if it has fields with validation attributes on them
     if ($(form).find('[data-validation]').length > 0) {
       // If so add a submit hook
-     $(form).submit(LITECommon.ClientSideValidation.validateForm);
+      $(form).submit(LITECommon.ClientSideValidation.handleSubmit);
     }
   });
 });

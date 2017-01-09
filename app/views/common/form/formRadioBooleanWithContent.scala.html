@@ -1,5 +1,5 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false)(trueContent: Html)(falseContent: Html)
+@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None)(trueContent: Html)(falseContent: Html)
 
 @if(!hideHeading) {
   <h2 class="heading-medium">@prompt</h2>
@@ -11,6 +11,9 @@
     if(fieldValidationData != null){
       HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
     }
+  }
+  @if(validationGroup.isDefined) { 
+    @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"") 
   }>
 
   <fieldset class="inline">

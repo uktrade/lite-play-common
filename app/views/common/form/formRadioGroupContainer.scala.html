@@ -1,5 +1,5 @@
 @import utils.common.ViewUtil
-@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium")(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None)(radioContent: Html)
 
 <h2 class="@promptCssClass">@prompt</h2>
 
@@ -9,6 +9,9 @@
     if(fieldValidationData != null){
       HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
     }
+  }
+  @if(validationGroup.isDefined) {
+    @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }>
 
   <fieldset>
