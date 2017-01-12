@@ -3,7 +3,6 @@ package components.common.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import models.common.Country;
-import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,33 +23,32 @@ import static play.mvc.Results.ok;
 
 public class CountryServiceClientTest {
 
+  private static final String PATH = "/countries/set/export-control";
+
   private CountryServiceClient client;
-  private ExecutorThreadPool delegateExecutor;
+  private WSClient ws;
+  private Server server;
 
   @Before
-  public void setup() {
+  public void setUp() {
     Router router = new RoutingDsl()
-      .GET("/countries/set/export-control").routeTo(() -> {
+      .GET(PATH).routeTo(() -> {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("common/client/countries.json");
         JsonNode jsonNode = Json.parse(inputStream);
         return ok(jsonNode);
       })
       .build();
 
-    Server server = Server.forRouter(router);
+    server = Server.forRouter(router);
     int port = server.httpPort();
-    WSClient ws = WS.newClient(port);
-    delegateExecutor = new ExecutorThreadPool();
-    client = new CountryServiceClient(new HttpExecutionContext(delegateExecutor), ws, "localhost", 10000, new ObjectMapper());
-  }
-
-  @After
-  public void cleanup() throws Exception {
-    delegateExecutor.stop();
+    ws = WS.newClient(port);
+    String serviceUrl = "http://localhost:" + port + PATH;
+    client = new CountryServiceClient(new HttpExecutionContext(Runnable::run), ws, serviceUrl, 10000, new ObjectMapper());
   }
 
   @Test
-  public void shouldGetCompanyDetails() throws Exception {
+  public void shouldGetCountries() throws Exception {
+
     CompletionStage<List<Country>> completionStage = client.getCountries();
 
     List<Country> countries = completionStage.toCompletableFuture().get();
@@ -58,5 +56,17 @@ public class CountryServiceClientTest {
     assertThat(countries).isNotEmpty();
     assertThat(countries.size()).isEqualTo(18);
   }
+
+  @After
+  public void cleanUp() throws Exception {
+    try {
+      ws.close();
+    }
+    finally {
+      server.stop();
+    }
+  }
+
+
 
 }
