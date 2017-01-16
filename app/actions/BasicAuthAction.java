@@ -16,23 +16,25 @@ public class BasicAuthAction extends Action.Simple {
 
   private static final String AUTHORIZATION = "authorization";
   private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
-  private static final String REALM = "Basic realm=\"Your Realm Here\"";
 
   private final String basicAuthUser;
   private final String basicAuthPassword;
+  private final String basicAuthRealm;
 
   @Inject
   public BasicAuthAction(@Named("basicAuthUser") String basicAuthUser,
-                         @Named("basicAuthPassword") String basicAuthPassword) {
+                         @Named("basicAuthPassword") String basicAuthPassword,
+                         @Named("basicAuthRealm") String basicAuthRealm) {
     this.basicAuthUser = basicAuthUser;
     this.basicAuthPassword = basicAuthPassword;
+    this.basicAuthRealm = basicAuthRealm;
   }
   @Override
   public CompletionStage<Result> call(Http.Context context) {
 
     String authHeader = context.request().getHeader(AUTHORIZATION);
     if (authHeader == null) {
-      context.response().setHeader(WWW_AUTHENTICATE, REALM);
+      context.response().setHeader(WWW_AUTHENTICATE, "Basic realm=\"" + basicAuthRealm + "\"");
       return unauthorizedResult();
     }
 
