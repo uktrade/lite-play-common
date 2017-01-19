@@ -87,7 +87,7 @@ public class JourneyDefinitionTest {
 
         atStage(STAGE_2)
             .onEvent(EVENT_2)
-            .then(moveTo(STAGE_3));
+            .then(backTo(STAGE_3)); //functionally equivalent to moveTo
 
         defineJourney("default", STAGE_1);
       }
@@ -100,9 +100,11 @@ public class JourneyDefinitionTest {
 
     transitionResult = journeyDefinition.fireEvent(hec, STAGE_1.getHash(), EVENT_1).getImmediateResult();
     assertEquals(STAGE_2, transitionResult.getNewStage());
+    assertEquals(MoveAction.Direction.FORWARD, transitionResult.getDirection());
 
     transitionResult = journeyDefinition.fireEvent(hec, STAGE_2.getHash(), EVENT_2).getImmediateResult();
     assertEquals(STAGE_3, transitionResult.getNewStage());
+    assertEquals(MoveAction.Direction.BACKWARD, transitionResult.getDirection());
 
     //No transition for event
     assertThatThrownBy(() -> journeyDefinition.fireEvent(hec, STAGE_1.getHash(), EVENT_3))

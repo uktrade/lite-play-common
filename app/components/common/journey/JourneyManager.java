@@ -28,19 +28,23 @@ public class JourneyManager {
 
   private final Map<String, JourneyDefinition> journeyNameToDefinitionMap;
 
-  private final JourneyContextParamProvider journeyContextParamProvider = new JourneyContextParamProvider();
-
   private final JourneySerialiser journeySerialiser;
 
   private final ContextParamManager contextParamManager;
 
+  private final JourneyContextParamProvider journeyContextParamProvider;
+
   private final HttpExecutionContext httpExecutionContext;
 
   @Inject
-  public JourneyManager(JourneySerialiser journeySerialiser, ContextParamManager contextParamManager,
-                        Collection<JourneyDefinitionBuilder> journeyDefinitionBuilders, HttpExecutionContext httpExecutionContext) {
+  public JourneyManager(JourneySerialiser journeySerialiser,
+                        ContextParamManager contextParamManager,
+                        JourneyContextParamProvider journeyContextParamProvider,
+                        Collection<JourneyDefinitionBuilder> journeyDefinitionBuilders,
+                        HttpExecutionContext httpExecutionContext) {
     this.journeySerialiser = journeySerialiser;
     this.contextParamManager = contextParamManager;
+    this.journeyContextParamProvider = journeyContextParamProvider;
     this.httpExecutionContext = httpExecutionContext;
 
     //Build all JourneyDefinitions from all JourneyDefinitionBuilders
