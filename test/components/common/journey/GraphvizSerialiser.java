@@ -2,7 +2,6 @@ package components.common.journey;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,7 @@ public class GraphvizSerialiser {
 
     //Collect graphviz syntax lines from all journeys into a unique set to reduce duplication
     for (JourneyDefinition journeyDefinition : journeyDefinitions) {
-      List<GraphViewTransition> graphViewTransitions = journeyDefinition.asGraphViewTransitions();
+      Collection<GraphViewTransition> graphViewTransitions = journeyDefinition.asGraphViewTransitions();
 
       Set<CommonStage> decisionStages = new HashSet<>();
 

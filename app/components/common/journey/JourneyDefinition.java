@@ -5,6 +5,7 @@ import play.Logger;
 import play.libs.concurrent.HttpExecutionContext;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,7 +50,7 @@ public class JourneyDefinition {
     return startStage;
   }
 
-  public JourneyStage resolveStageFromHash(String hash) {
+  JourneyStage resolveStageFromHash(String hash) {
     JourneyStage journeyStage = registeredStages.get(hash);
 
     if (journeyStage == null) {
@@ -58,7 +59,6 @@ public class JourneyDefinition {
       return journeyStage;
     }
   }
-
 
   public EventResult fireEvent(HttpExecutionContext httpExecutionContext, String currentStageHash, JourneyEvent event) {
     return fireEventInternal(httpExecutionContext, currentStageHash, event, null);
@@ -151,30 +151,23 @@ public class JourneyDefinition {
 
     TransitionAction transitionAction = stageTransitionMap.get(currentStage, event);
     if (transitionAction == null) {
-      throw new JourneyException("No transition available for %s, %s", currentStage, event);
+      throw new JourneyException(String.format("No transition defined for %s, %s", currentStage, event));
     } else {
       if (transitionAction instanceof BranchAction) {
         BranchAction branch = (BranchAction) transitionAction;
 
-        Object transitionArgument;
-        if (eventArgument != null) {
-          if(branch.eventArgumentConverter == null) {
-            throw new JourneyException("Event argument given but converter function unavailable", currentStage, event);
-          }
-
-          transitionArgument = branch.eventArgumentConverter.apply(eventArgument);
-        } else {
-          if(branch.transitionArgumentSupplier == null) {
-            throw new JourneyException("Event argument not given but argument supplier unavailable", currentStage, event);
-          }
-
-          transitionArgument = branch.transitionArgumentSupplier.get();
+        if (eventArgument == null) {
+          throw new JourneyException("Event argument cannot be null", currentStage, event);
         }
+
+        //Convert event argument using the branch's conversion function (possibly just the identity function)
+        Object transitionArgument = branch.eventArgumentConverter.apply(eventArgument);
 
         if (transitionArgument == null) {
           throw new JourneyException("Transition argument cannot be null", currentStage, event);
         }
 
+        //Resolve an action corresponding to the transition argument value
         TransitionAction conditionAction = branch.resultMap.get(transitionArgument);
 
         conditionAction = conditionAction == null ? branch.elseTransition : conditionAction;
@@ -195,10 +188,10 @@ public class JourneyDefinition {
   }
 
   /**
-   * @return A list of all transitions in this JourneyDefinition, expressed as GraphViewTransition objects. Events with
+   * @return A collection of all transitions in this JourneyDefinition, expressed as GraphViewTransition objects. Events with
    * branching logic are represented as multiple transitions with distinct condition values.
    */
-  List<GraphViewTransition> asGraphViewTransitions() {
+  Collection<GraphViewTransition> asGraphViewTransitions() {
 
     List<GraphViewTransition> allTransitions = new ArrayList<>();
 

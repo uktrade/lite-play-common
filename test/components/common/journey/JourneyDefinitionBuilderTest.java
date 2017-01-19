@@ -1,10 +1,14 @@
 package components.common.journey;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class JourneyDefinitionBuilderTest {
 
@@ -281,5 +285,31 @@ public class JourneyDefinitionBuilderTest {
     assertThatThrownBy(() -> new TestBuilder().buildAll())
         .isInstanceOf(JourneyDefinitionException.class)
         .hasMessageContaining("Unknown stage US1");
+  }
+
+  /*============ Multiple journeys ============*/
+
+  @Test
+  public void testMultipleJourneyDefinitions() {
+    class TestBuilder extends BaseStageBuilder {
+      @Override
+      protected void journeys() {
+        defineJourney("J2", STAGE_2);
+        defineJourney("J3", ENUM_DECISION_STAGE, BackLink.to(null, "backprompt"));
+      }
+    }
+
+    Map<String, JourneyDefinition> definitions = new TestBuilder().buildAll()
+        .stream().collect(Collectors.toMap(JourneyDefinition::getJourneyName, Function.identity()));
+
+    assertThat(definitions).containsOnlyKeys("defaultJourney", "J2", "J3");
+
+    assertEquals(STAGE_1.getInternalName(), definitions.get("defaultJourney").getStartStage().getInternalName());
+    assertEquals(STAGE_2.getInternalName(), definitions.get("J2").getStartStage().getInternalName());
+    assertEquals(ENUM_DECISION_STAGE.getInternalName(), definitions.get("J3").getStartStage().getInternalName());
+
+    assertThat(definitions.get("J2").getExitBackLink()).isEmpty();
+    assertThat(definitions.get("J3").getExitBackLink().map(BackLink::getPrompt)).isPresent().contains("backprompt");
+
   }
 }

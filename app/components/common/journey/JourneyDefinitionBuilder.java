@@ -507,18 +507,11 @@ public abstract class JourneyDefinitionBuilder {
   protected static final class BranchBuilder<E, T> {
 
     private final Function<E, T> eventArgumentConverter;
-    private final Supplier<T> transitionArgumentSupplier;
     private final Map<Object, TransitionActionBuilder> conditionMap = new HashMap<>();
     private TransitionActionBuilder elseCondition = null;
 
     public BranchBuilder(Function<E, T> eventArgumentConverter) {
       this.eventArgumentConverter = eventArgumentConverter;
-      transitionArgumentSupplier = null;
-    }
-
-    public BranchBuilder(Supplier<T> paramProvider) {
-      this.eventArgumentConverter = null;
-      this.transitionArgumentSupplier = paramProvider;
     }
 
     /**
@@ -565,7 +558,7 @@ public abstract class JourneyDefinitionBuilder {
       @SuppressWarnings("unchecked")
       Function<Object, Object> upcastConverter = (Function<Object, Object>) this.eventArgumentConverter;
 
-      return new BranchAction(transitionArgumentSupplier, upcastConverter, transitionActionMap, elseConditionAction);
+      return new BranchAction(upcastConverter, transitionActionMap, elseConditionAction);
     }
   }
 
