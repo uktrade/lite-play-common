@@ -7,6 +7,21 @@ Common code for use in all LITE Play projects.
 The `JourneyManager` and associated classes allow you to define a user's journey through the application. 
 [Read further details here](docs/Journey.md).
 
+## Context Params
+
+Context params are used to maintain session data, as an alternative to cookies. They work by "ping-ponging" data 
+between pages as GET or POST parameters attached to every request. This helps avoid common issues encountered when using
+cookies, such as the browser back button not restoring a value to its previous state, or multiple tabs overwriting each
+other's data.
+
+To use context params, subclass `ContextParamProvider` and implement the required name method, then `@Provide` a 
+`ContextParamManager` composed of all your `ContextParamProvider`s from your Guice module. 
+
+For context params to work correctly, every `<form>` in your application must include the `@contextFormParams` template.
+Additionally, every generated URL must be decorated by passing it to `ContextParamManager.addParamsToCall`. 
+
+The Journey Manager uses context params to pass the current journey state between forms, so you must do this if you want
+to use the Journey Manager.
 
 ## Error Pages
 
