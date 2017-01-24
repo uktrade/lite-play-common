@@ -8,14 +8,16 @@ public interface JourneySerialiser {
 
   /**
    * Returns the serialised Journey string from persistent storage
+   * @param journeyName The name of journey to read
    * @return the serialised journey
    */
-  String readJourneyString();
+  String readJourneyString(String journeyName);
 
   /**
    * Writes the serialised Journey string to persistent storage
+   * @param journeyName The name of journey to write
    * @param journeyString The journey string to write
    */
-  void writeJourneyString(String journeyString);
+  void writeJourneyString(String journeyName, String journeyString);
 
 }

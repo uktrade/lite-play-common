@@ -302,8 +302,8 @@ public class JourneyManager {
     }
   }
 
-  public CompletionStage<Result> restoreCurrentStage() {
-    Journey journey = restoreJourney();
+  public CompletionStage<Result> restoreCurrentStage(String journeyName) {
+    Journey journey = restoreJourney(journeyName);
 
     JourneyDefinition journeyDefinition = getDefinition(journey);
 
@@ -317,15 +317,15 @@ public class JourneyManager {
   }
 
   public void saveJourney(Journey journey) {
-    journeySerialiser.writeJourneyString(journey.serialiseToString());
+    journeySerialiser.writeJourneyString(journey.getJourneyName(), journey.serialiseToString());
   }
 
-  public Journey restoreJourney() {
-    return Journey.fromString(journeySerialiser.readJourneyString());
+  public boolean isJourneySerialised(String journeyName) {
+    return restoreJourney(journeyName) != null;
   }
 
-  public boolean isJourneySerialised() {
-    return restoreJourney() != null;
+  private Journey restoreJourney(String journeyName) {
+    return Journey.fromString(journeySerialiser.readJourneyString(journeyName));
   }
 
 }
