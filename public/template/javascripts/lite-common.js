@@ -13,5 +13,19 @@ LITECommon.initialiseSelectionButtons = function () {
 
 };
 
+// GOVUK compatible methods for showing and hiding content
+LITECommon.showContent = function($content) {
+  if ($content.hasClass('js-hidden')) {
+    $content.removeClass('js-hidden');
+    $content.attr('aria-hidden', 'false');
+  }
+};
+
+LITECommon.hideContent = function($content) {
+  if (!$content.hasClass('js-hidden')) {
+    $content.addClass('js-hidden');
+    $content.attr('aria-hidden', 'true');
+  }
+};
 
 $(document).ready(LITECommon.initialiseSelectionButtons())
