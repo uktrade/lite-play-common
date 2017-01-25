@@ -28,12 +28,12 @@ public class JourneyManagerTest {
 
   private static class DummySerialiser implements JourneySerialiser {
     @Override
-    public String readJourneyString() {
+    public String readJourneyString(String journeyName) {
       return "";
     }
 
     @Override
-    public void writeJourneyString(String journeyString) {
+    public void writeJourneyString(String journeyName, String journeyString) {
     }
   }
 
