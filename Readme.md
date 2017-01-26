@@ -50,3 +50,40 @@ escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidati
 
 You might have a form with multiple submit buttons and only want client side validation to run for some of them. For the
 submit buttons that you want to skip validation you can put an attribute of `data-skip-validation` on them.
+
+### Validating sub-groups of fields in a form
+
+By default when a form is submitted all of the elements in the form with `data-validation` attributes will be validated.
+In cases where you might have multiple submit actions in a form, and you want to scope the submit-validation to a 
+sub-group of elements you can put a `data-validation-group` attribute on the submit action and the elements you wish it
+to validate, using a distinct attribute value for the group, e.g. `data-validation-group="postcode"`
+
+### Validating from custom JS
+
+If you have some custom javascript and want to validate a form you can call:
+
+```javascript
+var validationResult = LITECommon.ClientSideValidation.validateForm($('#form'), $('#triggeringelement'));
+```
+
+Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that 
+triggered the validation (used to find the triggers validation-group).
+
+### Conditional validation
+
+Sometimes you might want to skip validation entirely or skip validating individual elements. To do this you can define a 
+global function that returns true or false to signify if the validation should or should not be performed, e.g. 
+ 
+```javascript
+function onlyValidateIfSomeFieldIsEmpty() {
+  if (!$('#someField').val() || $('#someField').val().length <= 0) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+```
+
+The function name can then be referenced on individual fields or form submits using the `data-validation-condition` 
+attribute, e.g. `data-validation-condition="onlyValidateIfSomeFieldIsEmpty""`

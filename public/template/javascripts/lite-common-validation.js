@@ -40,6 +40,11 @@ LITECommon.ClientSideValidation = {
   validateForm: function ($form, $triggeringElement) {
     "use strict";
 
+    // Skip validation if the triggering element has a validation-condition function that returned false
+    if (!LITECommon.ClientSideValidation._validationCondition($triggeringElement)) {
+      return true;
+    }
+
     // Find grouped
     var validatableElements = [];
     var validationGroup = $triggeringElement.attr('data-validation-group');
@@ -54,6 +59,11 @@ LITECommon.ClientSideValidation = {
     var validationFailures = [];
 
     validatableElements.each(function (i, field) {
+      // Skip validation of a field if the condition function returned false
+      if (!LITECommon.ClientSideValidation._validationCondition($(field))) {
+        return;
+      }
+
       LITECommon.ClientSideValidation._clearFieldClientSideError(field);
 
       var validationRules = $(field).data('validation');
@@ -261,6 +271,29 @@ LITECommon.ClientSideValidation = {
       // Clear client side if there's no errors this time
       $("div.error-summary["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]").remove();
     }
+  },
+
+  /**
+   * Call a function name defined in the data-validation-condition attribute on $element and return its value.
+   * This can be used to have arbitrary conditions on running the validation of forms or fields.
+   *
+   * @param $element Element to get the data-validation-condition attribute from
+   * @returns {boolean} The result of calling the data-validation-condition attribute function
+   * @private
+   */
+  _validationCondition: function($element) {
+    var validationConditionFunctionName = $($element).data('validation-condition');
+    if (validationConditionFunctionName) {
+      var conditionFunction = window[validationConditionFunctionName];
+      if (conditionFunction) {
+        return conditionFunction();
+      }
+      else {
+        throw "validation-condition function '" + validationConditionFunctionName + "' defined on element '" + 1 + "' not a global function";
+      }
+    }
+
+    return true;
   }
 };
 
