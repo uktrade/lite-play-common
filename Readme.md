@@ -75,7 +75,9 @@ do so, you can call setValidationFunction like so:
  
 ```javascript
 LITECommon.ClientSideValidation.setValidationFunction(function() {
-  var validationFailures = [];
+
+  var validationFailures = []; // this array is expected to store objects of the following structure - {field: $('#xyz'), message: 'message'}.  
+  
   // custom validation code
   ...
   return validationFailures;
