@@ -69,21 +69,18 @@ var validationResult = LITECommon.ClientSideValidation.validateForm($('#form'), 
 Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that 
 triggered the validation (used to find the triggers validation-group).
 
-### Conditional validation
-
-Sometimes you might want to skip validation entirely or skip validating individual elements. To do this you can define a 
-global function that returns true or false to signify if the validation should or should not be performed, e.g. 
+### Custom JS validation
+You might find that you need to use a custom validation function instead of the standard client side validation. In order to
+do so, you can call setValidationFunction like so:
  
 ```javascript
-function onlyValidateIfSomeFieldIsEmpty() {
-  if (!$('#someField').val() || $('#someField').val().length <= 0) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
+LITECommon.ClientSideValidation.setValidationFunction(function() {
+
+  var validationFailures = []; // this array is expected to store objects of the following structure - {field: $('#xyz'), message: 'message'}.  
+  
+  // custom validation code
+  ...
+  return validationFailures;
+});  
 ```
 
-The function name can then be referenced on individual fields or form submits using the `data-validation-condition` 
-attribute, e.g. `data-validation-condition="onlyValidateIfSomeFieldIsEmpty""`

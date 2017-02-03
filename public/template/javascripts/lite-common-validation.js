@@ -4,6 +4,7 @@
 var LITECommon = LITECommon || {};
 LITECommon.ClientSideValidation = {
   clientSideDataAttrName: 'data-clientside-validation',
+  _validationFunction: null,
 
   /**
    * Handle validation via a submit event by parsing the event and find the triggering element and then calling the
@@ -40,10 +41,36 @@ LITECommon.ClientSideValidation = {
   validateForm: function ($form, $triggeringElement) {
     "use strict";
 
-    // Skip validation if the triggering element has a validation-condition function that returned false
-    if (!LITECommon.ClientSideValidation._validationCondition($triggeringElement)) {
-      return true;
+    var validationFailures;
+    if (LITECommon.ClientSideValidation._validationFunction != null) {
+      validationFailures = LITECommon.ClientSideValidation._validationFunction();
+    } else {
+      validationFailures = LITECommon.ClientSideValidation.standardValidation($form, $triggeringElement)
     }
+
+    LITECommon.ClientSideValidation._addErrorSummary(validationFailures);
+    return validationFailures.length === 0;
+  },
+
+  /**
+   * Sets the custom validation function which overrides the default standard validation.
+   *
+   * @param validationFunction The custom validation function
+   */
+  setValidationFunction: function (validationFunction) {
+    this._validationFunction = validationFunction;
+  },
+
+  /**
+   * Validate all fields in a form which have data-validation attributes on them describing how the field should be
+   * validated.
+   *
+   * @param $form The form element with fields to validate
+   * @param $triggeringElement The element that caused the validation to happen
+   * @returns {array} of any validation failures found
+   */
+  standardValidation: function ($form, $triggeringElement) {
+    "use strict";
 
     // Find grouped
     var validatableElements = [];
@@ -55,14 +82,9 @@ LITECommon.ClientSideValidation = {
       validatableElements = $form.find('[data-validation]').not('[data-validation-group]');
     }
 
-
     var validationFailures = [];
 
     validatableElements.each(function (i, field) {
-      // Skip validation of a field if the condition function returned false
-      if (!LITECommon.ClientSideValidation._validationCondition($(field))) {
-        return;
-      }
 
       LITECommon.ClientSideValidation._clearFieldClientSideError(field);
 
@@ -75,14 +97,12 @@ LITECommon.ClientSideValidation = {
           // If the field is a text input, check the values length is above 0
           if (!$(field).val() || $(field).val().length <= 0) {
             validationFailures.push({field: field, message: validator.message});
-            LITECommon.ClientSideValidation._addError(field, validator.message);
           }
         }
         else if ($("[name='" + field.id + "']").is('input[type=checkbox], input[type=radio]')) {
           // If the field is a checkbox/radio input, check there are elements with that name marked as checked
           if ($("input[name='" + field.id + "']:checked").length === 0) {
             validationFailures.push({field: field, message: validator.message});
-            LITECommon.ClientSideValidation._addError(field, validator.message);
           }
         }
       }
@@ -92,7 +112,6 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check it is an @ surrounded by some non-@ characters
         if ($(field).val().length > 0 && !$(field).val().match(/[^@]+@[^@]+/)) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
@@ -101,7 +120,6 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check it matches against the provided pattern
         if ($(field).val().length > 0 && $(field).val().match(validator.pattern)) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
@@ -110,7 +128,6 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check it is lower than or equal to the limit
         if ($(field).val().length > 0 && $(field).val() <= validator.limit) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
@@ -119,7 +136,6 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check it is greater than or equal to the limit
         if ($(field).val().length > 0 && $(field).val() >= validator.limit) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
@@ -128,7 +144,6 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check its length is lower than or equal to the limit
         if ($(field).val().length > 0 && $(field).val().length <= validator.limit) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
@@ -137,15 +152,12 @@ LITECommon.ClientSideValidation = {
         // If the field has a value, check its length is greater than or equal to the limit
         if ($(field).val().length > 0 && $(field).val().length >= validator.limit) {
           validationFailures.push({field: field, message: validator.message});
-          LITECommon.ClientSideValidation._addError(field, validator.message);
         }
       }
 
     });
 
-    LITECommon.ClientSideValidation._addErrorSummary(validationFailures);
-
-    return validationFailures.length === 0;
+    return validationFailures;
   },
 
   /**
@@ -196,7 +208,7 @@ LITECommon.ClientSideValidation = {
    * @param message Validation failure message
    * @private
    */
-  _addError: function (field, message) {
+  _addErrorMessageToField: function (field, message) {
     "use strict";
 
     var formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
@@ -232,6 +244,12 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     if (validationFailures.length > 0) {
+
+      // Add validation failure messages to the invalid fields
+      validationFailures.forEach(function(item) {
+        LITECommon.ClientSideValidation._addErrorMessageToField(item.field, item.message);
+      });
+
       var errorSummary;
       // Look for existing summary
       var existingSummary = $('div.error-summary');
@@ -271,30 +289,8 @@ LITECommon.ClientSideValidation = {
       // Clear client side if there's no errors this time
       $("div.error-summary["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]").remove();
     }
-  },
-
-  /**
-   * Call a function name defined in the data-validation-condition attribute on $element and return its value.
-   * This can be used to have arbitrary conditions on running the validation of forms or fields.
-   *
-   * @param $element Element to get the data-validation-condition attribute from
-   * @returns {boolean} The result of calling the data-validation-condition attribute function
-   * @private
-   */
-  _validationCondition: function($element) {
-    var validationConditionFunctionName = $($element).data('validation-condition');
-    if (validationConditionFunctionName) {
-      var conditionFunction = window[validationConditionFunctionName];
-      if (conditionFunction) {
-        return conditionFunction();
-      }
-      else {
-        throw "validation-condition function '" + validationConditionFunctionName + "' defined on element '" + 1 + "' not a global function";
-      }
-    }
-
-    return true;
   }
+
 };
 
 // When the document is ready attach validation to forms with validating fields
