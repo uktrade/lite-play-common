@@ -42,7 +42,14 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     var validationFailures;
-    if (LITECommon.ClientSideValidation._validationFunction != null) {
+    if (LITECommon.ClientSideValidation._validationFunction != null) { // perform custom validation
+
+      // clear errors
+      var validatableElements = LITECommon.ClientSideValidation._findValidatableElements($form, $triggeringElement);
+      validatableElements.each(function (i, field) {
+        LITECommon.ClientSideValidation._clearFieldClientSideError(field);
+      });
+
       validationFailures = LITECommon.ClientSideValidation._validationFunction();
     } else {
       validationFailures = LITECommon.ClientSideValidation.standardValidation($form, $triggeringElement)
@@ -72,17 +79,9 @@ LITECommon.ClientSideValidation = {
   standardValidation: function ($form, $triggeringElement) {
     "use strict";
 
-    // Find grouped
-    var validatableElements = [];
-    var validationGroup = $triggeringElement.attr('data-validation-group');
-    if (validationGroup) {
-      validatableElements = $form.find("[data-validation-group='" + validationGroup + "']").filter('[data-validation]');
-    }
-    else {
-      validatableElements = $form.find('[data-validation]').not('[data-validation-group]');
-    }
-
     var validationFailures = [];
+
+    var validatableElements = LITECommon.ClientSideValidation._findValidatableElements($form, $triggeringElement);
 
     validatableElements.each(function (i, field) {
 
@@ -99,9 +98,9 @@ LITECommon.ClientSideValidation = {
             validationFailures.push({field: field, message: validator.message});
           }
         }
-        else if ($("[name='" + field.id + "']").is('input[type=checkbox], input[type=radio]')) {
+        else if ($("[name*='" + field.id + "']").is('input[type=checkbox], input[type=radio]')) {
           // If the field is a checkbox/radio input, check there are elements with that name marked as checked
-          if ($("input[name='" + field.id + "']:checked").length === 0) {
+          if ($("input[name*='" + field.id + "']:checked").length === 0) {
             validationFailures.push({field: field, message: validator.message});
           }
         }
@@ -158,6 +157,27 @@ LITECommon.ClientSideValidation = {
     });
 
     return validationFailures;
+  },
+
+  /**
+   * Find the fields which are validated
+   *
+   * @param $form
+   * @param $triggeringElement
+   * @returns {Array}
+   * @private
+   */
+  _findValidatableElements: function($form, $triggeringElement) {
+    // Find grouped
+    var validatableElements = [];
+    var validationGroup = $triggeringElement.attr('data-validation-group');
+    if (validationGroup) {
+      validatableElements = $form.find("[data-validation-group='" + validationGroup + "']").filter('[data-validation]');
+    }
+    else {
+      validatableElements = $form.find('[data-validation]').not('[data-validation-group]');
+    }
+    return validatableElements;
   },
 
   /**
