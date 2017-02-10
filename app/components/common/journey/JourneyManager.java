@@ -5,6 +5,7 @@ import static play.mvc.Controller.ctx;
 import com.google.inject.Inject;
 import components.common.state.ContextParamManager;
 import io.mikael.urlbuilder.UrlBuilder;
+import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.libs.concurrent.HttpExecutionContext;
 import play.mvc.Result;
@@ -25,6 +26,8 @@ public class JourneyManager {
   public static final String JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM = "journeySuppressBackLink";
   public static final String JOURNEY_NAME_SEPARATOR_CHAR = "~";
   static final String JOURNEY_STAGE_SEPARATOR_CHAR = "-";
+
+  private static final String DEFAULT_BACK_PROMPT = "Back";
 
   private final Map<String, JourneyDefinition> journeyNameToDefinitionMap;
 
@@ -232,7 +235,7 @@ public class JourneyManager {
       String previousStageHash = new ArrayList<>(journey.getHistoryQueue()).get(journey.getHistoryQueue().size() - 2);
 
       JourneyStage newPreviousStage = journeyDefinition.resolveStageFromHash(previousStageHash);
-      setBackLinkPrompt(newPreviousStage.getDisplayName());
+      setBackLinkPrompt(newPreviousStage.getBackLinkPrompt());
     } else if (journeyDefinition.getExitBackLink().isPresent()) {
       String exitPrompt = journeyDefinition.getExitBackLink().get().getPrompt();
       setBackLinkPrompt(exitPrompt);
@@ -247,7 +250,7 @@ public class JourneyManager {
   }
 
   private void setBackLinkPrompt(String prompt) {
-    ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, prompt);
+    ctx().args.put(JOURNEY_BACK_LINK_CONTEXT_PARAM, StringUtils.defaultIfBlank(prompt, DEFAULT_BACK_PROMPT));
   }
 
   public CompletionStage<Result> navigateBack() {

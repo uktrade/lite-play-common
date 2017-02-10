@@ -196,29 +196,53 @@ public abstract class JourneyDefinitionBuilder {
    * Defines a stage for this journey which will perform arbitrary processing to generate a <tt>Result</tt> to send to the user.
    * Typically this will be a call to a controller's render method. Only use this signature if it is not possible to
    * provide a direct route to the desired form using a <tt>Call</tt> - this is preferred as it allows stages to be linked
-   * to directly.
+   * to directly. Use this variant if no special back link prompt is required.
    * @param name Internal stage name, for debugging and logging.
-   * @param displayName Name displayed to the user on a BackLink.
    * @param formRenderSupplier Supplier which can produce a Play Result.
    * @return A new Stage. This object must be used when defining transitions.
    */
-  protected final JourneyStage defineStage(String name, String displayName, Supplier<CompletionStage<Result>> formRenderSupplier) {
-    return defineStage(name, displayName, null, formRenderSupplier);
+  protected final JourneyStage defineStage(String name, Supplier<CompletionStage<Result>> formRenderSupplier) {
+    return defineStage(name, null, null, formRenderSupplier);
+  }
+
+  /**
+   * Defines a stage for this journey which will perform arbitrary processing to generate a <tt>Result</tt> to send to the user.
+   * Typically this will be a call to a controller's render method. Only use this signature if it is not possible to
+   * provide a direct route to the desired form using a <tt>Call</tt> - this is preferred as it allows stages to be linked
+   * to directly.
+   * @param name Internal stage name, for debugging and logging.
+   * @param backLinkPrompt Prompt for the back link which will navigate back to this stage.
+   * @param formRenderSupplier Supplier which can produce a Play Result.
+   * @return A new Stage. This object must be used when defining transitions.
+   */
+  protected final JourneyStage defineStage(String name, String backLinkPrompt, Supplier<CompletionStage<Result>> formRenderSupplier) {
+    return defineStage(name, backLinkPrompt, null, formRenderSupplier);
+  }
+
+  /**
+   * Defines a stage for this journey using a <tt>Call</tt> which the user is redirected to. This is the preferred way to
+   * define a stage. Use this variant if no special back link prompt is required.
+   * @param name Internal stage name, for debugging and logging.
+   * @param call Call which will render the stage.
+   * @return A new Stage. This object must be used when defining transitions.
+   */
+  protected final JourneyStage defineStage(String name, Call call) {
+    return defineStage(name, null, call, null);
   }
 
   /**
    * Defines a stage for this journey using a <tt>Call</tt> which the user is redirected to. This is the preferred way to
    * define a stage.
    * @param name Internal stage name, for debugging and logging.
-   * @param displayName Name displayed to the user on a BackLink.
+   * @param backLinkPrompt Prompt for the back link which will navigate back to this stage.
    * @param call Call which will render the stage.
    * @return A new Stage. This object must be used when defining transitions.
    */
-  protected final JourneyStage defineStage(String name, String displayName, Call call) {
-    return defineStage(name, displayName, call, null);
+  protected final JourneyStage defineStage(String name, String backLinkPrompt, Call call) {
+    return defineStage(name, backLinkPrompt, call, null);
   }
 
-  private JourneyStage defineStage(String name, String displayName, Call call,
+  private JourneyStage defineStage(String name, String backLinkPrompt, Call call,
                                    Supplier<CompletionStage<Result>> formRenderSupplier) {
     if (!(call != null ^ formRenderSupplier != null)) {
       throw new IllegalArgumentException("Call and formRendererSupplier are mutually exclusive arguments");
@@ -231,9 +255,9 @@ public abstract class JourneyDefinitionBuilder {
 
       JourneyStage journeyStage;
       if (call != null) {
-        journeyStage = new CallableJourneyStage(hash, name, displayName, call);
+        journeyStage = new CallableJourneyStage(hash, name, backLinkPrompt, call);
       } else {
-        journeyStage = new RenderedJourneyStage(hash, name, displayName, formRenderSupplier);
+        journeyStage = new RenderedJourneyStage(hash, name, backLinkPrompt, formRenderSupplier);
       }
 
       knownStages.put(name, journeyStage);

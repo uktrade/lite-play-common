@@ -10,9 +10,9 @@ public class RenderedJourneyStage extends JourneyStage {
 
   private final Supplier<CompletionStage<Result>> formRenderSupplier;
 
-  RenderedJourneyStage(String hash, String internalName, String displayName,
+  RenderedJourneyStage(String hash, String internalName, String backLinkPrompt,
                        Supplier<CompletionStage<Result>> formRenderSupplier) {
-    super(hash, internalName, displayName);
+    super(hash, internalName, backLinkPrompt);
     this.formRenderSupplier = formRenderSupplier;
   }
 

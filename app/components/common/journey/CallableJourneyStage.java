@@ -10,8 +10,8 @@ public class CallableJourneyStage extends JourneyStage {
 
   private final Call entryCall;
 
-  CallableJourneyStage(String hash, String internalName, String displayName, Call entryCall) {
-    super(hash, internalName, displayName);
+  CallableJourneyStage(String hash, String internalName, String backLinkPrompt, Call entryCall) {
+    super(hash, internalName, backLinkPrompt);
     this.entryCall = entryCall;
   }
 

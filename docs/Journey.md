@@ -47,10 +47,8 @@ To define a Journey, subclass `JourneyDefinitionBuilder` and implement the `jour
 ``` java
 public class ExampleJourneyDefinitionBuilder extends JourneyDefinitionBuilder {
 
-  private final JourneyStage exportCategory = defineStage("exportCategory", "What are you exporting?",
-      controllers.categories.routes.ExportCategoryController.renderForm());
-  private final JourneyStage goodsType = defineStage("goodsType", "Are you exporting goods, software or technical information?",
-      routes.GoodsTypeController.renderForm());
+  private final JourneyStage exportCategory = defineStage("exportCategory", controllers.categories.routes.ExportCategoryController.renderForm());
+  private final JourneyStage goodsType = defineStage("goodsType", routes.GoodsTypeController.renderForm());
       
   @Override
   protected void journeys() {
@@ -78,10 +76,10 @@ Use `defineStage()` to define a `JourneyStage`. This requires either a `Call` or
 which will be used to generate the form for that stage. It is highly recommended you provide a `Call` because this allows
 the stage to be entered via a URI - so you can generate links which take the user directly there if you need. 
 
-A `JourneyStage` also requires a unique internal name and an external name for display on the back link.
+A `JourneyStage` also requires a unique internal name and an optional prompt for display on the back link.
 
 ``` java
-JourneyStage categoryMedicinesDrugs = defineStage("categoryMedicinesDrugs", "Medicines and drugs",
+JourneyStage categoryMedicinesDrugs = defineStage("categoryMedicinesDrugs", "Select drug type",
         controllers.categories.routes.MedicinesDrugsController.renderForm());
 ```
 
@@ -262,8 +260,9 @@ history to whenever it is modified. To restore a previously saved journey from t
 By default, the "back" link at the top of every page takes the user back one stage in a journey (ignoring decision stages).
 In some controllers you may wish to override this behaviour. 
 
-* To set a different back link, call `ViewUtil.overrideBackLink()` before rendering the template.
-* To hide the back link, call `JourneyManager.hideBackLink()`.
+* If a back link prompt is not specified for a stage, the default of "Back" is used.
+* To set a different back link within a controller, call `ViewUtil.overrideBackLink()` before rendering the template.
+* To hide the back link, call `JourneyManager.hideBackLink()` before rendering the template.
 
 By default, the first stage of a Journey has no back link. You can pass a `BackLink` to the `defineJourney()` method to
 override this behaviour.

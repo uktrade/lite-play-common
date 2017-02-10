@@ -14,12 +14,12 @@ public abstract class JourneyStage implements CommonStage {
 
   private final String hash;
   private final String internalName;
-  private final String displayName;
+  private final String backLinkPrompt;
 
-  protected JourneyStage(String hash, String internalName, String displayName) {
+  protected JourneyStage(String hash, String internalName, String backLinkPrompt) {
     this.hash = hash;
     this.internalName = internalName;
-    this.displayName = displayName;
+    this.backLinkPrompt = backLinkPrompt;
 
     //Stage hashes are serialised to a hyphen separated list, so they cannot contain hyphens
     if(hash.contains(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR)) {
@@ -35,8 +35,11 @@ public abstract class JourneyStage implements CommonStage {
     return internalName;
   }
 
-  public String getDisplayName() {
-    return displayName;
+  /**
+   * @return String to display on a BackLink navigating back to this stage, or null if the default prompt should be used.
+   */
+  public String getBackLinkPrompt() {
+    return backLinkPrompt;
   }
 
   /**
