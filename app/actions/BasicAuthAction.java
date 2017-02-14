@@ -34,8 +34,7 @@ public class BasicAuthAction extends Action.Simple {
 
     String authHeader = context.request().getHeader(AUTHORIZATION);
     if (authHeader == null) {
-      context.response().setHeader(WWW_AUTHENTICATE, "Basic realm=\"" + basicAuthRealm + "\"");
-      return unauthorizedResult();
+      return unauthorizedResult(context);
     }
 
     try {
@@ -44,12 +43,12 @@ public class BasicAuthAction extends Action.Simple {
 
       String[] credString = new String(decodedAuth, "UTF-8").split(":");
       if (credString.length != 2) {
-        return unauthorizedResult();
+        return unauthorizedResult(context);
       }
 
       boolean isAuthenticated = authenticate(credString[0], credString[1]);
 
-      return isAuthenticated ? delegate.call(context) : unauthorizedResult();
+      return isAuthenticated ? delegate.call(context) : unauthorizedResult(context);
 
     } catch (IOException e) {
       Logger.error("Failed to authenticate user.", e);
@@ -58,7 +57,8 @@ public class BasicAuthAction extends Action.Simple {
 
   }
 
-  private CompletionStage<Result> unauthorizedResult() {
+  private CompletionStage<Result> unauthorizedResult(Http.Context context) {
+    context.response().setHeader(WWW_AUTHENTICATE, "Basic realm=\"" + basicAuthRealm + "\"");
     return CompletableFuture.completedFuture(unauthorized());
   }
 
