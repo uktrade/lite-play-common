@@ -1,0 +1,33 @@
+@import models.common.Country
+
+@(field: Form.Field, countries: List[Country], hintText: Option[String] = None, removeButton: Option[Html] = None, detailPanel: Option[Html] = None)
+<div id="@field.id" class="form-group @if(field.error.isDefined) { error}">
+
+  @if(field.error.isDefined) {
+    <p class="error-message">@Messages(field.error.get.message)</p>
+  }
+
+  @if(hintText.isDefined) {
+    <label class="form-hint" for="@Html(field.id + "-s")">@hintText</label>
+  }
+
+  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-id="@Html(field.id + "-s")">
+    <option value="" @if(field.value == null || "".equals(field.value)) {selected="selected"}></option>
+    @for(country <- countries) {
+      <option value="@country.getCountryRef" data-alternative-spellings="" data-relevancy-booster="1" @if(field.value != null && country.getCountryRef.equals(field.value)){selected="selected"}>@country.getCountryName</option>
+    }
+  </select>
+
+  @if(removeButton.isDefined) {
+
+    @removeButton.get
+
+  }
+
+  @if(detailPanel.isDefined) {
+
+    @detailPanel.get
+
+  }
+
+</div>
