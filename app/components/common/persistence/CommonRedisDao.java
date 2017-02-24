@@ -211,4 +211,20 @@ public abstract class CommonRedisDao {
   protected TransactionIdProvider getTransactionIdProvider() {
     return transactionIdProvider;
   }
+
+  /**
+   * Refreshes the TTL of the key associated with this transaction, see {@link #hashKey()}
+   */
+  public void refreshTTL() {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    try (Jedis jedis = pool.getResource()) {
+      int reply = jedis.expire(hashKey(), keyConfig.getHashTtlSeconds()).intValue();
+      if (reply == 0) {
+        Logger.error(String.format("Could not refresh TTL of '%s', key does not exist", hashKey()));
+      }
+    }
+    finally {
+      Logger.debug(String.format("TTL of '%s' refresh completed in %d ms", hashKey(), stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+  }
 }
