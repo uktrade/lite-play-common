@@ -40,7 +40,7 @@ public class SpireAuthManager {
   /**
    * @return AuthInfo constructed from SAML attributes which have been cached by Pac4j.
    */
-  private AuthInfo getAuthInfoFromContext() {
+  public AuthInfo getAuthInfoFromContext() {
 
     Stopwatch sw = Stopwatch.createStarted();
     try {
