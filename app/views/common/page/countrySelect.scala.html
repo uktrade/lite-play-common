@@ -1,14 +1,14 @@
 @import models.common.Country
 
-@(field: Form.Field, countries: List[Country], hintText: Option[String] = None, removeButton: Option[Html] = None, detailPanel: Option[Html] = None)
+@(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None, detailPanel: Option[Html] = None)
 <div id="@field.id" class="form-group @if(field.error.isDefined) { error}">
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  @if(hintText.isDefined) {
-    <label class="form-hint" for="@Html(field.id + "-s")">@hintText</label>
+  @if(labelText.isDefined) {
+    <label class="@if(labelCssClass.isDefined) { @labelCssClass } else { form-label }" for="@Html(field.id + "-s")">@labelText</label>
   }
 
   <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-id="@Html(field.id + "-s")">
