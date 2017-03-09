@@ -19,11 +19,8 @@ import java.util.concurrent.TimeUnit;
  * Utility class providing logging of HTTP/HTTPS request and responses for use in service clients
  */
 public class ServiceClientLogger {
-  private final HttpExecutionContext httpExecutionContext;
 
-  @Inject
-  public ServiceClientLogger(HttpExecutionContext httpExecutionContext) {
-    this.httpExecutionContext = httpExecutionContext;
+  private ServiceClientLogger() {
   }
 
   /**
@@ -32,7 +29,7 @@ public class ServiceClientLogger {
    * @param request
    * @return the URL with parameters, defaults to the requests {@link play.libs.ws.WSRequest#getUrl()} if the build is unsuccessful
    */
-  private String requestToURL(WSRequest request) {
+  private static String requestToURL(WSRequest request) {
     // Default to request URL without parameters
     String url = request.getUrl();
     Map<String, Collection<String>> queryParameters = request.getQueryParameters();
@@ -82,9 +79,10 @@ public class ServiceClientLogger {
    *
    * @param serviceName name of the service which the request is sent too (used for logging purposes only)
    * @param method HTTP method used in this request (used for logging purposes only)
+   * @param httpExecutionContext The HTTP context in which the logs will be written
    * @return a request filter which logs the request
    */
-  public WSRequestFilter requestFilter(String serviceName, String method) {
+  public static WSRequestFilter requestFilter(String serviceName, String method, HttpExecutionContext httpExecutionContext) {
     return executor -> request -> {
       String url = requestToURL(request);
       Logger.info(String.format("%s service request - URL: %s, method: %s", serviceName, url, method));
