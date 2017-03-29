@@ -3,6 +3,7 @@ package components.common.state;
 import static play.mvc.Results.redirect;
 
 import io.mikael.urlbuilder.UrlBuilder;
+import org.apache.commons.lang3.StringUtils;
 import play.mvc.Call;
 import play.mvc.Result;
 
@@ -42,7 +43,10 @@ public class ContextParamManager {
       UrlBuilder urlBuilder = UrlBuilder.fromUri(new URI(call.url()));
 
       for (ContextParamProvider provider : contextParamProviderList) {
-        urlBuilder = urlBuilder.addParameter(provider.getParamName(), provider.getParamValueFromContext());
+        String paramValue = provider.getParamValueFromContext();
+        if (StringUtils.isNoneBlank(paramValue)) {
+          urlBuilder = urlBuilder.addParameter(provider.getParamName(), paramValue);
+        }
       }
 
       return urlBuilder.toUri().toString();
@@ -77,6 +81,7 @@ public class ContextParamManager {
     return contextParamProviderList
         .stream()
         .map(e -> new ContextParam(e.getParamName(), e.getParamValueFromContext()))
+        .filter(e -> StringUtils.isNoneBlank(e.getValue()))
         .collect(Collectors.toList());
   }
 }
