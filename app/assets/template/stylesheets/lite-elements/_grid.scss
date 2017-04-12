@@ -1,0 +1,178 @@
+/*
+Grid system based on Bootstrap 3
+
+The MIT License (MIT)
+
+Copyright (c) 2011-2016 Twitter, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+// Framework grid generation
+//
+// Used only by Bootstrap to generate the correct number of grid classes given
+// any value of `$grid-columns`.
+$grid-gutter-width: 30px;
+
+@mixin clearfix() {
+  &:before,
+  &:after {
+    content: " "; // 1
+    display: table; // 2
+  }
+  &:after {
+    clear: both;
+  }
+}
+
+@mixin container-fixed($gutter: $grid-gutter-width) {
+  margin-right: auto;
+  margin-left: auto;
+  padding-left:  floor(($gutter / 2));
+  padding-right: ceil(($gutter / 2));
+  @include clearfix;
+}
+
+
+@mixin make-row($gutter: $grid-gutter-width) {
+  margin-left:  ceil(($gutter / -2));
+  margin-right: floor(($gutter / -2));
+  @include clearfix;
+}
+
+
+@mixin make-row-to-edge($gutter: $grid-gutter-width) {
+  margin-left:  -$gutter;
+  margin-right: -$gutter;
+  @include clearfix;
+}
+
+
+@mixin make-grid-columns($columns, $classes, $i: 1) {
+  @each $class in $classes {
+    $list: ".col-#{$class}-#{$i}, .col-#{$class}-#{$i}, .col-#{$class}-#{$i}, .col-#{$class}-#{$i}";
+    @for $i from (1 + 1) through $columns {
+      $list: "#{$list}, .col-#{$class}-#{$i}, .col-#{$class}-#{$i}, .col-#{$class}-#{$i}, .col-#{$class}-#{$i}";
+    }
+    #{$list} {
+      box-sizing: border-box;
+      position: relative;
+      // Prevent columns from collapsing when empty
+      min-height: 1px;
+      // Inner gutter via padding
+      padding-left:  ceil(($grid-gutter-width / 2));
+      padding-right: floor(($grid-gutter-width / 2));
+    }
+  }
+}
+
+
+@mixin float-grid-columns($columns, $class, $i: 1, $list: ".col-#{$class}-#{$i}") {
+  @for $i from (1 + 1) through $columns {
+    $list: "#{$list}, .col-#{$class}-#{$i}";
+  }
+  #{$list} {
+    float: left;
+  }
+}
+
+
+@mixin calc-grid-column($columns, $index, $class, $type) {
+  @if ($type == width) and ($index > 0) {
+    .col-#{$class}-#{$index} {
+      width: percentage(($index / $columns));
+    }
+  }
+  @if ($type == push) and ($index > 0) {
+    .col-#{$class}-push-#{$index} {
+      left: percentage(($index / $columns));
+    }
+  }
+  @if ($type == push) and ($index == 0) {
+    .col-#{$class}-push-0 {
+      left: auto;
+    }
+  }
+  @if ($type == pull) and ($index > 0) {
+    .col-#{$class}-pull-#{$index} {
+      right: percentage(($index / $columns));
+    }
+  }
+  @if ($type == pull) and ($index == 0) {
+    .col-#{$class}-pull-0 {
+      right: auto;
+    }
+  }
+  @if ($type == offset) {
+    .col-#{$class}-offset-#{$index} {
+      margin-left: percentage(($index / $columns));
+    }
+  }
+}
+
+
+@mixin loop-grid-columns($columns, $class, $type) {
+  @for $i from 0 through $columns {
+    @include calc-grid-column($columns, $i, $class, $type);
+  }
+}
+
+
+// Create grid for specific class
+@mixin make-grid($class, $columns) {
+  @include float-grid-columns($columns, $class);
+  @include loop-grid-columns($columns, $class, width);
+  @include loop-grid-columns($columns, $class, pull);
+  @include loop-grid-columns($columns, $class, push);
+  @include loop-grid-columns($columns, $class, offset);
+}
+
+
+.container {
+  @include container-fixed;
+}
+
+.row {
+  @include make-row;
+
+  &.bottom-margin {
+    margin-bottom: $gutter / 2;
+  }
+}
+
+.row.to-edge {
+  @include make-row-to-edge;
+}
+
+@include make-grid-columns(12, (mobile, tablet, desktop));
+@include make-grid-columns(15, (mobile15, tablet15, desktop15));
+
+@include media(mobile) {
+  @include make-grid(mobile, 12);
+  @include make-grid(mobile15, 15);
+}
+
+@include media(tablet) {
+  @include make-grid(tablet, 12);
+  @include make-grid(tablet15, 15);
+}
+
+@include media(desktop) {
+  @include make-grid(desktop, 12);
+  @include make-grid(desktop15, 15);
+}

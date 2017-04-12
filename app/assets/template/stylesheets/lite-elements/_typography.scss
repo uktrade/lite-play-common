@@ -1,0 +1,25 @@
+.grid-label {
+  color: $secondary-text-colour;
+  margin-bottom: 5px;
+}
+
+.tooltipster-content .grid-label {
+  color: $grey-2;
+}
+
+ul.bullet-list {
+  list-style-type: disc;
+  padding-left: 1em;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+
+  li {
+    margin: 0.25em 0;
+  }
+}
+
+summary h2,
+summary h3,
+summary h4 {
+  display: inline-block;
+}

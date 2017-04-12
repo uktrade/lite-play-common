@@ -1,0 +1,80 @@
+.block-label {
+
+  &.selection-button-small {
+    padding: (1px $gutter-one-third 0px 30px);
+
+    @include media(tablet) {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    input {
+      width: 20px;
+      height: 20px;
+    }
+
+    &.row-selection-button {
+      padding: 0;
+      
+      input {
+        position: relative;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .js-enabled & {
+    &.selection-button-small {
+      min-height: 20px;
+    }
+
+    &.selection-button-radio.selection-button-small::before {
+      width: 16px;
+      height: 16px;
+    }
+
+    &.selection-button-radio.selection-button-small::after {
+      border: 4px solid;
+      top: 6px;
+      left: 6px;
+    }
+
+    &.selection-button-checkbox.selection-button-small::before {
+      content: "";
+      border: 2px solid;
+      background: transparent;
+      width: 16px;
+      height: 16px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    &.selection-button-checkbox.selection-button-small::after {
+      border-width: 0 0 3px 3px;
+      width: 7px;
+      height: 4px;
+      top: 5px;
+      left: 5px;
+    }
+
+    // Focused state
+    &.selection-button-small {
+      &.focused::before {
+        @include box-shadow(0 0 0 3px $focus-colour);
+      }
+      // IE8 focus outline should stay as a border around the entire label
+      // Lack of padding doesn’t matter as IE8 won’t resize the inputs.
+      @include ie-lte(8) {
+        &.focused {
+          outline: 3px solid $focus-colour;
+        }
+      }
+    }
+
+  }
+}
+
+.table-font-xsmall .row-selection-button {
+  margin-top: -3px
+}

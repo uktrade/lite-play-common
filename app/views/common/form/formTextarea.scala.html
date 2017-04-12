@@ -1,9 +1,9 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
+@(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass: String = "", validationGroup: Option[String] = None, boldPrompt: Boolean = false)(label: Html)
 
 <div class="form-group @if(field.error.isDefined){ error }">
 
-  <label class="form-label" for="@field.id">@label</label>
+  <label class="form-label @if(boldPrompt){ form-label-bold }" for="@field.id">@label</label>
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>

@@ -1,0 +1,44 @@
+.admin-page {
+
+  #global-header.with-proposition .header-wrapper .header-global {
+    @include media(tablet) {
+      width: 50%;
+    }
+  }
+
+  #global-header.with-proposition .header-wrapper .header-proposition {
+    @include media(tablet) {
+      width: 50%;
+    }
+  }
+
+  #global-header #logo {
+    background-image: url("images/dit_crest.png");
+    background-size: 30px 34px;
+  }
+
+  #content-wrapper {
+    padding-top: 30px;
+  }
+}
+
+.wide-page {
+  #global-header .header-wrapper {
+    max-width: 1230px;
+  }
+
+  #global-header-bar,
+  #content {
+    max-width: 1200px;
+  }
+}
+
+.display-none {
+  display: none;
+}
+
+@-moz-document regexp('.*') {
+  details summary:not([tabindex]).display-none {
+    display: none;
+  }
+}

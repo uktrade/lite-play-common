@@ -1,0 +1,4 @@
+@(width: Integer = 1, columns: Integer = 12, offset: Integer = null, minBreakpoint: String = "tablet")(content: Html)
+<div class="col-@minBreakpoint@if(columns != 12){@columns}-@width @if(offset != null){ col-@minBreakpoint@if(columns != 12){@columns}-offset-@offset }">
+  @content
+</div>

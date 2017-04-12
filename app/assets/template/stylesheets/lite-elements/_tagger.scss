@@ -1,0 +1,62 @@
+.tagger {
+  @include box-sizing(border-box);
+  @include core-19;
+  width: 100%;
+
+  padding: 5px 4px 4px;
+  background-color: transparent;
+  border: 2px solid;
+
+  &.focus {
+    outline: 3px solid $focus-colour;
+    outline-offset: 0;
+  }
+
+  .search {
+    display: none;
+  }
+
+  .tag {
+    border: none;
+    background: $panel-colour;
+    padding: 0 10px;
+    border-radius: 100px;
+
+    .removetag {
+      padding: 0 0 0 10px
+    }
+  }
+
+  .suggestions {
+    display: none;
+    float: left;
+    margin-left: -5px;
+    margin-top: 12px;
+    border: 1px solid #eee;
+    position: absolute;
+    background-color: $white;
+    max-height: 200px;
+    _height: expression( this.scrollHeight > 200 ? "200px" : "auto" );
+    overflow: auto;
+    overflow-x: hidden;
+    border: 1px solid #aaa;
+    z-index: 9999;
+    @include box-shadow(0px 0px 15px rgba(0,0,0,0.2));
+
+    ul {
+      li {
+        padding: 10px;
+        line-height: 1em;
+        box-sizing: border-box;
+
+        &:nth-child(odd) {
+          background: $white;
+        }
+        &.focus {
+          background: $focus-colour;
+          outline: 0;
+        }
+      }
+    }
+  }
+}

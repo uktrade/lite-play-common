@@ -1,0 +1,12 @@
+@import java.util.UUID
+
+@(side: String = "bottom", minWidth: Integer = 0)(content: Html)(tooltipContent: Html)
+@defining(UUID.randomUUID()) { tooltipId =>
+  <span class="tooltip" data-tooltip-content="#tooltip-content-@tooltipId" data-tooltipster='{"side":"@side","minWidth":@minWidth}'>@content</span>
+
+  <div class="tooltip-content">
+    <div id="tooltip-content-@tooltipId">
+      @tooltipContent
+    </div>
+  </div>
+}

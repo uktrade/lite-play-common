@@ -1,14 +1,14 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
+@(field: Form.Field, hint: Option[Html] = None, cssClass: String = "", validationGroup: Option[String] = None, boldPrompt: Boolean = false, placeholder: String = "")(label: Html)
 <div class="form-group @if(field.error.isDefined){ error }">
 
-  <label class="form-label" for="@field.id">@label</label>
+  <label class="form-label @if(boldPrompt){ form-label-bold }" for="@field.id">@label</label>
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <input class="form-control @cssClass" id="@field.id" name="@field.name" type="text" value="@field.value"
+  <input class="form-control @cssClass" id="@field.id" name="@field.name" type="text" value="@field.value" placeholder="@placeholder"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

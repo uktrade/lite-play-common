@@ -1,0 +1,9 @@
+@(bold: Boolean = true)(content: Html)
+<p class="notice">
+  <i class="icon icon-important">
+    <span class="visually-hidden">Warning</span>
+  </i>
+  <strong class="@if(bold) {bold-small}">
+    @content
+  </strong>
+</p>

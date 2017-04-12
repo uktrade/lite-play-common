@@ -1,0 +1,24 @@
+.tag-list {
+  li {
+    padding: 10px 0;
+    border-bottom: 1px solid $border-colour;
+    position: relative;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .tag-delete:after {
+      content: '\00d7';
+      width: 16px;
+      height: 16px;
+      display: block;
+      position: absolute;
+      right: 0;
+      top: 10px;
+      font-size: 20px;
+      color: $grey-2;
+      cursor: pointer;
+    }
+  }
+}

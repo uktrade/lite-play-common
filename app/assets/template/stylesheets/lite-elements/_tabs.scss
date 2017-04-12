@@ -1,0 +1,35 @@
+.tabs.pill-tabs {
+  margin-bottom: 1.5em;
+
+  li {
+    display: inline-block;
+    margin-right: 1em;
+    margin-bottom: 0.5em;
+
+    a {
+      font-weight: 600;
+      text-decoration: none;
+      background: $grey-3;
+      border-radius: 1000px;
+      line-height: 1;
+      display: inline-block;
+      padding: 0.5em 0.8em 0.4em 0.8em;
+
+      &:focus{
+        @include box-shadow(0 0 0 3px $focus-colour);
+        outline: none;
+      }
+
+      @include ie-lte(8) {
+        &:focus {
+          outline: 3px solid $focus-colour;
+        }
+      }
+    }
+
+    &.active a {
+      color: $white;
+      background: $govuk-blue;
+    }
+  }
+}

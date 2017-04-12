@@ -1,0 +1,24 @@
+.button.secondary {
+  @include button ($govuk-blue);
+}
+
+.button.link-button {
+  @include box-sizing (border-box);
+  background: transparent;
+  box-shadow: none;
+  padding: em(10) em(15) em(5) em(15);
+  vertical-align: top;
+  text-decoration: underline;
+  color: $link-colour;
+  @include media (mobile) {
+    width: 100%;
+  }
+
+  &:hover {
+    color: $link-hover-colour;
+  }
+
+  &:active {
+    color: $link-hover-colour;
+  }
+}

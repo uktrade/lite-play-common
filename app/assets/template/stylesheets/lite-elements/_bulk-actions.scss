@@ -1,0 +1,123 @@
+html.right-pane-visible {
+  height: 100%;
+  overflow: hidden;
+
+  body {
+    height: 100%;
+  }
+
+  #body-scroll {
+    overflow: auto;
+    height: 100%;
+  }
+
+  #body-wrapper {
+    min-width: 960px;
+  }
+
+  main#content,
+  footer#footer {
+    padding-left: $gutter;
+    padding-right: $gutter;
+  }
+}
+
+#body-scroll {
+  transition: width 0.2s;
+}
+
+.bulk-actions-pane {
+  opacity: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: $gutter / 2 $gutter;
+  border-top: 1px solid #efefef;
+  z-index: 100;
+  transform: translate3d(0, 100%, 0);
+  transition: transform 0.2s, opacity 0s 0.2s;
+  @include box-shadow(0 0px 10px rgba(0,0,0,0.1));
+
+  &.visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.2s;
+  }
+
+  &.right-bulk-actions-pane {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: 400px;
+    overflow: auto;
+    transform: translate3d(100%, 0, 0);
+    border-top: none;
+    border-left: 1px solid #efefef;
+
+    &.visible {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .bulk-actions {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .selected-item-counter {
+    float: left;
+    margin-right: 20px;
+    background: $panel-colour;
+    border-radius: 500px;
+    vertical-align: top;
+    padding: .526315em 0.39em .263157em;
+    font-weight: bold;
+    min-width: 1.3em;
+    text-align: center;
+  }
+
+  .selected-item-name-singular,
+  .selected-item-name-plural {
+    display: none;
+  }
+
+  .cancel-bulk-action {
+    float: right;
+  }
+
+  .bulk-action-status {
+    display: table;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibillity 0s, opacity 0.2s;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: $green;
+    color: $white;
+    font-weight: bold;
+    padding: $gutter / 2 0;
+    min-height: 41px;
+    width: 100%;
+    @include box-shadow(0 0px 10px rgba(0,0,0,0.1));
+
+    &.visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .bulk-action-status-wrapper {
+      display: table-cell;
+      vertical-align: middle;
+
+      .bulk-action-status-text {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+    }
+  }
+}

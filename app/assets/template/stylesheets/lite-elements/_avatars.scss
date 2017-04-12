@@ -1,0 +1,40 @@
+.avatar {
+  @extend .circle;
+  width: 24px;
+  height: 24px;
+  line-height: 25px;
+}
+
+.avatar-large {
+  @extend .circle-step-large;
+  width: 38px;
+  height: 38px;
+  line-height: 40px;
+}
+
+$avatar-colours: (
+  purple: $purple,
+  pink: $pink,
+  mellow-red: $mellow-red,
+  mauve: $mauve,
+  green: $green,
+  fuscia: $fuschia,
+  red: $red,
+  govuk-blue: $govuk-blue
+);
+
+@each $name, $colour in $avatar-colours {
+  .avatar-#{$name} {
+    background: $colour;
+  }
+}
+
+th .avatar,
+td .avatar {
+  display: block;
+  margin-top: -5px;
+}
+
+.table-font-xsmall .avatar {
+  margin-top: -4px
+}

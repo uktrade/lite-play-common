@@ -1,0 +1,59 @@
+.timeline {
+
+  width: 100%;
+  display: table;
+
+  li {
+    display: table-row;
+    position: relative;
+
+    .timeline-date,
+    .timeline-event {
+      display: table-cell;
+      vertical-align: top;
+    }
+
+    .timeline-date {
+      padding: 25px;
+      border-top: 3px dotted $black;
+      border-left: 4px solid $black;
+      position: relative;
+      white-space: nowrap;
+
+      &:before {
+        content: '';
+        width: 30px;
+        height: 30px;
+        background: $black;
+        border-radius: 50%;
+        position: absolute;
+        top: -17px;
+        left: -17px;
+      }
+    }
+
+    &:last-child .timeline-date {
+      border-left: none;
+    }
+
+    .timeline-time {
+      float: right;
+    }
+
+    .timeline-event-details {
+      border: 1px solid $grey-2;
+      border-top: none;
+      padding: 10px 15px 10px 15px;
+      margin-bottom: 30px;
+    }
+
+    h4 {
+      background: $black;
+      color: $white;
+      text-transform: uppercase;
+      font-weight: 700;
+      line-height: 1;
+      padding: 10px 15px 7px 15px;
+    }
+  }
+}

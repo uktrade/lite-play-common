@@ -1,0 +1,85 @@
+td.bold {
+  font-weight: 700;
+}
+
+.borderless-table td {
+  border-bottom: none;
+}
+
+.table-with-margins {
+  margin: 1em 0 2em;
+}
+
+.table-align-top {
+  th {
+    vertical-align: bottom;
+  }
+
+  td {
+    vertical-align: top;
+  }
+}
+
+.table-clickable-rows {
+  th:first-child,
+  td:first-child {
+    padding-left: 1.25em;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:hover {
+      background: #ffefd1;
+
+      input,
+      .selection-button-checkbox {
+        background: $white;
+      }
+    }
+  }
+}
+
+.card-table {
+  @extend .table-align-top;
+  border-collapse: separate;
+  border-spacing: 0 $gutter/2;
+
+  td {
+    border: 1px solid $border-colour;
+    border-left: none;
+    border-right: none;
+    padding: $gutter/2 0 $gutter/2 $gutter/2;
+
+    &:first-child {
+      border-left: 1px solid $border-colour;
+    }
+
+    &:last-child {
+      border-right: 1px solid $border-colour;
+      padding-right: $gutter/2;
+    }
+  }
+
+  thead th {
+    border: none;
+    padding: 0 $gutter/2 0 $gutter/2;
+
+    &:last-child {
+      padding-right: $gutter/2;
+    }
+  }
+}
+
+table li {
+  margin-bottom: 5px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+table .form-group {
+  margin-bottom: 0;
+}

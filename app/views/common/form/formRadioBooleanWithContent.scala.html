@@ -1,5 +1,5 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None)(trueContent: Html)(falseContent: Html)
+@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None, smallInputs: Boolean = false)(trueContent: Html)(falseContent: Html)
 
 @if(!hideHeading) {
   <h2 class="heading-medium">@prompt</h2>
@@ -23,12 +23,12 @@
       <p class="error-message">@Messages(field.error.get.message)</p>
     }
 
-    <label class="block-label" for="@field.name-T" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>
+    <label class="block-label @if(smallInputs){ selection-button-small }" for="@field.name-T" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>
       <input id="@field.name-T" name="@field.name" value="true" type="radio" @if("true".equals(field.value)){ checked="checked" }>
       @truePrompt
     </label>
 
-    <label class="block-label" for="@field.name-F" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>
+    <label class="block-label @if(smallInputs){ selection-button-small }" for="@field.name-F" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>
       <input id="@field.name-F" name="@field.name" value="false" type="radio" @if("false".equals(field.value)){ checked="checked" }>
       @falsePrompt
     </label>

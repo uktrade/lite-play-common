@@ -1,0 +1,8 @@
+@(title: Html, size: String = "medium")(content: Html)
+
+<div id="modal-container">
+  <div id="modal" class="modal-@size" role="dialog" aria-labelledby="modal-title">
+    <h2 id="modal-title" class="heading-large">@title</h2>
+    @content
+  </div>
+</div>
