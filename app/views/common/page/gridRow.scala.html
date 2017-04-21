@@ -1,4 +1,4 @@
-@(toEdge: Boolean = false, bottomMargin: Boolean = true)(content: Html)
-<div class="row @if(toEdge){ to-edge } @if(bottomMargin){ bottom-margin }">
+@(toEdge: Boolean = false, bottomMargin: Boolean = true, rowClass: String = "")(content: Html)
+<div class="row @if(toEdge){ to-edge } @if(bottomMargin){ bottom-margin } @rowClass">
   @content
 </div>

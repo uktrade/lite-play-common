@@ -11,6 +11,7 @@
     this.actionsSelector = 'button[data-bulk-action-id=' + this.bulkActionId + ']'
     this.paneSelector = '#' + this.bulkActionId
     this.checkedCheckboxesCount = 0;
+    this.paneVisible = false;
 
     //Move the pane to be a direct child of body so we can get the pane and content to scroll independently
     var $detachedPane = $('#' + this.bulkActionId).detach()
@@ -59,31 +60,45 @@
     $(this.paneSelector).css('transition', '')
   }
   BulkActions.prototype.togglePane = function () {
-    if($(this.checkboxesSelector).filter(':checked').length === 0){
+    if($(this.checkboxesSelector).filter(':checked').length === 0 && this.paneVisible){
       //If no rows are selected, hide the pane
-      $(this.paneSelector).removeClass('visible').attr('aria-hidden', 'true')
-      $('body').css('transform', '')
-      $('html').removeClass('right-pane-visible')
-      $('#body-scroll').css('width', parseFloat($('body').outerWidth()) + 'px')
-      setTimeout(function() { $('#body-scroll').css('width', '') }, 200)
-      $(this.paneSelector).css('transform', '')
-      var that = this
-      setTimeout(function() { that.hideStatus() }, 200) //Only do this after 200ms so the panel is offscreen before we hide the status
-      //Disable the window resize event so it's not firing unnecessarily
-      $(window).off('resize.bulkactionresize')
-    } else {
+      this.hidePane()
+    } else if(!this.paneVisible) {
       //If any rows are selected, show the pane
-      $(this.paneSelector).addClass('visible').attr('aria-hidden', 'false')
-      if($(this.paneSelector).hasClass('right-bulk-actions-pane')){
-        $('html').addClass('right-pane-visible')
-      }
-      this.updatePanePosition()
-      this.hideStatus()
-      var that = this
-      $(window).on('resize.bulkactionresize', function(e) {
-        that.handleWindowResize()
-      })
+      this.showPane()
     }
+  }
+  BulkActions.prototype.showPane = function () {
+    var bodyScrollPos = $('body').scrollTop();
+    $(this.paneSelector).addClass('visible').attr('aria-hidden', 'false')
+    if($(this.paneSelector).hasClass('right-bulk-actions-pane')){
+      $('html').addClass('right-pane-visible')
+    }
+    this.updatePanePosition()
+    this.hideStatus()
+    $('#body-scroll').scrollTop(bodyScrollPos);
+    $('body').scrollTop(0);
+    this.paneVisible = true;
+    var that = this
+    $(window).on('resize.bulkactionresize', function(e) {
+      that.handleWindowResize()
+    })
+  }
+  BulkActions.prototype.hidePane = function () {
+    var bodyScrollPos = $('#body-scroll').scrollTop();
+    $(this.paneSelector).removeClass('visible').attr('aria-hidden', 'true')
+    $('body').css('transform', '')
+    $('html').removeClass('right-pane-visible')
+    $('#body-scroll').css('width', parseFloat($('body').outerWidth()) + 'px')
+    setTimeout(function() { $('#body-scroll').css('width', '') }, 200)
+    $(this.paneSelector).css('transform', '')
+    $('body').scrollTop(bodyScrollPos);
+    $('#body-scroll').scrollTop(0);
+    this.paneVisible = false;
+    var that = this
+    setTimeout(function() { that.hideStatus() }, 200) //Only do this after 200ms so the panel is offscreen before we hide the status
+    //Disable the window resize event so it's not firing unnecessarily
+    $(window).off('resize.bulkactionresize')
   }
   BulkActions.prototype.toggleActions = function() {
     if($(this.checkboxesSelector).filter(':checked').length === 0){

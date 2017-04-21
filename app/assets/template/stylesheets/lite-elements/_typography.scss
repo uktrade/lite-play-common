@@ -10,8 +10,13 @@
 ul.bullet-list {
   list-style-type: disc;
   padding-left: 1em;
-  margin-top: 0.75em;
-  margin-bottom: 0.75em;
+  margin-top: em(5, 16);
+  margin-bottom: em(20, 16);
+
+  @include media(tablet) {
+    margin-top: em(5);
+    margin-bottom: em(20);
+  }
 
   li {
     margin: 0.25em 0;
@@ -22,4 +27,32 @@ summary h2,
 summary h3,
 summary h4 {
   display: inline-block;
+}
+
+a[target='_blank'] {
+  position: relative;
+  display: inline-block;
+  margin-right: 1.4em;
+
+  &:before,
+  &:after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    border: 0.13em solid;
+    background: white;
+    position: absolute;
+    z-index: 10;
+  }
+
+  &:before {
+    right: -1.05em;
+    bottom: 0.25em;
+  }
+
+  &:after {
+    right: -1.25em;
+    bottom: 0.45em;
+  }
 }
