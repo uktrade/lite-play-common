@@ -60,15 +60,18 @@
     $(this.paneSelector).css('transition', '')
   }
   BulkActions.prototype.togglePane = function () {
-    if($(this.checkboxesSelector).filter(':checked').length === 0 && this.paneVisible){
+    if($(this.checkboxesSelector).filter(':checked').length === 0){
       //If no rows are selected, hide the pane
       this.hidePane()
-    } else if(!this.paneVisible) {
+    } else {
       //If any rows are selected, show the pane
       this.showPane()
     }
   }
   BulkActions.prototype.showPane = function () {
+    if(this.paneVisible) {
+      return;
+    }
     var bodyScrollPos = $('body').scrollTop();
     $(this.paneSelector).addClass('visible').attr('aria-hidden', 'false')
     if($(this.paneSelector).hasClass('right-bulk-actions-pane')){
@@ -85,6 +88,9 @@
     })
   }
   BulkActions.prototype.hidePane = function () {
+    if(!this.paneVisible) {
+      return;
+    }
     var bodyScrollPos = $('#body-scroll').scrollTop();
     $(this.paneSelector).removeClass('visible').attr('aria-hidden', 'true')
     $('body').css('transform', '')

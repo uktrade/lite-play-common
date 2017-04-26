@@ -21,8 +21,7 @@ td.bold {
 }
 
 .table-clickable-rows {
-  th:first-child,
-  td:first-child {
+  th, td {
     padding-left: 1.25em;
   }
 
@@ -37,6 +36,10 @@ td.bold {
       .selection-button-checkbox {
         background: $white;
       }
+    }
+
+    td:hover{
+      background: $focus-colour;
     }
   }
 }
