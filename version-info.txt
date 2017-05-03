@@ -1,7 +1,7 @@
 This build created from:
 
- * govuk_frontend_toolkit   v5.0.2
- * govuk_elements           v2.2.1
+ * govuk_frontend_toolkit   v5.2.0
+ * govuk_elements           v3.0.2
  * govuk_template           v0.19.0
  * govuk_prototype_kit      v5.0.0
 
@@ -36,8 +36,7 @@ JavaScript
 
 Copy govuk_elements/public/javascripts/vendor/details.polyfill.js to public/template/javascripts/vendor
 
-Copy govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js
-                                              show-hide-content.js to public/template/javascripts/govuk
+Copy govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js to public/template/javascripts/govuk
 
 
 Misc

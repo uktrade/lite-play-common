@@ -3,7 +3,7 @@
 
 <h2 class="@promptCssClass">@prompt</h2>
 
-<div id="@field.name" class="form-group @if(field.error.isDefined) { error }"
+<div id="@field.name" class="form-group @if(field.error.isDefined) { form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

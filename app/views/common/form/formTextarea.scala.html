@@ -1,7 +1,7 @@
 @import utils.common.ViewUtil
 @(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
 
-<div class="form-group @if(field.error.isDefined){ error }">
+<div class="form-group @if(field.error.isDefined){ form-group-error }">
 
   <label class="form-label" for="@field.id">@label</label>
 
@@ -9,7 +9,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <textarea class="form-control @cssClass" id="@field.id" rows="@rows" name="@field.name" type="text"
+  <textarea class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" rows="@rows" name="@field.name" type="text"
     @{
       val fieldValidationData = ViewUtil.fieldValidationJSON(field);
       if(fieldValidationData != null){

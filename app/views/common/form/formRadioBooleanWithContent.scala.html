@@ -5,7 +5,7 @@
   <h2 class="heading-medium">@prompt</h2>
 }
 
-<div id="@field.name" class="form-group @if(field.error.isDefined){ error }"
+<div id="@field.name" class="form-group @if(field.error.isDefined){ form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -23,15 +23,15 @@
       <p class="error-message">@Messages(field.error.get.message)</p>
     }
 
-    <label class="block-label" for="@field.name-T" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>
+    <div class="multiple-choice">
       <input id="@field.name-T" name="@field.name" value="true" type="radio" @if("true".equals(field.value)){ checked="checked" }>
-      @truePrompt
-    </label>
+      <label for="@field.name-T" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>@truePrompt</label>
+    </div>
 
-    <label class="block-label" for="@field.name-F" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>
+    <div class="multiple-choice">
       <input id="@field.name-F" name="@field.name" value="false" type="radio" @if("false".equals(field.value)){ checked="checked" }>
-      @falsePrompt
-    </label>
+      <label for="@field.name-F" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>@falsePrompt</label>
+    </div>
 
     @if(trueContent.body.nonEmpty) {
       <div class="panel panel-border-narrow js-hidden" id="@field.name-T-content">
