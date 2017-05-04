@@ -233,9 +233,9 @@ LITECommon.ClientSideValidation = {
   _addErrorMessageToField: function (field, message) {
     "use strict";
 
-    var formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
-    if (!formGroup.hasClass('form-group-error')) {
-      formGroup.addClass('form-group-error');
+    var $formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
+    if (!$formGroup.hasClass('form-group-error')) {
+      $formGroup.addClass('form-group-error');
     }
 
     if (!$(field).hasClass('form-control-error') && LITECommon.ClientSideValidation._isTextField(field)) {
@@ -243,19 +243,19 @@ LITECommon.ClientSideValidation = {
     }
 
     // Only add the message if there's not already a matching error message for this field
-    if ($("p.error-message:contains('" + message + "')", formGroup).length === 0) {
-      var errorMessage = $("<p/>");
-      errorMessage.text(message);
-      errorMessage.addClass("error-message");
-      errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
+    if ($("p.error-message:contains('" + message + "')", $formGroup).length === 0) {
+      var $errorMessage = $("<p/>");
+      $errorMessage.text(message);
+      $errorMessage.addClass("error-message");
+      $errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
 
-      if (field === formGroup[0]) {
+      if (field === $formGroup[0]) {
         // If the 'field' is the form-group put the message at the top of the form-group content
-        $(formGroup).prepend(errorMessage);
+        $formGroup.prepend($errorMessage);
       }
       else {
         // If the 'field' is an individual field put the message before it
-        $(field).before(errorMessage);
+        $(field).before($errorMessage);
       }
     }
   },
