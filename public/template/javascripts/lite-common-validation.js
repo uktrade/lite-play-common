@@ -92,7 +92,7 @@ LITECommon.ClientSideValidation = {
 
       if ('required' in validationRules) {
         validator = validationRules.required;
-        if ($(field).is('textarea, select, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]')) {
+        if (LITECommon.ClientSideValidation._isTextField(field)) {
           // If the field is a text input, check the values length is above 0
           if (!$(field).val() || $(field).val().length <= 0) {
             validationFailures.push({field: field, message: validator.message});
@@ -212,9 +212,11 @@ LITECommon.ClientSideValidation = {
     var errorMessages = $(formGroup).find("p.error-message");
     var clientsideErrorMessages = $(formGroup).find("p.error-message["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]");
 
+    $(field).removeClass('form-control-error');
+
     // Clear the error class on the form-group if the only messages in the group are client side ones
     if (errorMessages.length === clientsideErrorMessages.length) {
-      formGroup.removeClass('error');
+      formGroup.removeClass('form-group-error');
     }
 
     // Remove the client side messages
@@ -231,25 +233,29 @@ LITECommon.ClientSideValidation = {
   _addErrorMessageToField: function (field, message) {
     "use strict";
 
-    var formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
-    if (!formGroup.hasClass('error')) {
-      formGroup.addClass('error');
+    var $formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
+    if (!$formGroup.hasClass('form-group-error')) {
+      $formGroup.addClass('form-group-error');
+    }
+
+    if (!$(field).hasClass('form-control-error') && LITECommon.ClientSideValidation._isTextField(field)) {
+      $(field).addClass('form-control-error');
     }
 
     // Only add the message if there's not already a matching error message for this field
-    if ($("p.error-message:contains('" + message + "')", formGroup).length === 0) {
-      var errorMessage = $("<p/>");
-      errorMessage.text(message);
-      errorMessage.addClass("error-message");
-      errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
+    if ($("p.error-message:contains('" + message + "')", $formGroup).length === 0) {
+      var $errorMessage = $("<p/>");
+      $errorMessage.text(message);
+      $errorMessage.addClass("error-message");
+      $errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
 
-      if (field === formGroup[0]) {
+      if (field === $formGroup[0]) {
         // If the 'field' is the form-group put the message at the top of the form-group content
-        $(formGroup).prepend(errorMessage);
+        $formGroup.prepend($errorMessage);
       }
       else {
         // If the 'field' is an individual field put the message before it
-        $(field).before(errorMessage);
+        $(field).before($errorMessage);
       }
     }
   },
@@ -309,7 +315,20 @@ LITECommon.ClientSideValidation = {
       // Clear client side if there's no errors this time
       $("div.error-summary["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]").remove();
     }
-  }
+  },
+
+  /**
+   * Determines whether the field is textual
+   *
+   * @param field Field to check the type of
+   * @returns {boolean}
+   * @private
+   */
+  _isTextField: function (field) {
+    "use strict";
+
+    return $(field).is('textarea, select, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]');
+  },
 
 };
 

@@ -1,7 +1,7 @@
 @import models.common.Country
 
 @(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None, detailPanel: Option[Html] = None)
-<div id="@field.id" class="form-group @if(field.error.isDefined) { error}">
+<div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error}">
 
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>
