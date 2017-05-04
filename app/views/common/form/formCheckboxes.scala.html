@@ -15,13 +15,15 @@
 
   @* Iterator required to preserve ordering *@
   @for((option, index) <- options.iterator.zipWithIndex) {
-    <label class="block-label" for="@field.name@index">
+    <div class="multiple-choice">
       <input id="@field.name@index" type="checkbox" name="@{field.name}[@index]" value="@option._1.value" @if(option._2) { checked="checked" }>
-      @if(option._1.isPromptHtml) {
-        @Html(option._1.prompt.replace("\n", "<br/>"))
-      } else {
-        @Html(HtmlFormat.escape(option._1.prompt).toString.replace("\n", "<br/>"))
-      }
-    </label>
+      <label for="@field.name@index">
+        @if(option._1.isPromptHtml) {
+          @Html(option._1.prompt.replace("\n", "<br/>"))
+        } else {
+          @Html(HtmlFormat.escape(option._1.prompt).toString.replace("\n", "<br/>"))
+        }
+      </label>
+    </div>
   }
 </div>
