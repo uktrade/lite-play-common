@@ -8,9 +8,12 @@ import play.Logger;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -33,9 +36,30 @@ public class CountryProvider {
     return countries.get(countryRef);
   }
 
+  /**
+   * Get a collection of countries
+   * @return a collection of Country
+   */
   public Collection<Country> getCountries() {
     Map<String, Country> countries = getCountriesMap();
     return countries.values();
+  }
+
+  /**
+   * Get a list a countries ordered by {@code countryComparator}
+   * @param countryComparator the Country comparator
+   * @return an ordered list of Country
+   */
+  public List<Country> getCountries(Comparator<Country> countryComparator) {
+    return getCountries().stream().sorted(countryComparator).collect(Collectors.toList());
+  }
+
+  /**
+   * Get a list of countries ordered by {@link Country#getCountryName()}
+   * @return an ordered list of Country
+   */
+  public List<Country> getCountriesOrderedByName() {
+    return getCountries(Comparator.comparing(Country::getCountryName));
   }
 
   public Map<String, Country> getCountriesMap() {
