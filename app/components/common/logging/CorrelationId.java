@@ -1,5 +1,6 @@
 package components.common.logging;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import play.Logger;
 import play.libs.ws.WSRequestExecutor;
@@ -28,11 +29,12 @@ public class CorrelationId {
    * This function should be called at the start of the request to either set an existing Correlation ID
    * (looked for in the request headers) on the thread for later use or to create a new Correlation ID just in time.
    *
-   * @param request HTTP Request which may contain a header called {@link CorrelationId#HTTP_HEADER_NAME} with an existing Correlation ID in it
+   * @param requestHeader HTTP Request headers which may contain a header called {@link CorrelationId#HTTP_HEADER_NAME}
+   *                      with an existing Correlation ID in it
    */
-  public static void setUp(Http.Request request) {
-    String header = request.getHeader(HTTP_HEADER_NAME);
-    if (header != null && !header.isEmpty()) {
+  public static void setUp(Http.RequestHeader requestHeader) {
+    String header = requestHeader.getHeader(HTTP_HEADER_NAME);
+    if (StringUtils.isNoneBlank(header)) {
       MDC.put(MDC_KEY, header);
     }
     else {
