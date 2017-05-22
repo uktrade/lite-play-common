@@ -10,7 +10,7 @@ import java.util.concurrent.CompletionStage;
 /**
  * Action which sets up the Http Context with objects required by common library components.
  */
-public class CommonContextAction extends Action {
+public class CommonContextAction extends Action<Void> {
 
   private final CommonContextActionSetup commonContextActionSetup;
 
