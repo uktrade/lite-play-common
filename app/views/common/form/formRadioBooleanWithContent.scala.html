@@ -23,14 +23,14 @@
       <p class="error-message">@Messages(field.error.get.message)</p>
     }
 
-    <div class="multiple-choice">
+    <div class="multiple-choice" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>
       <input id="@field.name-T" name="@field.name" value="true" type="radio" @if("true".equals(field.value)){ checked="checked" }>
-      <label for="@field.name-T" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>@truePrompt</label>
+      <label for="@field.name-T">@truePrompt</label>
     </div>
 
-    <div class="multiple-choice">
+    <div class="multiple-choice" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>
       <input id="@field.name-F" name="@field.name" value="false" type="radio" @if("false".equals(field.value)){ checked="checked" }>
-      <label for="@field.name-F" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>@falsePrompt</label>
+      <label for="@field.name-F">@falsePrompt</label>
     </div>
 
     @if(trueContent.body.nonEmpty) {
