@@ -12,7 +12,8 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.10.19",
   "org.pac4j" % "pac4j" % "1.9.0",
   "org.pac4j" % "pac4j-saml" % "1.9.0",
-  "org.pac4j" % "play-pac4j" % "2.4.0"
+  "org.pac4j" % "play-pac4j" % "2.4.0",
+  "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.3.10" % "test"
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
