@@ -16,24 +16,37 @@ import java.util.concurrent.CompletionStage;
 
 public class CountryServiceClient {
 
+  public enum CountryServiceEndpoint {
+    SET,
+    GROUP
+  }
+
   private final HttpExecutionContext httpExecutionContext;
   private final WSClient wsClient;
-  private final String countryServiceUrl;
   private final int countryServiceTimeout;
+  private final String countryServiceUrl;
+  private final CountryServiceEndpoint countryServiceEndpoint;
+  private final String countryParamName;
   private final ObjectMapper objectMapper;
 
   public CountryServiceClient(HttpExecutionContext httpExecutionContext,
-                              WSClient wsClient, String countryServiceUrl,
-                              int countryServiceTimeout, ObjectMapper objectMapper) {
+                              WSClient wsClient,
+                              int countryServiceTimeout,
+                              String countryServiceUrl,
+                              CountryServiceEndpoint countryServiceEndpoint,
+                              String countryParamName,
+                              ObjectMapper objectMapper) {
     this.httpExecutionContext = httpExecutionContext;
     this.wsClient = wsClient;
-    this.countryServiceUrl = countryServiceUrl;
     this.countryServiceTimeout = countryServiceTimeout;
+    this.countryServiceUrl = countryServiceUrl;
+    this.countryServiceEndpoint = countryServiceEndpoint;
+    this.countryParamName = countryParamName;
     this.objectMapper = objectMapper;
   }
 
   public CompletionStage<List<Country>> getCountries() {
-    return wsClient.url(countryServiceUrl)
+    return wsClient.url(buildUrl())
       .withRequestFilter(CorrelationId.requestFilter)
       .setRequestTimeout(countryServiceTimeout)
       .get().handleAsync((result, error) -> {
@@ -55,7 +68,24 @@ public class CountryServiceClient {
       }, httpExecutionContext.current());
   }
 
-  // sf for group, for set. Pass base url (like other clients), specific endpoint as enum (request type), endpoint as free String
+  private String buildUrl() {
+    switch (countryServiceEndpoint) {
+      case SET:
+        return countryServiceUrl + "/countries/set/" + countryParamName;
+      case GROUP:
+        return countryServiceUrl + "/countries/group/" + countryParamName;
+      default:
+        return null;
+    }
+  }
+
+  public static CountryServiceClient buildCountryServiceGroupClient(HttpExecutionContext httpExecutionContext, WSClient wsClient, int countryServiceTimeout, String countryServiceUrl, String countryParamName, ObjectMapper objectMapper) {
+    return new CountryServiceClient(httpExecutionContext, wsClient, countryServiceTimeout, countryServiceUrl, CountryServiceEndpoint.GROUP, countryParamName, objectMapper);
+  }
+
+  public static CountryServiceClient buildCountryServiceSetClient(HttpExecutionContext httpExecutionContext, WSClient wsClient, int countryServiceTimeout, String countryServiceUrl, String countryParamName, ObjectMapper objectMapper) {
+    return new CountryServiceClient(httpExecutionContext, wsClient, countryServiceTimeout, countryServiceUrl, CountryServiceEndpoint.SET, countryParamName, objectMapper);
+  }
 
 }
 

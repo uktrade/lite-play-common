@@ -2,6 +2,7 @@ package components.common.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import components.common.client.CountryServiceClient.CountryServiceEndpoint;
 import models.common.Country;
 import org.junit.After;
 import org.junit.Before;
@@ -23,7 +24,8 @@ import static play.mvc.Results.ok;
 
 public class CountryServiceClientTest {
 
-  private static final String PATH = "/countries/set/export-control";
+  private static final String BASE_PATH = "/countries/set/";
+  private static final String COUNTRY_SET_NAME = "export-control";
 
   private CountryServiceClient client;
   private WSClient ws;
@@ -32,7 +34,7 @@ public class CountryServiceClientTest {
   @Before
   public void setUp() {
     Router router = new RoutingDsl()
-      .GET(PATH).routeTo(() -> {
+      .GET(BASE_PATH + COUNTRY_SET_NAME).routeTo(() -> {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("common/client/countries.json");
         JsonNode jsonNode = Json.parse(inputStream);
         return ok(jsonNode);
@@ -42,8 +44,9 @@ public class CountryServiceClientTest {
     server = Server.forRouter(router);
     int port = server.httpPort();
     ws = WS.newClient(port);
-    String serviceUrl = "http://localhost:" + port + PATH;
-    client = new CountryServiceClient(new HttpExecutionContext(Runnable::run), ws, serviceUrl, 10000, new ObjectMapper());
+    String serviceUrl = "http://localhost:" + port;
+    client = new CountryServiceClient(new HttpExecutionContext(Runnable::run), ws, 1000, serviceUrl,
+        CountryServiceEndpoint.SET, COUNTRY_SET_NAME, new ObjectMapper());
   }
 
   @Test

@@ -28,11 +28,11 @@ import java.util.concurrent.ExecutionException;
 public class CountryServiceSetConsumerPact {
   public static final String PROVIDER = "lite-play-common";
   public static final String CONSUMER = "lite-play-common";
+
   public static final String COUNTRY_REF = "CRTY0";
   public static final String COUNTRY_NAME = "United Kingdom";
 
   public static final String COUNTRY_SET_BASE_PATH = "/countries/set/";
-  public static final String COUNTRY_GROUP_BASE_PATH = "/countries/group/";
   public static final String EXISTS = "EXISTS";
   public static final String DOES_NOT_EXIST = "DOES_NOT_EXIST";
 
@@ -57,14 +57,6 @@ public class CountryServiceSetConsumerPact {
     return headers;
   }
 
-  public static String getCountrySetExistsClientUrl(PactProviderRule mockProvider) {
-    return mockProvider.getConfig().url() + getCountrySetExistsPath();
-  }
-
-  public static String getCountrySetDoesNotExistClientUrl(PactProviderRule mockProvider) {
-    return mockProvider.getConfig().url() + getCountrySetDoesNotExistPath();
-  }
-
   public static String getCountrySetExistsPath() {
     return COUNTRY_SET_BASE_PATH + EXISTS;
   }
@@ -74,13 +66,13 @@ public class CountryServiceSetConsumerPact {
   }
 
   public static CountryServiceClient buildCountrySetExistsClient(PactProviderRule mockProvider, WSClient wsClient) {
-    String clientUrl = getCountrySetExistsClientUrl(mockProvider);
-    return new CountryServiceClient(new HttpExecutionContext(Runnable::run), wsClient, clientUrl, 10000, Json.newDefaultMapper());
+    return CountryServiceClient.buildCountryServiceSetClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
+        mockProvider.getConfig().url(), EXISTS, Json.newDefaultMapper());
   }
 
   public static CountryServiceClient buildCountrySetDoesNotExistClient(PactProviderRule mockProvider, WSClient wsClient) {
-    String clientUrl = getCountrySetDoesNotExistClientUrl(mockProvider);
-    return new CountryServiceClient(new HttpExecutionContext(Runnable::run), wsClient, clientUrl, 10000, Json.newDefaultMapper());
+    return CountryServiceClient.buildCountryServiceSetClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
+        mockProvider.getConfig().url(), DOES_NOT_EXIST, Json.newDefaultMapper());
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)

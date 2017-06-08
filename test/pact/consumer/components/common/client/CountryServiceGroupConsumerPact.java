@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 public class CountryServiceGroupConsumerPact {
   public static final String PROVIDER = "lite-play-common";
   public static final String CONSUMER = "lite-play-common";
+
   public static final String COUNTRY_REF = "CRTY0";
   public static final String COUNTRY_NAME = "United Kingdom";
 
@@ -56,14 +57,6 @@ public class CountryServiceGroupConsumerPact {
     return headers;
   }
 
-  public static String getCountryGroupExistsClientUrl(PactProviderRule mockProvider) {
-    return mockProvider.getConfig().url() + getCountryGroupExistsPath();
-  }
-
-  public static String getCountryGroupDoesNotExistClientUrl(PactProviderRule mockProvider) {
-    return mockProvider.getConfig().url() + getCountryGroupDoesNotExistPath();
-  }
-
   public static String getCountryGroupExistsPath() {
     return COUNTRY_GROUP_BASE_PATH + EXISTS;
   }
@@ -73,13 +66,13 @@ public class CountryServiceGroupConsumerPact {
   }
 
   public static CountryServiceClient buildCountryGroupExistsClient(PactProviderRule mockProvider, WSClient wsClient) {
-    String clientUrl = getCountryGroupExistsClientUrl(mockProvider);
-    return new CountryServiceClient(new HttpExecutionContext(Runnable::run), wsClient, clientUrl, 10000, Json.newDefaultMapper());
+    return CountryServiceClient.buildCountryServiceGroupClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
+        mockProvider.getConfig().url(), EXISTS, Json.newDefaultMapper());
   }
 
   public static CountryServiceClient buildCountryGroupDoesNotExistClient(PactProviderRule mockProvider, WSClient wsClient) {
-    String clientUrl = getCountryGroupDoesNotExistClientUrl(mockProvider);
-    return new CountryServiceClient(new HttpExecutionContext(Runnable::run), wsClient, clientUrl, 10000, Json.newDefaultMapper());
+    return CountryServiceClient.buildCountryServiceGroupClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
+        mockProvider.getConfig().url(), DOES_NOT_EXIST, Json.newDefaultMapper());
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
