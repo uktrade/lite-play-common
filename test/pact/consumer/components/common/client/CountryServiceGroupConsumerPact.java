@@ -6,6 +6,7 @@ import au.com.dius.pact.consumer.Pact;
 import au.com.dius.pact.consumer.PactProviderRule;
 import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
+import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.PactFragment;
 import components.common.client.CountryServiceClient;
@@ -96,15 +97,19 @@ public class CountryServiceGroupConsumerPact {
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
   public static PactFragment countryGroupDoesNotExist(PactDslWithProvider builder) {
+    PactDslJsonBody body = new PactDslJsonBody()
+        .integerType("code", 404)
+        .stringType("message", "Country group does not exist - " + DOES_NOT_EXIST)
+        .asBody();
     return builder
         .given("provided country group does not exist")
         .uponReceiving("a request for provided country group")
           .path(getCountryGroupDoesNotExistPath())
           .method("GET")
         .willRespondWith()
-          .status(200)
+          .status(404)
           .headers(jsonHeader())
-          .body(new PactDslJsonArray())
+          .body(body)
         .toFragment();
   }
 
