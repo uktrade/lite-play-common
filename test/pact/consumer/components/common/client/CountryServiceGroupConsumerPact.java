@@ -83,8 +83,8 @@ public class CountryServiceGroupConsumerPact {
       .closeObject()
       .asArray();
     return builder
-        .given("provided country set exists")
-        .uponReceiving("a request for provided country set")
+        .given("provided country group exists")
+        .uponReceiving("a request for provided country group")
           .path(getCountryGroupExistsPath())
           .method("GET")
         .willRespondWith()
@@ -97,8 +97,8 @@ public class CountryServiceGroupConsumerPact {
   @Pact(provider = PROVIDER, consumer = CONSUMER)
   public static PactFragment countryGroupDoesNotExist(PactDslWithProvider builder) {
     return builder
-        .given("provided country set does not exist")
-        .uponReceiving("a request for provided country set")
+        .given("provided country group does not exist")
+        .uponReceiving("a request for provided country group")
           .path(getCountryGroupDoesNotExistPath())
           .method("GET")
         .willRespondWith()
