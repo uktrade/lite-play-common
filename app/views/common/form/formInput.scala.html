@@ -4,6 +4,12 @@
 
   <label class="form-label" for="@field.id">@label</label>
 
+  @if(hint.isDefined){
+    <label class="form-label" for="@field.id">
+      <span class="form-hint">@hint</span>
+    </label>
+  }
+
   @if(field.error.isDefined) {
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
@@ -18,9 +24,5 @@
   @if(validationGroup.isDefined) {
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }/>
-  @if(hint.isDefined){
-    <label class="form-label" for="@field.id">
-      <span class="form-hint">@hint</span>
-    </label>
-  }
+
 </div>
