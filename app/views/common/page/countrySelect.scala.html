@@ -1,17 +1,17 @@
 @import models.common.Country
 
 @(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None, detailPanel: Option[Html] = None)
-<div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error}">
-
-  @if(field.error.isDefined) {
-    <p class="error-message">@Messages(field.error.get.message)</p>
-  }
+<div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error }">
 
   @if(labelText.isDefined) {
     <label class="@if(labelCssClass.isDefined) { @labelCssClass } else { form-label }" for="@Html(field.id + "-s")">@labelText</label>
   }
 
-  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-id="@Html(field.id + "-s")">
+  @if(field.error.isDefined) {
+    <p class="error-message">@Messages(field.error.get.message)</p>
+  }
+
+  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-id="@Html(field.id + "-s")">
     <option value="" @if(field.value == null || "".equals(field.value)) {selected="selected"}></option>
     @for(country <- countries) {
       <option value="@country.getCountryRef" data-alternative-spellings="" data-relevancy-booster="1" @if(field.value != null && country.getCountryRef.equals(field.value)){selected="selected"}>@country.getCountryName</option>
