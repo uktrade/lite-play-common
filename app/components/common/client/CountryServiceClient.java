@@ -22,7 +22,6 @@ public class CountryServiceClient {
   private final int countryServiceTimeout;
   private final ObjectMapper objectMapper;
 
-  @Inject
   public CountryServiceClient(HttpExecutionContext httpExecutionContext,
                               WSClient wsClient, String countryServiceUrl,
                               int countryServiceTimeout, ObjectMapper objectMapper) {
@@ -55,6 +54,8 @@ public class CountryServiceClient {
         return new ArrayList<>();
       }, httpExecutionContext.current());
   }
+
+  // sf for group, for set. Pass base url (like other clients), specific endpoint as enum (request type), endpoint as free String
 
 }
 
