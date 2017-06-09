@@ -4,6 +4,7 @@ package components.common.state;
 import static play.mvc.Controller.ctx;
 
 import org.apache.commons.lang3.StringUtils;
+import utils.common.UploadUtil;
 
 import java.util.Map;
 import java.util.Objects;
@@ -32,7 +33,12 @@ public abstract class ContextParamProvider {
     }
     else {
       //Check POST params
-      Map<String, String[]> postParamMap = ctx().request().body().asFormUrlEncoded();
+      Map<String, String[]> postParamMap;
+      if (UploadUtil.isMultipartRequest(ctx().request())) {
+        postParamMap = ctx().request().body().asMultipartFormData().asFormUrlEncoded();
+      } else {
+        postParamMap = ctx().request().body().asFormUrlEncoded();
+      }
 
       if (postParamMap == null) {
         if (strict) {
