@@ -41,7 +41,7 @@ public class NotificationServiceClient {
    * @param emailAddress Recipient email address.
    * @param templateParams Name/value pairs of parameters for the given template. This map must match the parameter
    */
-  public void sendEmail(String templateName, String emailAddress, Map<String, String> templateParams) {
+  public CompletionStage<Boolean> sendEmail(String templateName, String emailAddress, Map<String, String> templateParams) {
 
     Logger.info("notification [" + templateName + "|" + emailAddress + "]");
 
@@ -65,7 +65,7 @@ public class NotificationServiceClient {
       }
     }, httpExecutionContext.current());
 
-    CompletionStage<Boolean> handledResult = result.handleAsync((responseIsOk, error) -> {
+    return result.handleAsync((responseIsOk, error) -> {
       if (error != null || !responseIsOk) {
         Logger.error("Notification service failure");
         if (error != null) {
