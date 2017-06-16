@@ -202,12 +202,6 @@ public abstract class CommonRedisDao {
     }
   }
 
-  public boolean pendingTransactionExists() {
-    try (Jedis jedis = pool.getResource()) {
-      return jedis.hexists(hashKey(), "pending:transactionType");
-    }
-  }
-
   protected TransactionIdProvider getTransactionIdProvider() {
     return transactionIdProvider;
   }
