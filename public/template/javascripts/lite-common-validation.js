@@ -108,7 +108,7 @@ LITECommon.ClientSideValidation = {
 
       if ('email' in validationRules) {
         validator = validationRules.email;
-        // If the field has a value, check it is an @ surrounded by some non-@ characters
+        // If the field has a value, fail if it isn't an @ surrounded by some non-@ characters
         if ($(field).val().length > 0 && !$(field).val().match(/[^@]+@[^@]+/)) {
           validationFailures.push({field: field, message: validator.message});
         }
@@ -116,40 +116,40 @@ LITECommon.ClientSideValidation = {
 
       if ('pattern' in validationRules) {
         validator = validationRules.pattern;
-        // If the field has a value, check it matches against the provided pattern
-        if ($(field).val().length > 0 && $(field).val().match(validator.pattern)) {
+        // If the field has a value, fail if it doesn't match against the provided pattern
+        if ($(field).val().length > 0 && !$(field).val().match(validator.pattern)) {
           validationFailures.push({field: field, message: validator.message});
         }
       }
 
       if ('max' in validationRules) {
         validator = validationRules.max;
-        // If the field has a value, check it is lower than or equal to the limit
-        if ($(field).val().length > 0 && $(field).val() <= validator.limit) {
+        // If the field has a value, fail if it's greater than the limit
+        if ($(field).val().length > 0 && $(field).val() > validator.limit) {
           validationFailures.push({field: field, message: validator.message});
         }
       }
 
       if ('min' in validationRules) {
         validator = validationRules.min;
-        // If the field has a value, check it is greater than or equal to the limit
-        if ($(field).val().length > 0 && $(field).val() >= validator.limit) {
+        // If the field has a value, fail if it's lower than the limit
+        if ($(field).val().length > 0 && $(field).val() < validator.limit) {
           validationFailures.push({field: field, message: validator.message});
         }
       }
 
       if ('maxLength' in validationRules) {
         validator = validationRules.maxLength;
-        // If the field has a value, check its length is lower than or equal to the limit
-        if ($(field).val().length > 0 && $(field).val().length <= validator.limit) {
+        // If the field has a value, fail if its length is greater than the limit
+        if ($(field).val().length > 0 && $(field).val().length > validator.limit) {
           validationFailures.push({field: field, message: validator.message});
         }
       }
 
       if ('minLength' in validationRules) {
         validator = validationRules.minLength;
-        // If the field has a value, check its length is greater than or equal to the limit
-        if ($(field).val().length > 0 && $(field).val().length >= validator.limit) {
+        // If the field has a value, fail if its length is lower than the limit
+        if ($(field).val().length > 0 && $(field).val().length < validator.limit) {
           validationFailures.push({field: field, message: validator.message});
         }
       }
