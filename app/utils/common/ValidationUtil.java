@@ -78,7 +78,7 @@ public class ValidationUtil {
     Map<String, Object> maxLengthDetails = new HashMap<>();
     maxLengthDetails.put("message", Messages.get(message, null, maxLength));
     maxLengthDetails.put("limit", maxLength);
-    validationData.put("max", maxLengthDetails);
+    validationData.put("maxLength", maxLengthDetails);
 
     return validationData;
   }
@@ -91,7 +91,7 @@ public class ValidationUtil {
     Map<String, Object> minLengthDetails = new HashMap<>();
     minLengthDetails.put("message", Messages.get(message, null, minLength));
     minLengthDetails.put("limit", minLength);
-    validationData.put("min", minLengthDetails);
+    validationData.put("minLength", minLengthDetails);
 
     return validationData;
   }
