@@ -30,7 +30,7 @@ LITECommon.countrySelectInitialise = function($countrySelect) {
   var autocompleteInput = $("input[ui-autocomplete-id=" + id + "]");
   if (autocompleteInput.length > 0) {
     autocompleteInput.attr("id", id);
-    $(this).removeAttr("id");
+    $countrySelect.removeAttr("id");
   }
 };
 
