@@ -16,9 +16,19 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Base class for a Redis DAO which stores all transaction data in a single Redis hash. Subclasses should primarily use
- * the methods defined in this class to access the hash's data, but they are also free to use the pool and perform
- * arbitrary commands within Redis as required.
+ * <p>
+ *   Base class for a stateless Redis DAO which stores all transaction data in a single Redis hash.
+ *   The methods defined in this class to access the hash's data, but they are also free to use the pool and perform
+ *   arbitrary commands within Redis as required.
+ * </p>
+ *
+ * <p>
+ *   "Stateless" meaning the transaction ID must be provided for every method call as it is not inferred from the
+ *   context as in {@link CommonRedisDao}. Compare {@link #writeString} to {@link CommonRedisDao#writeString} for the
+ *   expected difference in method signature.
+ * </p>
+ *
+ * @see CommonRedisDao
  */
 public abstract class StatelessRedisDao {
 
