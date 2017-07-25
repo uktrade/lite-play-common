@@ -23,7 +23,7 @@ LITECommon.hideContent = function($content) {
 };
 
 LITECommon.countrySelectInitialise = function($countrySelect) {
-  $countrySelect.selectToAutocomplete({"alternative-spellings-attr":"data-alternative-spelling", "autoFocus":false});
+  $countrySelect.selectToAutocomplete({"autoFocus":false});
 
   // Associates the new ui-autocomplete input with the original select id (if the input was created), needed for labels and such.
   var id = $($countrySelect).attr("id");
