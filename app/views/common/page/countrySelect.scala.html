@@ -11,7 +11,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-id="@Html(field.id + "-s")">
+  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }" autofocus="autofocus" autocorrect="off" autocomplete="off" ui-autocomplete="ui-autocomplete" ui-autocomplete-type="country" ui-autocomplete-id="@Html(field.id + "-s")">
     <option value="" @if(field.value == null || "".equals(field.value)) {selected="selected"}></option>
     @for(country <- countries) {
       <option value="@country.getCountryRef" data-alternative-spellings="@country.getSynonymsAsString" data-relevancy-booster="1" @if(field.value != null && country.getCountryRef.equals(field.value)){selected="selected"}>@country.getCountryName</option>
