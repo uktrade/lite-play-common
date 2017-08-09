@@ -24,14 +24,17 @@ LITECommon.hideContent = function($content) {
 
 LITECommon.countrySelectInitialise = function($countrySelect) {
   $countrySelect.selectToAutocomplete({"autoFocus":false});
+  LITECommon.reassociateAutocompleteInput($countrySelect);
+};
 
+LITECommon.reassociateAutocompleteInput = function($selectElement) {
   // Associates the new ui-autocomplete input with the original select id (if the input was created), needed for labels and such.
-  var id = $($countrySelect).attr("id");
+  var id = $($selectElement).attr("id");
   var autocompleteInput = $("input[ui-autocomplete-id=" + id + "]");
   if (autocompleteInput.length > 0) {
     autocompleteInput.attr("id", id);
-    $countrySelect.removeAttr("id");
+    $selectElement.removeAttr("id");
   }
-};
+}
 
 $(document).ready(LITECommon.initialiseSelectionButtons())
