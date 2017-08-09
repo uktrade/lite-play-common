@@ -24,18 +24,7 @@ LITECommon.hideContent = function($content) {
 
 LITECommon.countrySelectInitialise = function($countrySelect) {
   $countrySelect.selectToAutocomplete({"autoFocus":false});
-  LITECommon.reassociateAutocompleteInput($controlCodeSelect);
-};
-
-LITECommon.controlCodeInitialise = function($controlCodeSelect) {
-  $controlCodeSelect.selectToAutocomplete(
-    {
-      "autoFocus":false,
-      "minLength":1,
-      "exact-match-only":true
-    }
-  );
-  LITECommon.reassociateAutocompleteInput($controlCodeSelect);
+  LITECommon.reassociateAutocompleteInput($countrySelect);
 };
 
 LITECommon.reassociateAutocompleteInput = function($selectElement) {
