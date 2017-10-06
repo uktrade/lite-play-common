@@ -30,7 +30,7 @@ LITECommon.countrySelectInitialise = function($countrySelect) {
 LITECommon.reassociateAutocompleteInput = function($selectElement) {
   // Associates the new ui-autocomplete input with the original select id (if the input was created), needed for labels and such.
   var id = $($selectElement).attr("id");
-  var autocompleteInput = $("input[ui-autocomplete-id=" + id + "]");
+  var autocompleteInput = $("input[data-ui-autocomplete-id=" + id + "]");
   if (autocompleteInput.length > 0) {
     autocompleteInput.attr("id", id);
     $selectElement.removeAttr("id");
