@@ -15,7 +15,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <textarea class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" rows="@rows" name="@field.name" type="text"
+  <textarea class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" rows="@rows" name="@field.name"
     @{
       val fieldValidationData = ViewUtil.fieldValidationJSON(field);
       if(fieldValidationData != null){
