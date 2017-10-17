@@ -85,8 +85,9 @@ LITECommon.ClientSideValidation.setValidationFunction(function() {
 ```
 
 ### JWT Request Filter
-This request filter (`JwtRequestFilter`) adds an `Authorization` with a signed JWT header to a `WSRequest`. The JWT is comprised of an `AuthInfo`
-object and is signed by secret key shared between both parties of the request.
+This request filter (`JwtRequestFilter`) adds an `Authorization` header containing a signed JWT to a `WSRequest`. The JWT 
+is comprised of a a subset of fields from an `AuthInfo` object, id, email, and full name. All signed by secret key shared 
+between both parties of the request.
 
 Example JwtRequestFilter provider, note: `jwtSharedSecret` must be at least 64 bytes in length.
 ```java
@@ -105,7 +106,7 @@ public void doGet() {
 }
 ```
 
-Sample `Authorization` header
+Sample `Authorization` header:
 ```
 Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzb21lLXNlcnZpY2UiLCJleHAiOjE1MDgyNDkyNjQsImp0aSI6IkRiUnNVOVlRdzYz
 NUZGTENaTVJyS3ciLCJpYXQiOjE1MDgyNDg2NjQsIm5iZiI6MTUwODI0ODU0NCwic3ViIjoiMTIzNDU2IiwiZW1haWwiOiJleGFtcGxlQGV4YW1wbGUub3Jn
