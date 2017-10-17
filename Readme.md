@@ -84,3 +84,48 @@ LITECommon.ClientSideValidation.setValidationFunction(function() {
 });  
 ```
 
+### JWT Request Filter
+This request filter (`JwtRequestFilter`) adds an `Authorization` with a signed JWT header to a `WSRequest`. The JWT is comprised of an `AuthInfo`
+object and is signed by secret key shared between both parties of the request.
+
+Example JwtRequestFilter provider, note: `jwtSharedSecret` must be at least 64 bytes in length.
+```java
+@Provides
+public JwtRequestFilter provideJwtRequestFilter(SpireAuthManager spireAuthManager, @Named("jwtSharedSecret") String jwtSharedSecret) {
+  JwtRequestFilterConfig filterConfig = new JwtRequestFilterConfig(jwtSharedSecret, "lite-sample-service");
+  return new JwtRequestFilter(spireAuthManager, filterConfig);
+}
+```
+
+Example usage with WSClient:
+```java
+public void doGet() {
+  JwtRequestFilter filter; // Injected
+  wsClient.url("/example").withRequestFilter(filter); 
+}
+```
+
+Sample `Authorization` header
+```
+Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzb21lLXNlcnZpY2UiLCJleHAiOjE1MDgyNDkyNjQsImp0aSI6IkRiUnNVOVlRdzYz
+NUZGTENaTVJyS3ciLCJpYXQiOjE1MDgyNDg2NjQsIm5iZiI6MTUwODI0ODU0NCwic3ViIjoiMTIzNDU2IiwiZW1haWwiOiJleGFtcGxlQGV4YW1wbGUub3Jn
+IiwiZnVsbE5hbWUiOiJNciB0ZXN0In0.Lkpv5sJGAVn3W3rOposUVf1Ei6UvPRwdR2cuykuiAnE
+```
+
+Which produces the following JWT (signature omitted):
+```
+{
+  "typ": "JWT",
+  "alg": "HS256"
+}.
+{
+  "iss": "some-service",
+  "exp": 1508249264,
+  "jti": "DbRsU9YQw635FFLCZMRrKw",
+  "iat": 1508248664,
+  "nbf": 1508248544,
+  "sub": "123456",
+  "email": "example@example.org",
+  "fullName": "Mr test"
+}
+```
