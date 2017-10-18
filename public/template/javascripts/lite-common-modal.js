@@ -54,6 +54,7 @@ LITECommon.Modal = {
     $('html').removeClass(LITECommon.Modal.htmlClass);
     LITECommon.Modal.unbindEvents();
 
+    // Refocus on element that was focused when the modal opened (probably the link/button that triggered it)
     LITECommon.Modal.$originalFocusedElement.get(0).focus();
   },
 
@@ -77,20 +78,20 @@ LITECommon.Modal = {
   bindEvents: function() {
     "use strict";
 
-    //Keydown events
+    // Keydown events
     $('body').on('keydown.LITECommon.Modal', function(e) {
-      //Escape key closes modal
+      // Escape key closes modal
       if (e.which === 27) {
         LITECommon.Modal.closeModal();
       }
 
-      //Trap tab key
+      // Trap tab key
       if (e.which === 9) {
         LITECommon.Modal.trapTabKey(e);
       }
     });
 
-    //Lets consumer define close links/buttons by giving them the class defined by closeClass
+    // Lets consumer define close links/buttons by giving them the class defined by closeClass
     $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, LITECommon.Modal.closeModal);
   },
 
@@ -118,18 +119,18 @@ LITECommon.Modal = {
     var focusedElmIndex = $focusableElms.index($focusedElm);
 
     if (event.shiftKey && focusedElmIndex === 0) {
-      //If we're going backwards (shift-tab) and we're at the first focusable element,
-      //loop back to last focusable element
+      // If we're going backwards (shift-tab) and we're at the first focusable element,
+      // loop back to last focusable element
       $focusableElms.get($focusableElms.length-1).focus();
       event.preventDefault();
     } else if(!event.shiftKey && focusedElmIndex === $focusableElms.length-1) {
-      //If we're going forwards and we're at the last focusable element,
-      //loop forwards to the first focusable element
+      // If we're going forwards and we're at the last focusable element,
+      // loop forwards to the first focusable element
       $focusableElms.get(0).focus();
       event.preventDefault();
     }
-    //Otherwise, allow the tab to proceed as normal because we're still in the group of
-    //focusable elements in the modal
+    // Otherwise, allow the tab to proceed as normal because we're still in the group of
+    // focusable elements in the modal
   },
 
   /**
