@@ -87,18 +87,16 @@ LITECommon.ClientSideValidation.setValidationFunction(function() {
 ## JWT Request Filter
 This request filter (`JwtRequestFilter`) adds an `Authorization` header containing a signed JWT to a `WSRequest`. The JWT 
 is comprised of a a subset of fields from an `AuthInfo` object, id, email, and full name. All signed by secret key shared 
-between both parties of the request.
+between both parties of the request. 
 
-Example JwtRequestFilter and JwtRequestFilterConfig providers, note: `jwtSharedSecret` must be at least 64 bytes in length.
+`JwtRequestFilter` should be injected wherever an instance is required, this relies on both `JwtRequestFilterConfig` and 
+`SpireAuthManager` to have providers defined (or otherwise be injectable).
+
+Example `JwtRequestFilterConfig` provider, note: `jwtSharedSecret` must be at least 64 bytes in length.
 ```java
 @Provides
 public JwtRequestFilterConfig provideJwtRequestFilterConfig(@Named("jwtSharedSecret") String jwtSharedSecret) {
   return new JwtRequestFilterConfig(jwtSharedSecret, "lite-sample-service");
-}
-
-@Provides
-public JwtRequestFilter provideJwtRequestFilter(SpireAuthManager spireAuthManager, JwtRequestFilterConfig filterConfig) {
-  return new JwtRequestFilter(spireAuthManager, filterConfig);
 }
 ```
 
