@@ -91,6 +91,12 @@ LITECommon.Modal = {
       }
     });
 
+    // If anything other than the modal gets focus (eg tabbing from address bar), force focus into the modal
+    $('body>*[id!=' + LITECommon.Modal.overlayID + ']').on('focusin.LITECommon.Modal', function(event) {
+      LITECommon.Modal.focusOnFirstElement();
+      event.stopPropagation();
+    });
+
     // Lets consumer define close links/buttons by giving them the class defined by closeClass
     $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, LITECommon.Modal.closeModal);
   },
@@ -102,7 +108,7 @@ LITECommon.Modal = {
   unbindEvents: function() {
     "use strict";
 
-    $('body').off('.LITECommon.Modal');
+    $('*').off('.LITECommon.Modal');
   },
 
   /**
