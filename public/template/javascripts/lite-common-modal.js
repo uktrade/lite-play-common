@@ -8,6 +8,7 @@ LITECommon.Modal = {
   htmlClass: 'has-modal',
   closeClass: 'close-modal',
   focusableElementsString: 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, *[tabindex], *[contenteditable]',
+  $originalFocusedElement: null,
 
   /**
    * Displays a modal onscreen containing the content in $content
@@ -17,6 +18,9 @@ LITECommon.Modal = {
    */
   displayModal: function($content, ariaLabel) {
     "use strict";
+
+    // Store reference to currently focused element
+    LITECommon.Modal.$originalFocusedElement = $(document.activeElement);
 
     // Remove any existing modal
     LITECommon.Modal.closeModal();
@@ -49,6 +53,8 @@ LITECommon.Modal = {
     $('#' + LITECommon.Modal.overlayID).remove();
     $('html').removeClass(LITECommon.Modal.htmlClass);
     LITECommon.Modal.unbindEvents();
+
+    LITECommon.Modal.$originalFocusedElement.get(0).focus();
   },
 
   /**
