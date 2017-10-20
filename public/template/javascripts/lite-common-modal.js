@@ -7,6 +7,7 @@ LITECommon.Modal = {
   contentID: 'modal-content',
   htmlClass: 'has-modal',
   closeClass: 'close-modal',
+  templateClass: 'modal-template',
   focusableElementsString: 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, *[tabindex], *[contenteditable]',
   $originalFocusedElement: null,
 
@@ -41,6 +42,21 @@ LITECommon.Modal = {
     $('body').append($modal);
     LITECommon.Modal.bindEvents();
     LITECommon.Modal.focusOnFirstElement();
+  },
+
+  displayModalFromTemplate: function(templateElementId, templateParams, ariaLabel) {
+    // Clone the template
+    $content = $('#' + templateElementId).clone().removeClass(LITECommon.Modal.templateClass);
+
+    // For each template param name, replace any instances of it in the template with the param value
+    $.each(templateParams, function(key, value){
+      var pattern = new RegExp('{{' + key + '}}', 'g');
+      var escapedValue = value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      $content.html($content.html().replace(pattern, escapedValue));
+    })
+
+    // Show the modal
+    LITECommon.Modal.displayModal($content, ariaLabel);
   },
 
   /**
@@ -98,7 +114,10 @@ LITECommon.Modal = {
     });
 
     // Lets consumer define close links/buttons by giving them the class defined by closeClass
-    $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, LITECommon.Modal.closeModal);
+    $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, function() {
+      LITECommon.Modal.closeModal();
+      return false;
+    });
   },
 
   /**
