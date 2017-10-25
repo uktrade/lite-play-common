@@ -24,10 +24,16 @@ html.has-modal {
   display: inline-block;
   text-align: left;
   box-sizing: border-box;
+  @include core-19;
 }
 
 #close-modal-fixed-button {
   display: block;
   margin-left: auto;
   margin-top: -5px;
+  margin-bottom: $gutter-half;
+}
+
+.modal-template {
+  display: none;
 }

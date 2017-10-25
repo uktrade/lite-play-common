@@ -7,6 +7,7 @@ LITECommon.Modal = {
   contentID: 'modal-content',
   htmlClass: 'has-modal',
   closeClass: 'close-modal',
+  templateClass: 'modal-template',
   focusableElementsString: 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, *[tabindex], *[contenteditable]',
   $originalFocusedElement: null,
 
@@ -41,6 +42,31 @@ LITECommon.Modal = {
     $('body').append($modal);
     LITECommon.Modal.bindEvents();
     LITECommon.Modal.focusOnFirstElement();
+  },
+
+  /**
+   * Displays a modal onscreen by cloning $template and replacing any content in {{double braces}} with the
+   * corresponding value in templateParams
+   *
+   * @param $template The jQuery-wrapped element to use as the template for the modal
+   * @param templateParams An object containing key-value pairs. Any instance of the key in double braces in the
+   * content of the template will be replaced by the value specified in this object
+   * @param ariaLabel The label for the modal, read out by screen readers but not shown onscreen
+   */
+  displayModalFromTemplate: function($template, templateParams, ariaLabel) {
+    "use strict";
+
+    // Clone the template
+    var $content = $template.clone().removeClass(LITECommon.Modal.templateClass);
+
+    // For each template param name, replace any instances of it in the template with the param value
+    $.each(templateParams, function(key, value){
+      var pattern = new RegExp('{{' + key + '}}', 'g');
+      $content.html($content.html().replace(pattern, LITECommon.Modal.escapeHtml(value)));
+    })
+
+    // Show the modal
+    LITECommon.Modal.displayModal($content, ariaLabel);
   },
 
   /**
@@ -98,7 +124,10 @@ LITECommon.Modal = {
     });
 
     // Lets consumer define close links/buttons by giving them the class defined by closeClass
-    $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, LITECommon.Modal.closeModal);
+    $('body').on('click.LITECommon.Modal', '.'+LITECommon.Modal.closeClass, function() {
+      LITECommon.Modal.closeModal();
+      return false;
+    });
   },
 
   /**
@@ -148,5 +177,30 @@ LITECommon.Modal = {
     "use strict";
 
     return $('#' + LITECommon.Modal.contentID).find('*').filter(LITECommon.Modal.focusableElementsString).filter(':visible');
+  },
+
+  /**
+   * Escapes a string by converting characters that could be part of HTML tags to entities
+   * @param string The string to escape
+   * @returns {string} the escaped string
+   * @private
+   */
+  escapeHtml: function(string) {
+    "use strict";
+
+    var entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
+    };
+
+    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+      return entityMap[s];
+    });
   }
 };
