@@ -44,9 +44,18 @@ LITECommon.Modal = {
     LITECommon.Modal.focusOnFirstElement();
   },
 
-  displayModalFromTemplate: function(templateElementId, templateParams, ariaLabel) {
+  /**
+   * Displays a modal onscreen by cloning $template and replacing any content in {{double braces}} with the
+   * corresponding value in templateParams
+   *
+   * @param $template The jQuery-wrapped element to use as the template for the modal
+   * @param templateParams An object containing key-value pairs. Any instance of the key in double braces in the
+   * content of the template will be replaced by the value specified in this object
+   * @param ariaLabel The label for the modal, read out by screen readers but not shown onscreen
+   */
+  displayModalFromTemplate: function($template, templateParams, ariaLabel) {
     // Clone the template
-    $content = $('#' + templateElementId).clone().removeClass(LITECommon.Modal.templateClass);
+    $content = $template.clone().removeClass(LITECommon.Modal.templateClass);
 
     // For each template param name, replace any instances of it in the template with the param value
     $.each(templateParams, function(key, value){
