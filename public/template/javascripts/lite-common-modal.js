@@ -123,7 +123,7 @@ LITECommon.Modal = {
     });
 
     // Lets consumer define close links/buttons by giving them the class defined by closeClass
-    $('body').on('click.LITECommon.modal', '.'+LITECommon.Modal.closeClass, function() {
+    $('body').on('click.LITECommon.Modal', '.'+LITECommon.Modal.closeClass, function() {
       LITECommon.Modal.closeModal();
       return false;
     });
