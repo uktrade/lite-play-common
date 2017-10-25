@@ -54,14 +54,15 @@ LITECommon.Modal = {
    * @param ariaLabel The label for the modal, read out by screen readers but not shown onscreen
    */
   displayModalFromTemplate: function($template, templateParams, ariaLabel) {
+    "use strict";
+
     // Clone the template
-    $content = $template.clone().removeClass(LITECommon.Modal.templateClass);
+    var $content = $template.clone().removeClass(LITECommon.Modal.templateClass);
 
     // For each template param name, replace any instances of it in the template with the param value
     $.each(templateParams, function(key, value){
       var pattern = new RegExp('{{' + key + '}}', 'g');
-      var escapedValue = value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      $content.html($content.html().replace(pattern, escapedValue));
+      $content.html($content.html().replace(pattern, LITECommon.Modal.escapeHtml(value)));
     })
 
     // Show the modal
@@ -176,5 +177,30 @@ LITECommon.Modal = {
     "use strict";
 
     return $('#' + LITECommon.Modal.contentID).find('*').filter(LITECommon.Modal.focusableElementsString).filter(':visible');
+  },
+
+  /**
+   * Escapes a string by converting characters that could be part of HTML tags to entities
+   * @param string The string to escape
+   * @returns {string} the escaped string
+   * @private
+   */
+  escapeHtml: function(string) {
+    "use strict";
+
+    var entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
+    };
+
+    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+      return entityMap[s];
+    });
   }
 };
