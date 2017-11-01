@@ -11,7 +11,9 @@ import play.data.validation.Constraints;
 import play.i18n.Messages;
 import play.mvc.Call;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +28,16 @@ public class ViewUtil {
 
   public static String urlFor(Call call) {
     return currentParamManager().addParamsToCall(call);
+  }
+
+  public static String unencodedUrlFor(Call call) {
+    String url = "";
+    try {
+      url = URLDecoder.decode(urlFor(call), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      // This exception is only thrown if the length of the second param to decode() is 0, and we hardcode it above
+    }
+    return url;
   }
 
   /**
