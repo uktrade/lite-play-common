@@ -1,8 +1,10 @@
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field, prompt: String, isPromptHtml: Boolean = false, cssClass : String = "")(checkedContent: Html)
 
-<div class="multiple-choice" @if(checkedContent.body.nonEmpty){data-target="@field.name-content"}>
-  <input id="@field.name" name="@field.name" value="true" type="checkbox" @if(field.value != null && field.value.equals("true")){ checked="checked" }>
-  <label class="@cssClass" for="@field.name">
+<div class="multiple-choice" @if(checkedContent.body.nonEmpty){data-target="@field.getName.get-content"}>
+  <input id="@field.getName.get" name="@field.getName.get" value="true" type="checkbox" @if(field.getValue.isPresent && field.getValue.get.equals("true")){ checked="checked" }>
+  <label class="@cssClass" for="@field.getName.get">
   @if(isPromptHtml) {
     @Html(prompt.replace("\n", "<br/>"))
   } else {
@@ -12,7 +14,7 @@
 </div>
 
 @if(checkedContent.body.nonEmpty) {
-  <div class="panel panel-border-narrow js-hidden" id="@field.name-content">
+  <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-content">
   @checkedContent
   </div>
 }

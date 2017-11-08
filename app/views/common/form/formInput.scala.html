@@ -1,4 +1,6 @@
 @import utils.common.ViewUtil
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
 <div class="form-group @if(field.error.isDefined){ form-group-error }">
 
@@ -14,7 +16,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <input class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" name="@field.name" type="text" value="@field.value"
+  <input class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" name="@field.getName.get" type="text" value="@field.getValue.orElse(null)"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

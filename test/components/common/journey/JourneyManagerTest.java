@@ -111,7 +111,7 @@ public class JourneyManagerTest {
 
   @Before
   public void setup() {
-    Http.Context context = new Http.Context(1L, null, null, new HashMap<>(), new HashMap<>(), new HashMap<>());
+    Http.Context context = new Http.Context(1L, null, null, new HashMap<>(), new HashMap<>(), new HashMap<>(),null);
     Http.Context.current.set(context);
 
     manager = new JourneyManager(new DummySerialiser(), new ContextParamManager(), new DummyContextParamProvider(),

@@ -1,9 +1,9 @@
 package components.common.cache;
 
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import com.google.inject.Inject;
 
-public class UpdateCountryCacheActor extends UntypedActor {
+public class UpdateCountryCacheActor extends UntypedAbstractActor {
 
   private final CountryProvider countryProvider;
 
@@ -14,7 +14,7 @@ public class UpdateCountryCacheActor extends UntypedActor {
 
   @Override
   public void onReceive(Object message) throws Exception {
-      sender().tell(updateCache(message), self());
+    sender().tell(updateCache(message), self());
   }
 
   private Object updateCache(Object message) {

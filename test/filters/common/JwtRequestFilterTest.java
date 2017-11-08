@@ -1,16 +1,9 @@
 package filters.common;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import components.common.auth.AuthInfo;
 import components.common.auth.SpireAuthManager;
 import org.jose4j.jwa.AlgorithmConstraints;
@@ -21,41 +14,45 @@ import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.keys.HmacKey;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import play.libs.ws.WS;
+import play.libs.ws.StandaloneWSRequest;
+import play.libs.ws.StandaloneWSResponse;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSRequestExecutor;
-import play.libs.ws.WSResponse;
+import play.mvc.Result;
+import play.mvc.Results;
+import play.routing.RoutingDsl;
+import play.server.Server;
+import play.test.WSTestClient;
 
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 
 public class JwtRequestFilterTest {
 
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(options().dynamicPort());
+  private Server server;
 
   @Before
   public void setUp() throws Exception {
-    configureFor(wireMockRule.port());
+    server = Server.forRouter(builtInComponents -> RoutingDsl.fromComponents(builtInComponents)
+        .GET("/test").routeTo((Supplier<Result>) Results::ok)
+        .build());
   }
 
   /**
    * Test method, testing {@link JwtRequestFilter}'s JWT generation and inclusion in the "Authorization" header for a {@link WSRequest}
+   *
    * @param authInfo The non null auth info
-   * @param issuer The issuer to include in the "iss" JWT claim
+   * @param issuer   The issuer to include in the "iss" JWT claim
    * @return A loosely validated set of JWT Claims for testing
    * @throws Exception
    */
   private JwtClaims doRequestFilterTestWithGivenAuthInfo(AuthInfo authInfo, String issuer) throws Exception {
-    final String key = "demo-secret-which-is-very-long-so-as-to-hit-the-byte-requirement";
+    String key = "demo-secret-which-is-very-long-so-as-to-hit-the-byte-requirement";
 
-    // Setup client and dummy wiremock endpoint
-    stubFor(get(urlEqualTo("/test"))
-        .willReturn(aResponse().withStatus(200)));
-    WSClient wsClient = WS.newClient(wireMockRule.port());
+    WSClient wsClient = WSTestClient.newClient(server.httpPort());
 
     SpireAuthManager spireAuthManager = mock(SpireAuthManager.class);
     when(spireAuthManager.getAuthInfoFromContext()).thenReturn(authInfo);
@@ -69,7 +66,7 @@ public class JwtRequestFilterTest {
         .toCompletableFuture().get();
 
     // Extract token from Authorization header
-    String authorizationHeader = (String) executor.getRequest().getHeaders().get("Authorization").toArray()[0];
+    String authorizationHeader = (String) executor.getStandaloneWSRequest().getHeaders().get("Authorization").toArray()[0];
     System.out.println("Authorization Header: " + authorizationHeader);
 
     String token = authorizationHeader.replace("Bearer ", "");
@@ -92,20 +89,18 @@ public class JwtRequestFilterTest {
    */
   class WSRequestExecutorTestHarness implements WSRequestExecutor {
 
-    private WSRequest request;
+    private StandaloneWSRequest standaloneWSRequest;
 
-    /**
-     * @return The last WSRequest object used by {@link WSRequestExecutorTestHarness#apply(WSRequest)}
-     */
-    public WSRequest getRequest() {
-      return request;
+    public StandaloneWSRequest getStandaloneWSRequest() {
+      return standaloneWSRequest;
     }
 
     @Override
-    public CompletionStage<WSResponse> apply(WSRequest request) {
-      this.request = request;
-      return request.execute();
+    public CompletionStage<StandaloneWSResponse> apply(StandaloneWSRequest standaloneWSRequest) {
+      this.standaloneWSRequest = standaloneWSRequest;
+      return (CompletionStage<StandaloneWSResponse>) standaloneWSRequest.execute();
     }
+
   }
 
   @Test

@@ -1,11 +1,13 @@
 @import utils.common.ViewUtil
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None, inline: Boolean = true)(trueContent: Html)(falseContent: Html)
 
 @if(!hideHeading) {
   <h2 class="heading-medium">@prompt</h2>
 }
 
-<div id="@field.name" class="form-group @if(field.error.isDefined){ form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined){ form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -23,30 +25,30 @@
       <p class="error-message">@Messages(field.error.get.message)</p>
     }
 
-    <div class="multiple-choice" @if(trueContent.body.nonEmpty){data-target="@field.name-T-content"}>
-      <input id="@field.name-T" name="@field.name" value="true" type="radio" @if("true".equals(field.value)){ checked="checked" }>
-      <label for="@field.name-T">@truePrompt</label>
+    <div class="multiple-choice" @if(trueContent.body.nonEmpty){data-target="@field.getName.get-T-content"}>
+      <input id="@field.getName.get-T" name="@field.getName.get" value="true" type="radio" @if(field.getValue.isPresent && "true".equals(field.getValue.get)){ checked="checked" }>
+      <label for="@field.getName.get-T">@truePrompt</label>
     </div>
 
     @if(trueContent.body.nonEmpty && !inline) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.name-T-content">
+      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
       @trueContent
       </div>
     }
 
-    <div class="multiple-choice" @if(falseContent.body.nonEmpty){data-target="@field.name-F-content"}>
-      <input id="@field.name-F" name="@field.name" value="false" type="radio" @if("false".equals(field.value)){ checked="checked" }>
-      <label for="@field.name-F">@falsePrompt</label>
+    <div class="multiple-choice" @if(falseContent.body.nonEmpty){data-target="@field.getName.get-F-content"}>
+      <input id="@field.getName.get-F" name="@field.getName.get" value="false" type="radio" @if(field.getValue.isPresent && "false".equals(field.getValue.get)){ checked="checked" }>
+      <label for="@field.getName.get-F">@falsePrompt</label>
     </div>
 
     @if(trueContent.body.nonEmpty && inline) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.name-T-content">
+      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
       @trueContent
       </div>
     }
 
     @if(falseContent.body.nonEmpty) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.name-F-content">
+      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-F-content">
       @falseContent
       </div>
     }

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.api.http.HttpConfiguration;
+import play.api.http.HttpErrorHandler;
 import play.core.parsers.Multipart;
 import play.libs.F;
 import play.libs.streams.Accumulator;
@@ -38,8 +39,8 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
   private static final long CONTENT_LENGTH_MAX = 10 * 1024 * 1024;
 
   @Inject
-  public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig) {
-    super(materializer, httpConfig.parser().maxDiskBuffer());
+  public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig, HttpErrorHandler errorHandler) {
+    super(materializer, httpConfig.parser().maxDiskBuffer(), errorHandler);
   }
 
   @Override

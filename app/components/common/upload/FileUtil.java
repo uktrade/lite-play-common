@@ -18,13 +18,14 @@ public class FileUtil {
     }
   }
 
-  public static void addUploadErrorsToForm(Form form, List<UploadResult> uploadResults) {
-    uploadResults.stream()
-        .filter(uploadResult -> !uploadResult.isValid())
-        .forEach(uploadResult -> {
-          form.reject("fileupload",
-              "Error for file " + uploadResult.getFilename() + ": " + uploadResult.getError());
-        });
+  public static <T> Form<T> addUploadErrorsToForm(Form<T> form, List<UploadResult> uploadResults) {
+    for (UploadResult uploadResult : uploadResults) {
+      if (!uploadResult.isValid()) {
+        String error = String.format("Error for file %s: %s", uploadResult.getFilename(), uploadResult.getError());
+        form = form.withError("fileupload", error);
+      }
+    }
+    return form;
   }
 
 }

@@ -9,6 +9,7 @@ import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -50,8 +51,8 @@ public class CountryServiceClient {
   public CompletionStage<List<Country>> getCountries() {
     return wsClient.url(buildUrl())
         .setAuth(credentials)
-        .withRequestFilter(CorrelationId.requestFilter)
-        .setRequestTimeout(countryServiceTimeout)
+        .setRequestFilter(CorrelationId.requestFilter)
+        .setRequestTimeout(Duration.ofMillis(countryServiceTimeout))
         .get().handleAsync((result, error) -> {
           if (error != null) {
             Logger.error("Country service client failure.", error);

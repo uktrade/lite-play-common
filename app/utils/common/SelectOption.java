@@ -16,8 +16,7 @@ public class SelectOption {
 
   /**
    * Use this constructor if the prompt contains HTML.
-   * @param value
-   * @param prompt
+   *
    * @param isPromptHtml set to true if you can guarantee that the prompt contains safe HTML.
    */
   public SelectOption(String value, String prompt, boolean isPromptHtml) {
@@ -27,19 +26,15 @@ public class SelectOption {
   }
 
   public static LinkedHashMap<SelectOption, Boolean> fromEmpty(List<SelectOption> allOptions) {
-    LinkedHashMap<SelectOption, Boolean> collect = allOptions.stream().collect(Collectors.toMap(e -> e, e -> false, (u, v) -> {
+    return allOptions.stream().collect(Collectors.toMap(e -> e, e -> false, (u, v) -> {
       throw new IllegalArgumentException();
     }, LinkedHashMap::new));
-
-    return collect;
   }
 
   public static LinkedHashMap<SelectOption, Boolean> fromSelected(List<SelectOption> allOptions, List<String> selectedOptions) {
-    LinkedHashMap<SelectOption, Boolean> collect = allOptions.stream().collect(Collectors.toMap(e -> e, e -> selectedOptions.contains(e.value), (u, v) -> {
+    return allOptions.stream().collect(Collectors.toMap(e -> e, e -> selectedOptions.contains(e.value), (u, v) -> {
       throw new IllegalArgumentException();
     }, LinkedHashMap::new));
-
-    return collect;
   }
 
   @Override

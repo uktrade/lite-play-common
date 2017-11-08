@@ -16,6 +16,7 @@ import play.mvc.Http.MultipartFormData.DataPart;
 import play.mvc.Http.MultipartFormData.FilePart;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.CompletionStage;
 
@@ -44,10 +45,10 @@ public class VirusCheckerClient {
 
   public CompletionStage<Boolean> isOk(Path path) {
     WSRequest req = wsClient.url(address)
-        .withRequestFilter(CorrelationId.requestFilter)
-        .withRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", httpExecutionContext))
+        .setRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", httpExecutionContext))
         .setAuth(credentials)
-        .setRequestTimeout(timeout);
+        .setRequestTimeout(Duration.ofMillis(timeout));
     // https://www.playframework.com/documentation/2.5.x/JavaWS#Submitting-multipart/form-data
     Source<ByteString, ?> file = FileIO.fromFile(path.toFile());
     FilePart<Source<ByteString, ?>> fp = new FilePart<>("file", "file.txt", "text/plain", file);
