@@ -2,7 +2,6 @@ package components.common.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import components.common.logging.CorrelationId;
 import models.common.Country;
 import play.Logger;
@@ -47,7 +46,7 @@ public class CountryServiceClient {
 
   public CompletionStage<List<Country>> getCountries() {
     return wsClient.url(buildUrl())
-      .withRequestFilter(CorrelationId.requestFilter)
+      .setRequestFilter(CorrelationId.requestFilter)
       .setRequestTimeout(countryServiceTimeout)
       .get().handleAsync((result, error) -> {
         if (error != null) {

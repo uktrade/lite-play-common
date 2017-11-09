@@ -4,9 +4,10 @@ version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   "redis.clients" % "jedis" % "2.8.1",
-  cache,
+  //cache,
   javaWs,
   filters,
+  guice,
   "io.mikael" % "urlbuilder" % "2.0.7",
   "org.assertj" % "assertj-core" % "3.5.2" % "test",
   "org.mockito" % "mockito-all" % "1.10.19",
@@ -15,6 +16,8 @@ libraryDependencies ++= Seq(
   "org.pac4j" % "play-pac4j" % "2.4.0",
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.3.10" % "test"
 )
+
+TwirlKeys.templateImports += "play.twirl.api.HtmlFormat"
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
 
