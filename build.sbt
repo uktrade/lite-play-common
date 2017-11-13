@@ -14,13 +14,13 @@ libraryDependencies ++= Seq(
   "org.pac4j" % "pac4j" % "1.9.0",
   "org.pac4j" % "pac4j-saml" % "1.9.0",
   "org.pac4j" % "play-pac4j" % "2.4.0",
-  "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.3.10" % "test"
+  "au.com.dius" % "pact-jvm-consumer-junit_2.12" % "3.5.8" % "test"
 )
 
 TwirlKeys.templateImports += "play.twirl.api.HtmlFormat"
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.4"
 
 resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
