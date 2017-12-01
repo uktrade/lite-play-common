@@ -1,7 +1,5 @@
 package utils.common;
 
-import static play.mvc.Controller.ctx;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import components.common.journey.BackLink;
@@ -13,10 +11,14 @@ import play.mvc.Call;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import static play.mvc.Controller.ctx;
 
 public class ViewUtil {
 
@@ -41,6 +43,55 @@ public class ViewUtil {
   }
 
   /**
+   * Returns the underlying Java Field for a given Play form field (play.data.Form.Field) name string.
+   * The Play from binding supports several formats for the name string:
+   * - "foo" - directly maps to the field with name "foo" in the backedTypeClass
+   * - "foo[n]" - references the n'th element of a repeating field (i.e. Collection) "foo" in the backedTypeClass
+   * - "foo[n].bar" - references the "bar" field of the n'th object in the repeating field (i.e. Collection) "foo" in the backedTypeClass
+   *
+   * @param formFieldName The field name string
+   * @param backedTypeClass The underlying model Class of the form
+   * @return The java.lang.reflect.Field which the field name string refers to
+   * @throws NoSuchFieldException The Field could not be found
+   */
+  private static Field getJavaFieldFromFormFieldName(String formFieldName, Class<Object> backedTypeClass) throws NoSuchFieldException {
+
+    if(formFieldName.contains(".") && formFieldName.contains("[")) {
+      // Get the field name of the Collection
+      String collectionFieldName = formFieldName.substring(0, formFieldName.indexOf("["));
+
+      // Try to determine its parametrised (generic) type
+      Type collectionField = backedTypeClass.getDeclaredField(collectionFieldName).getGenericType();
+      if(collectionField instanceof ParameterizedType) {
+        Type[] parametrisedType = ((ParameterizedType) collectionField).getActualTypeArguments();
+
+        if(parametrisedType.length == 1 && parametrisedType[0] instanceof Class) {
+          Class collectionType = (Class) parametrisedType[0];
+
+          // Get the target field name
+          String targetFieldName = formFieldName.substring(formFieldName.lastIndexOf(".") + 1);
+
+          return collectionType.getDeclaredField(targetFieldName);
+        }
+        else {
+          throw new RuntimeException("The Type parameter of Collection '" + collectionFieldName + "' in '" + formFieldName + "' is not a single Class");
+        }
+      }
+      else {
+        throw new RuntimeException("Field '" + collectionFieldName + "' in '" + formFieldName + "' is not a parametrised Collection");
+      }
+    }
+    else if(formFieldName.contains("[")) {
+      String targetFieldName = formFieldName.substring(0, formFieldName.indexOf("["));
+      return backedTypeClass.getDeclaredField(targetFieldName);
+    }
+    else {
+      return backedTypeClass.getDeclaredField(formFieldName);
+    }
+  }
+
+
+  /**
    * Create field validation information JSON for a given Form Field
    *
    * @param field Form Field that may have validation conditions
@@ -56,7 +107,7 @@ public class ViewUtil {
         Class<Object> backedTypeClass = getField(form, "backedType");
         if (backedTypeClass != null) {
           // Get the field from the backed type class for the form field parameter
-          Field f = backedTypeClass.getDeclaredField(field.name());
+          Field f = getJavaFieldFromFormFieldName(field.name(), backedTypeClass);
           if (f != null) {
             // For the various annotation classes that could be applied to the field for validation populate a map with information describing the validation condition
             Constraints.Required required = f.getAnnotation(Constraints.Required.class);
