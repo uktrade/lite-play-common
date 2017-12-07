@@ -30,7 +30,7 @@ public class NotificationServiceClient {
                                    WSClient ws,
                                    @Named("notificationServiceAddress") String wsAddress,
                                    @Named("notificationServiceTimeout") int wsTimeout,
-                                   @Named("credentials") String credentials) {
+                                   @Named("notificationServiceCredentials") String credentials) {
     this.httpExecutionContext = httpExecutionContext;
     this.ws = ws;
     this.wsTimeout = wsTimeout;
