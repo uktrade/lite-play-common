@@ -42,14 +42,21 @@ public class NotificationClientConsumerPact {
     ws.close();
   }
 
-  private static Map<String, String> jsonHeader() {
+  private static Map<String, String> jsonHeaderRequest() {
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Content-Type", "application/json");
+    headers.put("Authorization", "Basic dXNlcjpwYXNzd29yZA==");
+    return headers;
+  }
+
+  private static Map<String, String> jsonHeaderResponse() {
     Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", "application/json");
     return headers;
   }
 
   public static NotificationServiceClient buildNotificationServiceClient(PactProviderRule mockProvider, WSClient wsClient) {
-    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getConfig().url(), 1000);
+    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getConfig().url(), 1000, "user:password");
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
@@ -64,11 +71,11 @@ public class NotificationClientConsumerPact {
           .path("/notification/send-email")
           .query("template=validTemplate&recipientEmail=recipient@email.com")
           .method("POST")
-          .headers(jsonHeader())
+          .headers(jsonHeaderRequest())
           .body(requestBody)
         .willRespondWith()
           .status(200)
-          .headers(jsonHeader())
+          .headers(jsonHeaderResponse())
           .body(new PactDslJsonBody().stringValue("status", "success"))
         .toFragment();
   }
@@ -81,10 +88,10 @@ public class NotificationClientConsumerPact {
           .path("/notification/send-email")
           .query("template=invalidTemplate&recipientEmail=recipient@email.com")
           .method("POST")
-          .headers(jsonHeader())
+          .headers(jsonHeaderRequest())
         .willRespondWith()
           .status(400)
-          .headers(jsonHeader())
+          .headers(jsonHeaderResponse())
           .body(new PactDslJsonBody().numberValue("code", 400).stringType("message", "incorrect template"))
         .toFragment();
   }
