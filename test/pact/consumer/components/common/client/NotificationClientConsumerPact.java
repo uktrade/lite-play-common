@@ -45,7 +45,7 @@ public class NotificationClientConsumerPact {
   private static Map<String, String> jsonHeaderRequest() {
     Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", "application/json");
-    headers.put("Authorization", "Basic dXNlcjpwYXNzd29yZA==");
+    headers.put("Authorization", "Basic c2VydmljZTpwYXNzd29yZA==");
     return headers;
   }
 
@@ -56,7 +56,7 @@ public class NotificationClientConsumerPact {
   }
 
   public static NotificationServiceClient buildNotificationServiceClient(PactProviderRule mockProvider, WSClient wsClient) {
-    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getConfig().url(), 1000, "user:password");
+    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getConfig().url(), 1000, "service:password");
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
