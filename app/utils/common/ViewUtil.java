@@ -11,7 +11,9 @@ import play.data.validation.Constraints;
 import play.i18n.Messages;
 import play.mvc.Call;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +28,16 @@ public class ViewUtil {
 
   public static String urlFor(Call call) {
     return currentParamManager().addParamsToCall(call);
+  }
+
+  public static String unencodedUrlFor(Call call) {
+    String url = "";
+    try {
+      url = URLDecoder.decode(urlFor(call), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      // This exception is only thrown if the length of the second param to decode() is 0, and we hardcode it above
+    }
+    return url;
   }
 
   /**
@@ -123,6 +135,57 @@ public class ViewUtil {
 
   public static Optional<BackLink> currentBackLink() {
     return Optional.ofNullable((BackLink) ctx().args.get(BACK_LINK_CONTEXT_PARAM_NAME));
+  }
+
+  /**
+   * Pluralises a word by appending an 's' if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @return String The plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluralise(Number count, String singular) {
+    return pluralise(count, singular, singular + 's');
+  }
+
+  /**
+   * Pluralises a word by using the supplied plural form if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @param plural The plural form of the word
+   * @return String The plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluralise(Number count, String singular, String plural) {
+    if(count.equals(1)) {
+      return singular;
+    }
+    else {
+      return plural;
+    }
+  }
+
+  /**
+   * Returns the count and the plural of a word by appending an 's' if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @return String The count, and the plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluraliseWithCount(Number count, String singular) {
+    return count + " " + pluralise(count, singular);
+  }
+
+  /**
+   * Returns the count and the plural of a word by using the supplied plural form if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @param plural The plural form of the word
+   * @return String The count, and the plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluraliseWithCount(Number count, String singular, String plural) {
+    return count + " " + pluralise(count, singular, plural);
   }
 
 }
