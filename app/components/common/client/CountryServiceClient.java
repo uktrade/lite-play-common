@@ -2,7 +2,6 @@ package components.common.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import components.common.logging.CorrelationId;
 import models.common.Country;
 import play.Logger;
@@ -25,6 +24,7 @@ public class CountryServiceClient {
   private final WSClient wsClient;
   private final int countryServiceTimeout;
   private final String countryServiceUrl;
+  private final String credentials;
   private final CountryServiceEndpoint countryServiceEndpoint;
   private final String countryParamName;
   private final ObjectMapper objectMapper;
@@ -33,6 +33,7 @@ public class CountryServiceClient {
                               WSClient wsClient,
                               int countryServiceTimeout,
                               String countryServiceUrl,
+                              String credentials,
                               CountryServiceEndpoint countryServiceEndpoint,
                               String countryParamName,
                               ObjectMapper objectMapper) {
@@ -40,6 +41,7 @@ public class CountryServiceClient {
     this.wsClient = wsClient;
     this.countryServiceTimeout = countryServiceTimeout;
     this.countryServiceUrl = countryServiceUrl;
+    this.credentials = credentials;
     this.countryServiceEndpoint = countryServiceEndpoint;
     this.countryParamName = countryParamName;
     this.objectMapper = objectMapper;
@@ -47,25 +49,26 @@ public class CountryServiceClient {
 
   public CompletionStage<List<Country>> getCountries() {
     return wsClient.url(buildUrl())
-      .withRequestFilter(CorrelationId.requestFilter)
-      .setRequestTimeout(countryServiceTimeout)
-      .get().handleAsync((result, error) -> {
-        if (error != null) {
-          Logger.error("Country service client failure.", error);
-        } else if (result.getStatus() != 200) {
-          Logger.error("Country service error - {}", result.getBody());
-        } else {
-          try {
-            String json = result.asJson().toString();
-            return objectMapper.readValue(json, new TypeReference<List<Country>>() {
-            });
-          } catch (IOException e) {
-            Logger.error("Failed to parse Country service response as JSON.", e);
+        .setAuth(credentials)
+        .withRequestFilter(CorrelationId.requestFilter)
+        .setRequestTimeout(countryServiceTimeout)
+        .get().handleAsync((result, error) -> {
+          if (error != null) {
+            Logger.error("Country service client failure.", error);
+          } else if (result.getStatus() != 200) {
+            Logger.error("Country service error - {}", result.getBody());
+          } else {
+            try {
+              String json = result.asJson().toString();
+              return objectMapper.readValue(json, new TypeReference<List<Country>>() {
+              });
+            } catch (IOException e) {
+              Logger.error("Failed to parse Country service response as JSON.", e);
+            }
           }
-        }
 
-        return new ArrayList<>();
-      }, httpExecutionContext.current());
+          return new ArrayList<>();
+        }, httpExecutionContext.current());
   }
 
   private String buildUrl() {
@@ -79,12 +82,38 @@ public class CountryServiceClient {
     }
   }
 
-  public static CountryServiceClient buildCountryServiceGroupClient(HttpExecutionContext httpExecutionContext, WSClient wsClient, int countryServiceTimeout, String countryServiceUrl, String countryParamName, ObjectMapper objectMapper) {
-    return new CountryServiceClient(httpExecutionContext, wsClient, countryServiceTimeout, countryServiceUrl, CountryServiceEndpoint.GROUP, countryParamName, objectMapper);
+  public static CountryServiceClient buildCountryServiceGroupClient(HttpExecutionContext httpExecutionContext,
+                                                                    WSClient wsClient,
+                                                                    int countryServiceTimeout,
+                                                                    String countryServiceUrl,
+                                                                    String credentials,
+                                                                    String countryParamName,
+                                                                    ObjectMapper objectMapper) {
+    return new CountryServiceClient(httpExecutionContext,
+        wsClient,
+        countryServiceTimeout,
+        countryServiceUrl,
+        credentials,
+        CountryServiceEndpoint.GROUP,
+        countryParamName,
+        objectMapper);
   }
 
-  public static CountryServiceClient buildCountryServiceSetClient(HttpExecutionContext httpExecutionContext, WSClient wsClient, int countryServiceTimeout, String countryServiceUrl, String countryParamName, ObjectMapper objectMapper) {
-    return new CountryServiceClient(httpExecutionContext, wsClient, countryServiceTimeout, countryServiceUrl, CountryServiceEndpoint.SET, countryParamName, objectMapper);
+  public static CountryServiceClient buildCountryServiceSetClient(HttpExecutionContext httpExecutionContext,
+                                                                  WSClient wsClient,
+                                                                  int countryServiceTimeout,
+                                                                  String countryServiceUrl,
+                                                                  String credentials,
+                                                                  String countryParamName,
+                                                                  ObjectMapper objectMapper) {
+    return new CountryServiceClient(httpExecutionContext,
+        wsClient,
+        countryServiceTimeout,
+        countryServiceUrl,
+        credentials,
+        CountryServiceEndpoint.SET,
+        countryParamName,
+        objectMapper);
   }
 
 }
