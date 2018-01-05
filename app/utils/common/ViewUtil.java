@@ -191,4 +191,14 @@ public class ViewUtil {
     return count + " " + pluralise(count, singular, plural);
   }
 
+  /**
+   * Returns true if the length of a string (after trimming whitespace) is zero, or if the string is null
+   *
+   * @param s The string to test
+   * @return boolean True if the length s (after trimming whitespace) is zero, or if s is null
+   */
+  public static boolean isNullOrBlank(String s) {
+    return (s == null || s.trim().length() == 0);
+  }
+
 }
