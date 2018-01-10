@@ -15,7 +15,9 @@ libraryDependencies ++= Seq(
   "org.pac4j" % "play-pac4j" % "2.4.0",
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.3.10" % "test",
   "org.bitbucket.b_c" % "jose4j" % "0.6.1",
-  "com.github.tomakehurst" % "wiremock" % "2.9.0"
+  "com.github.tomakehurst" % "wiremock" % "2.9.0",
+  "commons-io" % "commons-io" % "2.6"
+
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
