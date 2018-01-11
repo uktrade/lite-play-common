@@ -2,6 +2,9 @@ name := """zzz-common"""
 
 version := "1.0-SNAPSHOT"
 
+// Disable Scaladoc
+publishArtifact in(Compile, packageDoc) := false
+
 libraryDependencies ++= Seq(
   "redis.clients" % "jedis" % "2.8.1",
   cache,
@@ -16,8 +19,8 @@ libraryDependencies ++= Seq(
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.3.10" % "test",
   "org.bitbucket.b_c" % "jose4j" % "0.6.1",
   "com.github.tomakehurst" % "wiremock" % "2.9.0",
-  "commons-io" % "commons-io" % "2.6"
-
+  "commons-io" % "commons-io" % "2.6",
+  "io.pivotal.labs" % "cf-env" % "0.0.1"
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
