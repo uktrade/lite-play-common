@@ -1,5 +1,5 @@
 @import utils.common.ViewUtil
-@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None, vueModel: Option[String] = None)(label: Html)
+@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None, vueModel: Option[String] = None, afterInput: Option[Html] = None)(label: Html)
 <div class="form-group @if(field.error.isDefined){ form-group-error }">
 
   <label class="form-label" for="@field.id">@label</label>
@@ -26,6 +26,6 @@
   }
   @if(validationGroup.isDefined) {
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
-  }/>
+  }/> @afterInput
 
 </div>
