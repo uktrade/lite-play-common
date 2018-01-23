@@ -29,14 +29,14 @@ public class RedisGuiceModule extends AbstractModule {
   @Override
   protected void configure() {
 
-    bind(JedisPool.class).toInstance(createJedisPool());
+    bind(JedisPool.class).toInstance(createJedisPool(configuration));
   }
 
-  private JedisPool createJedisPool() {
+  private JedisPool createJedisPool(Configuration configuration) {
     JedisPoolConfig poolConfig = new JedisPoolConfig();
-    poolConfig.setMaxTotal(50);
-    poolConfig.setMaxIdle(5);
-    poolConfig.setMinIdle(1);
+    poolConfig.setMaxTotal(configuration.getInt("redis.pool.maxTotal"));
+    poolConfig.setMaxIdle(configuration.getInt("redis.pool.maxIdle"));
+    poolConfig.setMinIdle(configuration.getInt("redis.pool.minIdle"));
     poolConfig.setTestOnBorrow(true);
     poolConfig.setTestOnReturn(true);
     poolConfig.setTestWhileIdle(true);
