@@ -49,14 +49,17 @@ public class ViewUtil {
   public static String fieldValidationJSON(Form.Field field) {
     Map<String, Object> fieldValidation = new HashMap<>();
 
-    try {
-      // Reflect through field.form.backedType to get the original Java form class
-      Form form = getField(field, "form");
-      if (form != null) {
-        Class<Object> backedTypeClass = getField(form, "backedType");
-        if (backedTypeClass != null) {
-          // Get the field from the backed type class for the form field parameter
-          Field f = backedTypeClass.getDeclaredField(field.name());
+    // Reflect through field.form.backedType to get the original Java form class
+    Form form = getField(field, "form");
+    if (form != null) {
+      Class<Object> backedTypeClass = getField(form, "backedType");
+      if (backedTypeClass != null) {
+        // Get the field from the backed type class for the form field parameter
+        String formFieldName = field.name();
+        // Remove the array syntax suffix for collection based fields (e.g. "countrySelect[0] -> countrySelect")
+        formFieldName = formFieldName.replaceAll("\\[[0-9]+]", "");
+        try {
+          Field f = backedTypeClass.getDeclaredField(formFieldName);
           if (f != null) {
             // For the various annotation classes that could be applied to the field for validation populate a map with information describing the validation condition
             Constraints.Required required = f.getAnnotation(Constraints.Required.class);
@@ -94,13 +97,13 @@ public class ViewUtil {
               fieldValidation.putAll(ValidationUtil.getMinLengthValidationMap(Messages.get(minLength.message()), minLength.value()));
             }
           }
+        } catch (NoSuchFieldException e) {
+          throw new RuntimeException("Unable to read validation constraints from form field: " + formFieldName, e);
         }
       }
-
-      return javaMapToJSON(fieldValidation);
-    } catch (NoSuchFieldException e) {
-      throw new RuntimeException("Unable to read validation constraints from form field: " + field.name(), e);
     }
+
+    return javaMapToJSON(fieldValidation);
   }
 
   /**
