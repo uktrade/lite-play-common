@@ -20,7 +20,10 @@ libraryDependencies ++= Seq(
   "org.bitbucket.b_c" % "jose4j" % "0.6.1",
   "com.github.tomakehurst" % "wiremock" % "2.9.0",
   "commons-io" % "commons-io" % "2.6",
-  "io.pivotal.labs" % "cf-env" % "0.0.1"
+  "io.pivotal.labs" % "cf-env" % "0.0.1",
+  "com.amazonaws" % "aws-java-sdk-core" % "1.11.269",
+  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.269",
+  "com.spotify" % "completable-futures" % "0.3.2"
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
