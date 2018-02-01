@@ -10,6 +10,8 @@ pipeline {
         script {
           deleteDir()
           checkout scm
+          deployer = docker.image("ukti/lite-image-builder")
+          deployer.pull()
         }
       }
     }
