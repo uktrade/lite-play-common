@@ -6,7 +6,7 @@ version := "1.0-SNAPSHOT"
 publishArtifact in(Compile, packageDoc) := false
 
 libraryDependencies ++= Seq(
-  "redis.clients" % "jedis" % "2.8.1",
+  "redis.clients" % "jedis" % "2.9.0",
   cache,
   javaWs,
   filters,
