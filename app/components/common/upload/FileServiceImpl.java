@@ -75,23 +75,28 @@ public class FileServiceImpl implements FileService {
 
   private UploadResult uploadToS3AndDeleteMultipartResult(String folder, MultipartResult multipartResult) {
     try {
-      if (multipartResult.isValid()) {
-        String id = generateFileId();
-        File file = multipartResult.getPath().toFile();
-        try {
-          amazonS3.putObject(new PutObjectRequest(awsBucketName, folder + "/" + id, file));
-        } catch (Exception exception) {
-          LOGGER.error("Unable to upload file with filename {} and path {} to amazon s3", multipartResult.getFilename(),
-              multipartResult.getPath(), exception);
-          return UploadResult.failedUpload(multipartResult.getFilename(), "An unexpected error occurred.");
-        }
-        long size = file.length();
-        return UploadResult.successfulUpload(id, multipartResult.getFilename(), awsBucketName, folder, size, null);
-      } else {
-        return UploadResult.failedUpload(multipartResult.getFilename(), multipartResult.getError());
-      }
+      return uploadToS3(folder, multipartResult);
     } finally {
       deleteMultipartResult(multipartResult);
+    }
+  }
+
+  @Override
+  public UploadResult uploadToS3(String folder, MultipartResult multipartResult) {
+    if (multipartResult.isValid()) {
+      String id = generateFileId();
+      File file = multipartResult.getPath().toFile();
+      try {
+        amazonS3.putObject(new PutObjectRequest(awsBucketName, folder + "/" + id, file));
+      } catch (Exception exception) {
+        LOGGER.error("Unable to upload file with filename {} and path {} to amazon s3", multipartResult.getFilename(),
+            multipartResult.getPath(), exception);
+        return UploadResult.failedUpload(multipartResult.getFilename(), "An unexpected error occurred.");
+      }
+      long size = file.length();
+      return UploadResult.successfulUpload(id, multipartResult.getFilename(), awsBucketName, folder, size, null);
+    } else {
+      return UploadResult.failedUpload(multipartResult.getFilename(), multipartResult.getError());
     }
   }
 
