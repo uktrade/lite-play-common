@@ -14,4 +14,5 @@ public interface FileService {
 
   void deleteFile(String id, String bucket, String folder);
 
+  UploadResult uploadToS3(String folder, MultipartResult multipartResult);
 }
