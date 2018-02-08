@@ -20,6 +20,7 @@ public class NotificationServiceClient {
   private final WSClient ws;
   private final int wsTimeout;
   private final String wsUrl;
+  private final String credentials;
 
   private static final String TEMPLATE_QUERY_NAME = "template";
   private static final String RECIPIENT_EMAIL_QUERY_NAME = "recipientEmail";
@@ -28,11 +29,13 @@ public class NotificationServiceClient {
   public NotificationServiceClient(HttpExecutionContext httpExecutionContext,
                                    WSClient ws,
                                    @Named("notificationServiceAddress") String wsAddress,
-                                   @Named("notificationServiceTimeout") int wsTimeout) {
+                                   @Named("notificationServiceTimeout") int wsTimeout,
+                                   @Named("notificationServiceCredentials") String credentials) {
     this.httpExecutionContext = httpExecutionContext;
     this.ws = ws;
     this.wsTimeout = wsTimeout;
     this.wsUrl = wsAddress + "/notification/send-email";
+    this.credentials = credentials;
   }
 
   /**
@@ -54,6 +57,7 @@ public class NotificationServiceClient {
         .setRequestTimeout(wsTimeout)
         .setQueryParameter(TEMPLATE_QUERY_NAME, templateName)
         .setQueryParameter(RECIPIENT_EMAIL_QUERY_NAME, emailAddress)
+        .setAuth(credentials)
         .post(nameValueJson);
 
     CompletionStage<Boolean> result = wsResponse.thenComposeAsync(r -> {

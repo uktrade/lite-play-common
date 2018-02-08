@@ -95,7 +95,10 @@ LITECommon.ClientSideValidation = {
         if (LITECommon.ClientSideValidation._isTextField(field)) {
           // If the field is a text input, check the values length is above 0
           if (!$(field).val() || $(field).val().length <= 0) {
-            validationFailures.push({field: field, message: validator.message});
+            // Ignore countrySelect select element - uses generated input element
+            if (!LITECommon.ClientSideValidation._isSelectCountryField(field)) {
+              validationFailures.push({field: field, message: validator.message});
+            }
           }
         }
         else if ($("[name*='" + field.id + "']").is('input[type=checkbox], input[type=radio]')) {
@@ -337,6 +340,18 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     return $(field).is('textarea, select, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]');
+  },
+
+  /**
+   * Determines whether the field is select element from countrySelect
+   *
+   * @param field Field to check the type of
+   * @returns {boolean}
+   * @private
+   */
+  _isSelectCountryField: function (field) {
+    "use strict";
+    return $(field).is("select[name*='Country']");
   },
 
   /**

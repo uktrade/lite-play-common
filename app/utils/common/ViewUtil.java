@@ -91,7 +91,7 @@ public class ViewUtil {
   }
 
 
-  /**
+/**
    * Create field validation information JSON for a given Form Field
    *
    * @param field Form Field that may have validation conditions
@@ -154,6 +154,7 @@ public class ViewUtil {
     }
   }
 
+
   /**
    * Convert a java map to a JSON object as a string
    *
@@ -186,6 +187,57 @@ public class ViewUtil {
 
   public static Optional<BackLink> currentBackLink() {
     return Optional.ofNullable((BackLink) ctx().args.get(BACK_LINK_CONTEXT_PARAM_NAME));
+  }
+
+  /**
+   * Pluralises a word by appending an 's' if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @return String The plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluralise(Number count, String singular) {
+    return pluralise(count, singular, singular + 's');
+  }
+
+  /**
+   * Pluralises a word by using the supplied plural form if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @param plural The plural form of the word
+   * @return String The plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluralise(Number count, String singular, String plural) {
+    if(count.equals(1)) {
+      return singular;
+    }
+    else {
+      return plural;
+    }
+  }
+
+  /**
+   * Returns the count and the plural of a word by appending an 's' if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @return String The count, and the plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluraliseWithCount(Number count, String singular) {
+    return count + " " + pluralise(count, singular);
+  }
+
+  /**
+   * Returns the count and the plural of a word by using the supplied plural form if count is not zero
+   *
+   * @param count The count of things used to decide whether to pluralise the word
+   * @param singular The singular form of the word
+   * @param plural The plural form of the word
+   * @return String The count, and the plural of the word if count is not 1, otherwise the singular
+   */
+  public static String pluraliseWithCount(Number count, String singular, String plural) {
+    return count + " " + pluralise(count, singular, plural);
   }
 
 }
