@@ -46,11 +46,15 @@ public class PaasApplicationLoader extends GuiceApplicationLoader {
   @Override
   public GuiceApplicationBuilder builder(Context context) {
 
-    String schema = context.initialConfiguration().getString("db.default.schema");
+    String appSchema = context.initialConfiguration().getString("db.default.schema");
+    String camundaSchema = context.initialConfiguration().getString("camunda.db.schema");
+
+    String vcapJdbcUri = getVcapJdbcUri();
 
     return initialBuilder
         .in(context.environment())
-        .configure("db.default.url", getVcapJdbcUri() + "&currentSchema=" + schema)
+        .configure("db.default.url", vcapJdbcUri + "&currentSchema=" + appSchema)
+        .configure("camunda.db.url", vcapJdbcUri + "&currentSchema=" + camundaSchema)
         .overrides(overrides(context));
   }
 }
