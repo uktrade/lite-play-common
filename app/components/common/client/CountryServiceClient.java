@@ -50,7 +50,7 @@ public class CountryServiceClient {
   public CompletionStage<List<Country>> getCountries() {
     return wsClient.url(buildUrl())
         .setAuth(credentials)
-        .withRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(CorrelationId.requestFilter)
         .setRequestTimeout(countryServiceTimeout)
         .get().handleAsync((result, error) -> {
           if (error != null) {
