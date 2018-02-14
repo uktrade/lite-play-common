@@ -1,33 +1,33 @@
-@Library('lite-jenkins-pipeline') _
-def slackChannels = [started: ['#lite-jenkins'], successful: ['#lite-jenkins'], failed: ['#lite-builds', '#lite-jenkins']]
-
-node('jdk8') {
-  slackBuildNotifier.notifyBuild("STARTED", slackChannels)
-  try {
-
-    stage('Clean workspace'){
-      deleteDir()
+pipeline {
+  agent {
+    node {
+      label 'docker.ci.uktrade.io'
     }
-
-    stage('Checkout files'){
-      checkout scm
-    }
-
-    stage('SBT test') {
-      try {
-        sh 'sbt test'
-      }
-      finally {
-        step([$class: 'JUnitResultArchiver', testResults: 'target/test-reports/**/*.xml'])
+  }
+  stages {
+    stage('prep') {
+      steps {
+        script {
+          deleteDir()
+          checkout scm
+          deployer = docker.image("ukti/lite-image-builder")
+          deployer.pull()
+        }
       }
     }
-
-  }
-  catch (e) {
-    currentBuild.result = "FAILED"
-    throw e
-  }
-  finally {
-    slackBuildNotifier.notifyBuild(currentBuild.result, slackChannels)
+    stage('test') {
+      steps {
+        script {
+          deployer.inside {
+            try {
+              sh 'sbt -no-colors test'
+            }
+            finally {
+              step([$class: 'JUnitResultArchiver', testResults: 'target/test-reports/**/*.xml'])
+            }
+          }
+        }
+      }
+    }
   }
 }

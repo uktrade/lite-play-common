@@ -1,7 +1,7 @@
 @import play.data.Form
 @import utils.common.ViewUtil
 
-@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
 
 @if(prompt != null) {
   <h2 class="@promptCssClass">@prompt</h2>
@@ -18,7 +18,7 @@
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }>
 
-  <fieldset>
+  <fieldset @if(inline) { class="inline" }>
     <legend class="visually-hidden">@prompt</legend>
 
     @if(field.error.isDefined) {

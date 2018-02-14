@@ -95,7 +95,10 @@ LITECommon.ClientSideValidation = {
         if (LITECommon.ClientSideValidation._isTextField(field)) {
           // If the field is a text input, check the values length is above 0
           if (!$(field).val() || $(field).val().length <= 0) {
-            validationFailures.push({field: field, message: validator.message});
+            // Ignore countrySelect select element - uses generated input element
+            if (!LITECommon.ClientSideValidation._isSelectCountryField(field)) {
+              validationFailures.push({field: field, message: validator.message});
+            }
           }
         }
         else if ($("[name*='" + field.id + "']").is('input[type=checkbox], input[type=radio]')) {
@@ -192,6 +195,11 @@ LITECommon.ClientSideValidation = {
 
     var formGroup = $(field).closest('div.form-group');
 
+    // If this is a date part field, the form group for this field has an ancestor form group, which is the one we want to use
+    if (LITECommon.ClientSideValidation._isDatePartField(field)) {
+      formGroup = formGroup.parent().closest('div.form-group');
+    }
+
     if (formGroup.length === 0) {
       throw "Form Group not found for field id=" + field.id + ", name=" + field.name;
     }
@@ -252,6 +260,10 @@ LITECommon.ClientSideValidation = {
       if (field === $formGroup[0]) {
         // If the 'field' is the form-group put the message at the top of the form-group content
         $formGroup.prepend($errorMessage);
+      }
+      else if (LITECommon.ClientSideValidation._isDatePartField(field)) {
+        // If the 'field' is part of a three-field date put the message at the end of the legend element
+        $formGroup.find('legend').append($errorMessage);
       }
       else {
         // If the 'field' is an individual field put the message before it
@@ -329,6 +341,31 @@ LITECommon.ClientSideValidation = {
 
     return $(field).is('textarea, select, input[type=color], input[type=date], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=range], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week]');
   },
+
+  /**
+   * Determines whether the field is select element from countrySelect
+   *
+   * @param field Field to check the type of
+   * @returns {boolean}
+   * @private
+   */
+  _isSelectCountryField: function (field) {
+    "use strict";
+    return $(field).is("select[name*='Country']");
+  },
+
+  /**
+   * Determines whether the field is part of a three-input date
+   *
+   * @param field Field to check the type of
+   * @returns {boolean}
+   * @private
+   */
+  _isDatePartField: function (field) {
+    "use strict";
+
+    return $(field).closest('.form-date').length > 0;
+  }
 
 };
 

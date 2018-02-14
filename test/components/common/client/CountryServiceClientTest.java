@@ -46,7 +46,7 @@ public class CountryServiceClientTest {
     ws = WS.newClient(port);
     String serviceUrl = "http://localhost:" + port;
     client = new CountryServiceClient(new HttpExecutionContext(Runnable::run), ws, 1000, serviceUrl,
-        CountryServiceEndpoint.SET, COUNTRY_SET_NAME, new ObjectMapper());
+        "service:password", CountryServiceEndpoint.SET, COUNTRY_SET_NAME, new ObjectMapper());
   }
 
   @Test
