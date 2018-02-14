@@ -79,9 +79,7 @@ $(function () {
       var size = data.result.files[0].size;
       var filename = data.result.files[0].name;
       var url = data.result.files[0].url;
-      var param1 = data.result.files[0].param1;
-      var param2 = data.result.files[0].param2;
-      var param3 = data.result.files[0].param3;
+      var fileProperties = data.result.files[0].fileProperties;
 
       if (error) {
         data.context.find('.file-upload-status').text('Error:' + error);
@@ -99,9 +97,7 @@ $(function () {
           }, 2000);
 
           // Create the delete action
-          data.context.find('.file-upload-actions').html('<a href="#" data-param1="' + param1 +
-            '" data-param2="' + param2 +
-            '" data-param3="' + param3 +
+          data.context.find('.file-upload-actions').html('<a href="#" data-file-properties="' +  fileProperties +
             '" class="file-delete-link">Remove<span class="visually-hidden"> ' + filename + '</span></a>');
 
           // If the page has been validated, remove the error summary and any error from the upload widget,
@@ -146,9 +142,7 @@ $('#fileupload').attr('tabindex', '-1');
 
 //Bind click events to file delete links
 $('body').on('click', '.file-delete-link', function(e){
-  var param1 = $(this).attr('data-param1');
-  var param2 = $(this).attr('data-param2');
-  var param3 = $(this).attr('data-param3');
+  var fileProperties = $(this).attr('data-file-properties');
   var $fileRow = $(this).closest('tr');
   $fileRow.hide();
 
@@ -159,9 +153,7 @@ $('body').on('click', '.file-delete-link', function(e){
       "Csrf-Token": $('input[name=csrfToken]').val()
     },
     data: {
-      param1: param1,
-      param2: param2,
-      param3: param3,
+      fileProperties: fileProperties
     },
     success: function() {
       $fileRow.remove();
