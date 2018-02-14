@@ -39,7 +39,7 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
 
   @Inject
   public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig) {
-    super(materializer, httpConfig.parser().maxDiskBuffer());
+    super(materializer, httpConfig.parser().maxDiskBuffer(), null);
   }
 
   @Override
