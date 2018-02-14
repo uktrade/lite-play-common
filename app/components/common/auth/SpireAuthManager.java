@@ -14,6 +14,7 @@ import play.Logger;
 import play.mvc.Http;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,8 +66,8 @@ public class SpireAuthManager {
    *
    * <pre>{@literal
    * <saml2:Attribute Name="ATTR_NAME">
-      <xs:string xmlns:xs="http://www.w3.org/2001/XMLSchema">attr value</xs:string>
-    </saml2:Attribute>}
+  <xs:string xmlns:xs="http://www.w3.org/2001/XMLSchema">attr value</xs:string>
+  </saml2:Attribute>}
    * </pre>
    *
    * @param credentials Credentials from a SAML2 Authentication response.
@@ -127,8 +128,9 @@ public class SpireAuthManager {
     String forename = (String) attributes.get(FORENAME_ATTRIBUTE);
     String surname = (String) attributes.get(SURNAME_ATTRIBUTE);
     String email = (String) attributes.get(EMAIL_ADDRESS_ATTRIBUTE);
+    Set<String> roles = new HashSet<String>(profile.getAttribute("ROLES", List.class));
 
-    return new AuthInfo(id, forename, surname, email);
+    return new AuthInfo(id, forename, surname, email, roles);
   }
 
   /**
