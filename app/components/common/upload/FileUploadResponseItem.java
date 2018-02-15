@@ -4,16 +4,16 @@ public class FileUploadResponseItem {
 
   private final String name;
   private final String url;
-  private final String error;
   private final String size;
-  private final String fileProperties;
+  private final String jsDeleteLink;
+  private final String error;
 
-  public FileUploadResponseItem(String name, String url, String error, String size, String fileProperties) {
+  public FileUploadResponseItem(String name, String url, String size, String jsDeleteLink, String error) {
     this.name = name;
     this.url = url;
-    this.error = error;
     this.size = size;
-    this.fileProperties = fileProperties;
+    this.jsDeleteLink = jsDeleteLink;
+    this.error = error;
   }
 
   public String getName() {
@@ -24,16 +24,16 @@ public class FileUploadResponseItem {
     return url;
   }
 
-  public String getError() {
-    return error;
-  }
-
   public String getSize() {
     return size;
   }
 
-  public String getFileProperties() {
-    return fileProperties;
+  public String getJsDeleteLink() {
+    return jsDeleteLink;
+  }
+
+  public String getError() {
+    return error;
   }
 
 }

@@ -79,7 +79,7 @@ $(function () {
       var size = data.result.files[0].size;
       var filename = data.result.files[0].name;
       var url = data.result.files[0].url;
-      var fileProperties = data.result.files[0].fileProperties;
+      var jsDeleteLink = data.result.files[0].jsDeleteLink;
 
       if (error) {
         data.context.find('.file-upload-status').text('Error:' + error);
@@ -97,7 +97,7 @@ $(function () {
           }, 2000);
 
           // Create the delete action
-          data.context.find('.file-upload-actions').html('<a href="#" data-file-properties="' +  fileProperties +
+          data.context.find('.file-upload-actions').html('<a href="#" data-js-delete-link="' + jsDeleteLink +
             '" class="file-delete-link">Remove<span class="visually-hidden"> ' + filename + '</span></a>');
 
           // If the page has been validated, remove the error summary and any error from the upload widget,
@@ -142,18 +142,14 @@ $('#fileupload').attr('tabindex', '-1');
 
 //Bind click events to file delete links
 $('body').on('click', '.file-delete-link', function(e){
-  var fileProperties = $(this).attr('data-file-properties');
   var $fileRow = $(this).closest('tr');
   $fileRow.hide();
 
   $.ajax({
-    url: $('input[name=delete-url]').val(),
+    url: $(this).attr('data-js-delete-link'),
     method: 'POST',
     headers: {
       "Csrf-Token": $('input[name=csrfToken]').val()
-    },
-    data: {
-      fileProperties: fileProperties
     },
     success: function() {
       $fileRow.remove();
