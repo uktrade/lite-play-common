@@ -35,6 +35,10 @@ function hideFileListIfEmpty() {
   };
 }
 
+function endsWith(filename, extension) {
+  return filename.toLowerCase().lastIndexOf(extension.toLowerCase()) == filename.length - extension.length;
+}
+
 $(function () {
   $('#fileupload').fileupload({
     dataType: 'json',
@@ -46,7 +50,10 @@ $(function () {
       //Create tr in the uploads table
       data.context = $('<tr><th class="file-upload-filename bold" id="file-upload-filename-' + fileRowCount + '">' + filename + '</th><td class="file-upload-status"></td><td class="file-upload-actions"><a href="#" class="file-cancel-link">Cancel<span class="visually-hidden"> upload of ' + filename + '</span></a></td></tr>').prependTo($('#file-list tbody'));
 
-      if (filename.endsWith('exe') || size > 5 * 1024 * 1024) { //TODO: improve client side validation (this is just an example)
+      var disallowedExtensions = $("input[name='files[]']").attr('data-upload-validation-disallowed-extensions').split(',');
+      var maxSize = parseInt($("input[name='files[]']").attr('data-upload-validation-max-size'))
+
+      if (disallowedExtensions.some(function(extension) { return endsWith(filename, extension)}) || size > maxSize) {
         data.context.find('.file-upload-status').text('Error: Not a valid file');
         data.context.find('.file-upload-filename').addClass('form-group-error');
         data.context.find('.file-cancel-link').click(function(){
@@ -82,13 +89,13 @@ $(function () {
       var jsDeleteLink = data.result.files[0].jsDeleteLink;
 
       if (error) {
-        data.context.find('.file-upload-status').text('Error:' + error);
+        data.context.find('.file-upload-status').text('Error: ' + error);
       } else {
         var doneTimestamp = new Date().getTime();
 
         setTimeout( function() {
           //Add download link, success label and filesize
-          data.context.find('.file-upload-filename').html('<a href="' + url + '"><span class="visually-hidden">Download</span> ' + filename + '</a>');
+          data.context.find('.file-upload-filename').html('<a href="' + url + '" target="_blank"><span class="visually-hidden">Download</span> ' + filename + '</a>');
           data.context.find('.file-upload-status').html('<span class="status-label status-label-finished">Success</span><span class="file-upload-size">' + size + '</span>');
 
           // After 2 seconds, fade out the success label to reveal the file size
