@@ -18,6 +18,7 @@ import play.libs.streams.Accumulator;
 import play.mvc.BodyParser;
 import play.mvc.Http;
 import play.mvc.Result;
+import play.mvc.Results;
 import scala.Option;
 
 import java.io.FileOutputStream;
@@ -55,24 +56,35 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
     String header = request.getHeader("Content-Length");
     if (header == null) {
       LOGGER.warn("Rejecting request with no Content-Length header");
-      return Accumulator.done(F.Either.Left(badRequest("bad content length")));
+      return redirect(request);
     }
     long contentLength;
     try {
       contentLength = Long.parseLong(header);
     } catch (NumberFormatException nfe) {
       LOGGER.warn("Rejecting request of size " + header);
-      return Accumulator.done(F.Either.Left(badRequest("bad content length")));
+      return redirect(request);
     }
     if (contentLength < 1) {
       LOGGER.warn("Rejecting request of size " + header);
       return Accumulator.done(F.Either.Left(badRequest("bad content length")));
     } else if (contentLength > maxSize) {
       LOGGER.warn("Rejecting request of size " + header);
-      return Accumulator.done(F.Either.Left(badRequest("content length too big")));
+      return redirect(request);
     } else {
       return super.apply(request);
     }
+  }
+
+  private Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> redirect(Http.RequestHeader request) {
+    String modifier;
+    if (request.uri().contains("?")) {
+      modifier = "&";
+    } else {
+      modifier = "?";
+    }
+    String url = request.uri() + modifier + FileService.INVALID_FILE_SIZE_QUERY_PARAM + "=true";
+    return Accumulator.done(F.Either.Left(Results.redirect(url)));
   }
 
   /**

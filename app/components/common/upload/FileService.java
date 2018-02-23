@@ -13,6 +13,8 @@ public interface FileService {
 
   String FILE_UPLOAD_FORM_FIELD = "fileupload";
 
+  String INVALID_FILE_SIZE_QUERY_PARAM = "invalidFileSize";
+
   CompletionStage<List<UploadResult>> processUpload(String folder, Http.Request request);
 
   InputStream retrieveFile(String id, String bucket, String folder);
