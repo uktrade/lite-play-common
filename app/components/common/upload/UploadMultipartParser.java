@@ -26,20 +26,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDataBodyParser<MultipartResult> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UploadMultipartParser.class);
 
-  private static final List<String> FORBIDDEN_FILE_EXTENSIONS = Arrays.asList("exe", "bat", "cmd");
-  private static final long CONTENT_LENGTH_MAX = 10 * 1024 * 1024;
+  private final long maxSize;
+  private final List<String> allowedExtensions;
 
   @Inject
-  public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig) {
+  public UploadMultipartParser(Materializer materializer,
+                               HttpConfiguration httpConfig,
+                               UploadValidationConfig uploadValidationConfig) {
     super(materializer, httpConfig.parser().maxDiskBuffer());
+    this.maxSize = uploadValidationConfig.getMaxSize();
+    this.allowedExtensions = Arrays.stream(uploadValidationConfig.getAllowedExtensions().split(","))
+        .map(String::trim)
+        .map(String::toLowerCase)
+        .map(extension -> "." + extension)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -59,7 +67,7 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
     if (contentLength < 1) {
       LOGGER.warn("Rejecting request of size " + header);
       return Accumulator.done(F.Either.Left(badRequest("bad content length")));
-    } else if (contentLength > CONTENT_LENGTH_MAX) {
+    } else if (contentLength > maxSize) {
       LOGGER.warn("Rejecting request of size " + header);
       return Accumulator.done(F.Either.Left(badRequest("content length too big")));
     } else {
@@ -85,9 +93,8 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
         MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
         return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
       } else {
-        Optional<String> forbiddenFileEnding = getForbiddenFileEnding(filename);
-        if (forbiddenFileEnding.isPresent()) {
-          String errorMessage = "File ending not allowed: " + forbiddenFileEnding.get();
+        if (!isExtensionAllowed(filename)) {
+          String errorMessage = "File ending not allowed";
           MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
           return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
         } else {
@@ -109,11 +116,10 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
     };
   }
 
-  private Optional<String> getForbiddenFileEnding(String filename) {
+  private boolean isExtensionAllowed(String filename) {
     String lowercase = filename.toLowerCase();
-    return FORBIDDEN_FILE_EXTENSIONS.stream()
-        .filter(lowercase::endsWith)
-        .findAny();
+    return allowedExtensions.stream()
+        .anyMatch(lowercase::endsWith);
   }
 
   private String parse(Option<String> stringOption) {

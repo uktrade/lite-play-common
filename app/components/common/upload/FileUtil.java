@@ -22,7 +22,7 @@ public class FileUtil {
     uploadResults.stream()
         .filter(uploadResult -> !uploadResult.isValid())
         .forEach(uploadResult -> {
-          form.reject("fileupload",
+          form.reject(FileService.FILE_UPLOAD_FORM_FIELD,
               "Error for file " + uploadResult.getFilename() + ": " + uploadResult.getError());
         });
   }

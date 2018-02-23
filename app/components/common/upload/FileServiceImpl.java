@@ -119,7 +119,7 @@ public class FileServiceImpl implements FileService {
               return multipartResult;
             } else {
               LOGGER.error("File with filename {} and path {} did not pass virus check", multipartResult.getFilename(), multipartResult.getPath());
-              return new MultipartResult(multipartResult.getFilename(), multipartResult.getPath(), "Invalid file");
+              return new MultipartResult(multipartResult.getFilename(), multipartResult.getPath(), "Not a valid file");
             }
           })
           .exceptionally(error -> {
