@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,7 +35,7 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
   private static final Logger LOGGER = LoggerFactory.getLogger(UploadMultipartParser.class);
 
   private final long maxSize;
-  private final List<String> disallowedExtensions;
+  private final List<String> allowedExtensions;
 
   @Inject
   public UploadMultipartParser(Materializer materializer,
@@ -44,8 +43,10 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
                                UploadValidationConfig uploadValidationConfig) {
     super(materializer, httpConfig.parser().maxDiskBuffer());
     this.maxSize = uploadValidationConfig.getMaxSize();
-    this.disallowedExtensions = Arrays.stream(uploadValidationConfig.getDisallowedExtensions().split(","))
+    this.allowedExtensions = Arrays.stream(uploadValidationConfig.getAllowedExtensions().split(","))
+        .map(String::trim)
         .map(String::toLowerCase)
+        .map(extension -> "." + extension)
         .collect(Collectors.toList());
   }
 
@@ -92,9 +93,8 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
         MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
         return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
       } else {
-        Optional<String> forbiddenFileEnding = getForbiddenFileEnding(filename);
-        if (forbiddenFileEnding.isPresent()) {
-          String errorMessage = "File ending not allowed: " + forbiddenFileEnding.get();
+        if (!isExtensionAllowed(filename)) {
+          String errorMessage = "File ending not allowed";
           MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
           return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
         } else {
@@ -116,11 +116,10 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
     };
   }
 
-  private Optional<String> getForbiddenFileEnding(String filename) {
+  private boolean isExtensionAllowed(String filename) {
     String lowercase = filename.toLowerCase();
-    return disallowedExtensions.stream()
-        .filter(lowercase::endsWith)
-        .findAny();
+    return allowedExtensions.stream()
+        .anyMatch(lowercase::endsWith);
   }
 
   private String parse(Option<String> stringOption) {

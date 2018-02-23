@@ -3,22 +3,22 @@ package components.common.upload;
 public class UploadValidationConfig {
 
   private long maxSize = 0;
-  private String disallowedExtensions = "";
+  private String allowedExtensions = "";
 
   public UploadValidationConfig() {
   }
 
-  public UploadValidationConfig(long maxSize, String disallowedExtensions) {
+  public UploadValidationConfig(long maxSize, String allowedExtensions) {
     this.maxSize = maxSize;
-    this.disallowedExtensions = disallowedExtensions;
+    this.allowedExtensions = allowedExtensions;
   }
 
   public long getMaxSize() {
     return maxSize;
   }
 
-  public String getDisallowedExtensions() {
-    return disallowedExtensions;
+  public String getAllowedExtensions() {
+    return allowedExtensions;
   }
 
 }

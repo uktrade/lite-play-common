@@ -1,7 +1,6 @@
 @import components.common.upload.FileService
 @import components.common.upload.FileView
 @import components.common.upload.UploadValidationConfig
-@import views.html.common.page._
 
 @(form: Form[_], url: String, fileViews: java.util.List[FileView], labelVisuallyHidden: Boolean = false)(label: Html)
 
@@ -9,10 +8,7 @@
   ctx().args.get(FileService.CTX_UPLOAD_VALIDATION_CONFIG).asInstanceOf[UploadValidationConfig]
 }
 
-
-<script src="@controllers.common.routes.Assets.versioned("template/javascripts/jquery-file-upload/js/jquery.fileupload.js")"></script>
-
-<div id="file-upload-container" @if(form.error(FileService.FILE_UPLOAD) != null){ class="form-group-error" }>
+<div id="file-upload-container" @if(form.error(FileService.FILE_UPLOAD_FORM_FIELD) != null){ class="form-group-error" }>
 
   @twoThirdsColumn {
     <div id="file-upload-label-fileupload" @if(labelVisuallyHidden) { class="visually-hidden" }>
@@ -24,15 +20,15 @@
     </div>
   }
 
-  @if(form.error(FileService.FILE_UPLOAD) != null) {
-    <span class="error-message">@form.error(FileService.FILE_UPLOAD).message</span>
+  @if(form.error(FileService.FILE_UPLOAD_FORM_FIELD) != null) {
+    <span class="error-message">@form.error(FileService.FILE_UPLOAD_FORM_FIELD).message</span>
   }
 
   <div class="file-upload-drop-target">
     <div class="file-upload-help-text">Drag and drop your files here <br>or</div>
     <button class="button secondary file-upload-button" tabindex="0">Select a file</button>
-    <input id=@FileService.FILE_UPLOAD aria-labelledby="file-upload-label-fileupload" type="file" name="files[]"
-      data-url="@url" data-upload-validation-disallowed-extensions="@uploadValidationConfig.getDisallowedExtensions"
+    <input id=@FileService.FILE_UPLOAD_FORM_FIELD aria-labelledby="file-upload-label-fileupload" type="file" name="files[]"
+      data-url="@url" data-upload-validation-allowed-extensions="@uploadValidationConfig.getAllowedExtensions"
       data-upload-validation-max-size="@uploadValidationConfig.getMaxSize" multiple>
   </div>
 </div>
@@ -66,5 +62,3 @@
   }
   </tbody>
 </table>
-
-<script src="@controllers.common.routes.Assets.versioned("template/javascripts/lite-file-upload.js")"></script>

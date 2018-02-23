@@ -41,8 +41,8 @@ public class UploadGuiceModule extends AbstractModule {
   @Provides
   UploadValidationConfig provideUploadValidationConfig() {
     long maxSize = configuration.getLong("upload.validation.maxSize");
-    String disallowedExtensions = configuration.getString("upload.validation.disallowedExtensions");
-    return new UploadValidationConfig(maxSize, disallowedExtensions);
+    String allowedExtensions = configuration.getString("upload.validation.allowedExtensions");
+    return new UploadValidationConfig(maxSize, allowedExtensions);
   }
 
   private AWSCredentialsProvider getAwsCredentialsProvider() {

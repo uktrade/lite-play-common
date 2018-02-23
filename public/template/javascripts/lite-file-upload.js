@@ -50,10 +50,10 @@ $(function () {
       //Create tr in the uploads table
       data.context = $('<tr><th class="file-upload-filename bold" id="file-upload-filename-' + fileRowCount + '">' + filename + '</th><td class="file-upload-status"></td><td class="file-upload-actions"><a href="#" class="file-cancel-link">Cancel<span class="visually-hidden"> upload of ' + filename + '</span></a></td></tr>').prependTo($('#file-list tbody'));
 
-      var disallowedExtensions = $("input[name='files[]']").attr('data-upload-validation-disallowed-extensions').split(',');
+      var allowedExtensions = $("input[name='files[]']").attr('data-upload-validation-allowed-extensions').split(',');
       var maxSize = parseInt($("input[name='files[]']").attr('data-upload-validation-max-size'))
 
-      if (disallowedExtensions.some(function(extension) { return endsWith(filename, extension)}) || size > maxSize) {
+      if (!allowedExtensions.some(function(extension) { return endsWith(filename, "." + extension.trim())}) || size > maxSize) {
         data.context.find('.file-upload-status').text('Error: Not a valid file');
         data.context.find('.file-upload-filename').addClass('form-group-error');
         data.context.find('.file-cancel-link').click(function(){

@@ -11,7 +11,7 @@ public interface FileService {
 
   String CTX_UPLOAD_VALIDATION_CONFIG = "ctx_upload_validation_config";
 
-  String FILE_UPLOAD = "fileupload";
+  String FILE_UPLOAD_FORM_FIELD = "fileupload";
 
   CompletionStage<List<UploadResult>> processUpload(String folder, Http.Request request);
 
