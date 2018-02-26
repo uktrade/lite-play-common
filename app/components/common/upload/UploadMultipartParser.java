@@ -27,13 +27,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDataBodyParser<MultipartResult> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UploadMultipartParser.class);
+  private static final Pattern FILENAME_PATTERN = Pattern.compile("[^a-zA-Z0-9\\-_]");
 
   private final long maxSize;
   private final List<String> allowedExtensions;
@@ -49,6 +52,9 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
         .map(String::toLowerCase)
         .map(extension -> "." + extension)
         .collect(Collectors.toList());
+    if (allowedExtensions.isEmpty()) {
+      throw new RuntimeException("At least one file extension needs to be allowed");
+    }
   }
 
   @Override
@@ -110,22 +116,41 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
           MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
           return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
         } else {
-          Path path;
-          try {
-            path = Files.createTempFile("lite", null);
-          } catch (IOException ioe) {
-            throw new RuntimeException("Unable to create temp file", ioe);
+          Optional<String> cleanFilename = clean(filename);
+          if (!cleanFilename.isPresent()) {
+            String errorMessage = "Filename not allowed";
+            MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
+            return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
+          } else {
+            Path path;
+            try {
+              path = Files.createTempFile("lite", null);
+            } catch (IOException ioe) {
+              throw new RuntimeException("Unable to create temp file", ioe);
+            }
+            MultipartResult multipartResult = new MultipartResult(cleanFilename.get(), path, null);
+            Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
+            return Accumulator.fromSink(
+                sink.mapMaterializedValue(completionStage ->
+                    completionStage.thenApplyAsync(results ->
+                        new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult))
+                ));
           }
-          MultipartResult multipartResult = new MultipartResult(filename, path, null);
-          Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
-          return Accumulator.fromSink(
-              sink.mapMaterializedValue(completionStage ->
-                  completionStage.thenApplyAsync(results ->
-                      new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult))
-              ));
         }
       }
     };
+  }
+
+  private static Optional<String> clean(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    String fileStart = filename.substring(0, lastDot);
+    String fileEnding = filename.substring(lastDot + 1, filename.length());
+    String fileStartClean = FILENAME_PATTERN.matcher(fileStart).replaceAll("");
+    if (fileStartClean.length() < 1 || fileStartClean.length() > 240) {
+      return Optional.empty();
+    } else {
+      return Optional.of(fileStartClean + "." + fileEnding);
+    }
   }
 
   private boolean isExtensionAllowed(String filename) {
