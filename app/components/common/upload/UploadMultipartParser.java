@@ -7,6 +7,7 @@ import akka.stream.Materializer;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.StreamConverters;
 import akka.util.ByteString;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -27,13 +28,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDataBodyParser<MultipartResult> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UploadMultipartParser.class);
+  private static final Pattern FILENAME_PATTERN = Pattern.compile("[^a-zA-Z0-9\\-_]");
+  private static final Pattern FILE_ENDING_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
 
   private final long maxSize;
   private final List<String> allowedExtensions;
@@ -44,11 +49,23 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
                                UploadValidationConfig uploadValidationConfig) {
     super(materializer, httpConfig.parser().maxDiskBuffer());
     this.maxSize = uploadValidationConfig.getMaxSize();
-    this.allowedExtensions = Arrays.stream(uploadValidationConfig.getAllowedExtensions().split(","))
+    this.allowedExtensions = createAllowedExtensions(uploadValidationConfig);
+  }
+
+  private List<String> createAllowedExtensions(UploadValidationConfig uploadValidationConfig) {
+    List<String> normalized = Arrays.stream(uploadValidationConfig.getAllowedExtensions().split(","))
         .map(String::trim)
         .map(String::toLowerCase)
-        .map(extension -> "." + extension)
         .collect(Collectors.toList());
+    if (normalized.stream().anyMatch(extension -> !FILE_ENDING_PATTERN.matcher(extension).matches())) {
+      throw new RuntimeException("All extensions must be alphanumeric");
+    } else if (normalized.stream().anyMatch(extension -> extension.length() > 10)) {
+      throw new RuntimeException("All extensions must have length less than 11");
+    } else {
+      return normalized.stream()
+          .map(extension -> "." + extension)
+          .collect(Collectors.toList());
+    }
   }
 
   @Override
@@ -110,22 +127,42 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
           MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
           return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
         } else {
-          Path path;
-          try {
-            path = Files.createTempFile("lite", null);
-          } catch (IOException ioe) {
-            throw new RuntimeException("Unable to create temp file", ioe);
+          Optional<String> normalizedFilename = normalizeFilename(filename);
+          if (!normalizedFilename.isPresent()) {
+            String errorMessage = "Filename not allowed";
+            MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
+            return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
+          } else {
+            Path path;
+            try {
+              path = Files.createTempFile("lite", null);
+            } catch (IOException ioe) {
+              throw new RuntimeException("Unable to create temp file", ioe);
+            }
+            MultipartResult multipartResult = new MultipartResult(normalizedFilename.get(), path, null);
+            Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
+            return Accumulator.fromSink(
+                sink.mapMaterializedValue(completionStage ->
+                    completionStage.thenApplyAsync(results ->
+                        new Http.MultipartFormData.FilePart<>(partName, normalizedFilename.get(), contentType, multipartResult))
+                ));
           }
-          MultipartResult multipartResult = new MultipartResult(filename, path, null);
-          Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
-          return Accumulator.fromSink(
-              sink.mapMaterializedValue(completionStage ->
-                  completionStage.thenApplyAsync(results ->
-                      new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult))
-              ));
         }
       }
     };
+  }
+
+  @VisibleForTesting
+  protected Optional<String> normalizeFilename(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    String fileStart = filename.substring(0, lastDot);
+    String fileEnding = filename.substring(lastDot + 1, filename.length());
+    String fileStartClean = FILENAME_PATTERN.matcher(fileStart).replaceAll("");
+    if (fileStartClean.length() < 1 || fileStartClean.length() > 240) {
+      return Optional.empty();
+    } else {
+      return Optional.of(fileStartClean + "." + fileEnding);
+    }
   }
 
   private boolean isExtensionAllowed(String filename) {
