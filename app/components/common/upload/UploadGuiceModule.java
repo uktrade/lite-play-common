@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import play.Configuration;
@@ -38,6 +39,7 @@ public class UploadGuiceModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("virusServiceCredentials")).to(configuration.getString("virusService.credentials"));
   }
 
+  @Singleton
   @Provides
   UploadValidationConfig provideUploadValidationConfig() {
     long maxSize = configuration.getLong("upload.validation.maxSize");
