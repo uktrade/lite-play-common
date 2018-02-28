@@ -10,9 +10,11 @@ import org.pac4j.saml.profile.SAML2Profile;
 import play.Logger;
 import play.mvc.Http;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -71,8 +73,11 @@ public class SpireAuthManager {
     Optional<String> surname = getAttribute(attributes, SURNAME_ATTRIBUTE);
     Optional<String> email = getAttribute(attributes, EMAIL_ADDRESS_ATTRIBUTE);
 
+    // TODO clean up
+    Set<String> roles = new HashSet<String>(profile.getAttribute("ROLES", List.class));
+
     if (id.isPresent() && forename.isPresent() && surname.isPresent() && email.isPresent()) {
-      return new AuthInfo(id.get(), forename.get(), surname.get(), email.get());
+      return new AuthInfo(id.get(), forename.get(), surname.get(), email.get(), roles);
     } else {
       return AuthInfo.unauthenticatedInstance();
     }
