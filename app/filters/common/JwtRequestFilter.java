@@ -1,6 +1,5 @@
 package filters.common;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import components.common.auth.AuthInfo;
 import components.common.auth.SpireAuthManager;
@@ -12,8 +11,6 @@ import org.jose4j.keys.HmacKey;
 import org.jose4j.lang.JoseException;
 import play.libs.ws.WSRequestExecutor;
 import play.libs.ws.WSRequestFilter;
-
-import java.util.Arrays;
 
 public class JwtRequestFilter implements WSRequestFilter {
 
@@ -55,7 +52,7 @@ public class JwtRequestFilter implements WSRequestFilter {
         throw new RuntimeException(e);
       }
 
-      request.setHeaders(ImmutableMap.of("Authorization", Arrays.asList("Bearer " + token)));
+      request.setHeader("Authorization", "Bearer " + token);
 
       return executor.apply(request);
     };

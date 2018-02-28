@@ -15,6 +15,11 @@ import java.util.concurrent.CompletionStage;
 
 public class CountryServiceClient {
 
+  public enum CountryServiceEndpoint {
+    SET,
+    GROUP
+  }
+
   private final HttpExecutionContext httpExecutionContext;
   private final WSClient wsClient;
   private final int countryServiceTimeout;
@@ -23,6 +28,7 @@ public class CountryServiceClient {
   private final CountryServiceEndpoint countryServiceEndpoint;
   private final String countryParamName;
   private final ObjectMapper objectMapper;
+
   public CountryServiceClient(HttpExecutionContext httpExecutionContext,
                               WSClient wsClient,
                               int countryServiceTimeout,
@@ -39,6 +45,41 @@ public class CountryServiceClient {
     this.countryServiceEndpoint = countryServiceEndpoint;
     this.countryParamName = countryParamName;
     this.objectMapper = objectMapper;
+  }
+
+  public CompletionStage<List<Country>> getCountries() {
+    return wsClient.url(buildUrl())
+        .setAuth(credentials)
+        .withRequestFilter(CorrelationId.requestFilter)
+        .setRequestTimeout(countryServiceTimeout)
+        .get().handleAsync((result, error) -> {
+          if (error != null) {
+            Logger.error("Country service client failure.", error);
+          } else if (result.getStatus() != 200) {
+            Logger.error("Country service error - {}", result.getBody());
+          } else {
+            try {
+              String json = result.asJson().toString();
+              return objectMapper.readValue(json, new TypeReference<List<Country>>() {
+              });
+            } catch (IOException e) {
+              Logger.error("Failed to parse Country service response as JSON.", e);
+            }
+          }
+
+          return new ArrayList<>();
+        }, httpExecutionContext.current());
+  }
+
+  private String buildUrl() {
+    switch (countryServiceEndpoint) {
+      case SET:
+        return countryServiceUrl + "/countries/set/" + countryParamName;
+      case GROUP:
+        return countryServiceUrl + "/countries/group/" + countryParamName;
+      default:
+        return null;
+    }
   }
 
   public static CountryServiceClient buildCountryServiceGroupClient(HttpExecutionContext httpExecutionContext,
@@ -73,45 +114,6 @@ public class CountryServiceClient {
         CountryServiceEndpoint.SET,
         countryParamName,
         objectMapper);
-  }
-
-  public CompletionStage<List<Country>> getCountries() {
-    return wsClient.url(buildUrl())
-        .setRequestFilter(CorrelationId.requestFilter)
-        .setRequestTimeout(countryServiceTimeout)
-        .setAuth(credentials)
-        .get().handleAsync((result, error) -> {
-          if (error != null) {
-            Logger.error("Country service client failure.", error);
-          } else if (result.getStatus() != 200) {
-            Logger.error("Country service error - {}", result.getBody());
-          } else {
-            try {
-              String json = result.asJson().toString();
-              return objectMapper.readValue(json, new TypeReference<List<Country>>() {
-              });
-            } catch (IOException e) {
-              Logger.error("Failed to parse Country service response as JSON.", e);
-            }
-          }
-          return new ArrayList<>();
-        }, httpExecutionContext.current());
-  }
-
-  private String buildUrl() {
-    switch (countryServiceEndpoint) {
-      case SET:
-        return countryServiceUrl + "/countries/set/" + countryParamName;
-      case GROUP:
-        return countryServiceUrl + "/countries/group/" + countryParamName;
-      default:
-        return null;
-    }
-  }
-
-  public enum CountryServiceEndpoint {
-    SET,
-    GROUP
   }
 
 }

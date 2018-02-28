@@ -1,23 +1,12 @@
 package utils.common;
 
 import play.data.validation.Constraints;
+import play.i18n.Messages;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ValidationUtil {
-
-  static class DummyMessages {
-    public String get(String str){
-      return "dummy";
-    }
-
-    public String get(String s1, Object o2, Object o3) {
-      return "dummy";
-    }
-  }
-
-  private static final DummyMessages Messages = new DummyMessages();
 
   public static Map<String, Object> getRequiredValidationMap(String message) {
     if (message == null) {

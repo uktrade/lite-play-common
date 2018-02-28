@@ -73,7 +73,7 @@ public class CorrelationId {
    * <p>Example Usage:</p>
    * <pre>{@code
    * ws.url("http://www.example.com/api/v1/example")
-   *  .setRequestFilter(CorrelationId.requestFilter)
+   *  .withRequestFilter(CorrelationId.requestFilter)
    *  .get()
    *  .handleAsync((response, error) -> {
    *    if (error != null) {
@@ -89,7 +89,7 @@ public class CorrelationId {
    */
   public static final WSRequestFilter requestFilter = executor -> {
     WSRequestExecutor next = request -> {
-      request.addHeader(HTTP_HEADER_NAME, CorrelationId.get());
+      request.setHeader(HTTP_HEADER_NAME, CorrelationId.get());
       return executor.apply(request);
     };
     return next;

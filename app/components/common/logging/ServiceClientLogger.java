@@ -1,15 +1,16 @@
 package components.common.logging;
 
 import com.google.common.base.Stopwatch;
+import com.google.inject.Inject;
 import org.apache.http.client.utils.URIBuilder;
 import play.Logger;
 import play.libs.concurrent.HttpExecutionContext;
-import play.libs.ws.StandaloneWSRequest;
+import play.libs.ws.WSRequest;
 import play.libs.ws.WSRequestFilter;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -28,16 +29,16 @@ public class ServiceClientLogger {
    * @param request
    * @return the URL with parameters, defaults to the requests {@link play.libs.ws.WSRequest#getUrl()} if the build is unsuccessful
    */
-  private static String requestToURL(StandaloneWSRequest request) {
+  private static String requestToURL(WSRequest request) {
     // Default to request URL without parameters
     String url = request.getUrl();
-    Map<String, List<String>> queryParameters = request.getQueryParameters();
+    Map<String, Collection<String>> queryParameters = request.getQueryParameters();
     if (!queryParameters.isEmpty()) {
       // Build a URL which includes parameters
       try {
         URIBuilder uriBuilder = new URIBuilder(request.getUrl());
         // Loop through params
-        for (Entry<String, List<String>> paramEntry: queryParameters.entrySet()) {
+        for (Entry<String, Collection<String>> paramEntry: queryParameters.entrySet()) {
           // Loop through param values, add to URI builder
           for (String paramValue: paramEntry.getValue()) {
             uriBuilder.addParameter(paramEntry.getKey(), paramValue);
@@ -62,7 +63,7 @@ public class ServiceClientLogger {
    * <p>Example usage:</p>
    * <pre>{@code
    * ws.url("http://www.example.com/api")
-   *  .setRequestFilter(serviceClientLogger.requestFilter("Example", "GET"))
+   *  .withRequestFilter(serviceClientLogger.requestFilter("Example", "GET"))
    *  .setQueryParameter("version", 1)
    *  .get()
    *  .thenApplyAsync(response -> {
@@ -89,7 +90,7 @@ public class ServiceClientLogger {
       return executor.apply(request)
           .thenApplyAsync(response -> {
             Logger.info(String.format("%s service response - URL: %s, status code: %s, status text: %s, completed in %dms",
-                serviceName, request.getUrl(), response.getStatus(), response.getStatusText(), stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+                serviceName, response.getUri(), response.getStatus(), response.getStatusText(), stopwatch.elapsed(TimeUnit.MILLISECONDS)));
             return response;
           }, httpExecutionContext.current());
     };

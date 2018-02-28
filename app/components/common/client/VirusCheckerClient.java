@@ -44,8 +44,8 @@ public class VirusCheckerClient {
 
   public CompletionStage<Boolean> isOk(Path path) {
     WSRequest req = wsClient.url(address)
-        .setRequestFilter(CorrelationId.requestFilter)
-        .setRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", httpExecutionContext))
+        .withRequestFilter(CorrelationId.requestFilter)
+        .withRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", httpExecutionContext))
         .setAuth(credentials)
         .setRequestTimeout(timeout);
     // https://www.playframework.com/documentation/2.5.x/JavaWS#Submitting-multipart/form-data
