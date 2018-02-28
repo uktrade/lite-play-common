@@ -7,6 +7,7 @@ import akka.stream.Materializer;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.StreamConverters;
 import akka.util.ByteString;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import play.libs.streams.Accumulator;
 import play.mvc.BodyParser;
 import play.mvc.Http;
 import play.mvc.Result;
+import play.mvc.Results;
 import scala.Option;
 
 import java.io.FileOutputStream;
@@ -30,17 +32,42 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDataBodyParser<MultipartResult> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UploadMultipartParser.class);
+  private static final Pattern FILENAME_PATTERN = Pattern.compile("[^a-zA-Z0-9\\-_]");
+  private static final Pattern FILE_ENDING_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
 
-  private static final List<String> FORBIDDEN_FILE_EXTENSIONS = Arrays.asList("exe", "bat", "cmd");
-  private static final long CONTENT_LENGTH_MAX = 10 * 1024 * 1024;
+  private final long maxSize;
+  private final List<String> allowedExtensions;
 
   @Inject
-  public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig, HttpErrorHandler errorHandler) {
+  public UploadMultipartParser(Materializer materializer,
+                               HttpConfiguration httpConfig,
+                               HttpErrorHandler errorHandler,
+                               UploadValidationConfig uploadValidationConfig) {
     super(materializer, httpConfig.parser().maxDiskBuffer(), errorHandler);
+    this.maxSize = uploadValidationConfig.getMaxSize();
+    this.allowedExtensions = createAllowedExtensions(uploadValidationConfig);
+  }
+
+  private List<String> createAllowedExtensions(UploadValidationConfig uploadValidationConfig) {
+    List<String> normalized = Arrays.stream(uploadValidationConfig.getAllowedExtensions().split(","))
+        .map(String::trim)
+        .map(String::toLowerCase)
+        .collect(Collectors.toList());
+    if (normalized.stream().anyMatch(extension -> !FILE_ENDING_PATTERN.matcher(extension).matches())) {
+      throw new RuntimeException("All extensions must be alphanumeric");
+    } else if (normalized.stream().anyMatch(extension -> extension.length() > 10)) {
+      throw new RuntimeException("All extensions must have length less than 11");
+    } else {
+      return normalized.stream()
+          .map(extension -> "." + extension)
+          .collect(Collectors.toList());
+    }
   }
 
   @Override
@@ -48,24 +75,35 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
     String header = request.getHeader("Content-Length");
     if (header == null) {
       LOGGER.warn("Rejecting request with no Content-Length header");
-      return Accumulator.done(F.Either.Left(badRequest("bad content length")));
+      return redirect(request);
     }
     long contentLength;
     try {
       contentLength = Long.parseLong(header);
     } catch (NumberFormatException nfe) {
       LOGGER.warn("Rejecting request of size " + header);
-      return Accumulator.done(F.Either.Left(badRequest("bad content length")));
+      return redirect(request);
     }
     if (contentLength < 1) {
       LOGGER.warn("Rejecting request of size " + header);
       return Accumulator.done(F.Either.Left(badRequest("bad content length")));
-    } else if (contentLength > CONTENT_LENGTH_MAX) {
+    } else if (contentLength > maxSize) {
       LOGGER.warn("Rejecting request of size " + header);
-      return Accumulator.done(F.Either.Left(badRequest("content length too big")));
+      return redirect(request);
     } else {
       return super.apply(request);
     }
+  }
+
+  private Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> redirect(Http.RequestHeader request) {
+    String modifier;
+    if (request.uri().contains("?")) {
+      modifier = "&";
+    } else {
+      modifier = "?";
+    }
+    String url = request.uri() + modifier + FileService.INVALID_FILE_SIZE_QUERY_PARAM + "=true";
+    return Accumulator.done(F.Either.Left(Results.redirect(url)));
   }
 
   /**
@@ -86,35 +124,53 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
         MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
         return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
       } else {
-        Optional<String> forbiddenFileEnding = getForbiddenFileEnding(filename);
-        if (forbiddenFileEnding.isPresent()) {
-          String errorMessage = "File ending not allowed: " + forbiddenFileEnding.get();
+        if (!isExtensionAllowed(filename)) {
+          String errorMessage = "File ending not allowed";
           MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
           return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
         } else {
-          Path path;
-          try {
-            path = Files.createTempFile("lite-exporter-dashboard", null);
-          } catch (IOException ioe) {
-            throw new RuntimeException("Unable to create temp file", ioe);
+          Optional<String> normalizedFilename = normalizeFilename(filename);
+          if (!normalizedFilename.isPresent()) {
+            String errorMessage = "Filename not allowed";
+            MultipartResult multipartResult = new MultipartResult(filename, null, errorMessage);
+            return Accumulator.done(new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult));
+          } else {
+            Path path;
+            try {
+              path = Files.createTempFile("lite", null);
+            } catch (IOException ioe) {
+              throw new RuntimeException("Unable to create temp file", ioe);
+            }
+            MultipartResult multipartResult = new MultipartResult(normalizedFilename.get(), path, null);
+            Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
+            return Accumulator.fromSink(
+                sink.mapMaterializedValue(completionStage ->
+                    completionStage.thenApplyAsync(results ->
+                        new Http.MultipartFormData.FilePart<>(partName, normalizedFilename.get(), contentType, multipartResult))
+                ));
           }
-          MultipartResult multipartResult = new MultipartResult(filename, path, null);
-          Sink<ByteString, CompletionStage<IOResult>> sink = StreamConverters.fromOutputStream(() -> new FileOutputStream(path.toFile()));
-          return Accumulator.fromSink(
-              sink.mapMaterializedValue(completionStage ->
-                  completionStage.thenApplyAsync(results ->
-                      new Http.MultipartFormData.FilePart<>(partName, filename, contentType, multipartResult))
-              ));
         }
       }
     };
   }
 
-  private Optional<String> getForbiddenFileEnding(String filename) {
+  @VisibleForTesting
+  protected Optional<String> normalizeFilename(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    String fileStart = filename.substring(0, lastDot);
+    String fileEnding = filename.substring(lastDot + 1, filename.length());
+    String fileStartClean = FILENAME_PATTERN.matcher(fileStart).replaceAll("");
+    if (fileStartClean.length() < 1 || fileStartClean.length() > 240) {
+      return Optional.empty();
+    } else {
+      return Optional.of(fileStartClean + "." + fileEnding);
+    }
+  }
+
+  private boolean isExtensionAllowed(String filename) {
     String lowercase = filename.toLowerCase();
-    return FORBIDDEN_FILE_EXTENSIONS.stream()
-        .filter(lowercase::endsWith)
-        .findAny();
+    return allowedExtensions.stream()
+        .anyMatch(lowercase::endsWith);
   }
 
   private String parse(Option<String> stringOption) {

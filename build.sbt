@@ -8,8 +8,7 @@ publishArtifact in(Compile, packageDoc) := false
 libraryDependencies ++= Seq(
   "redis.clients" % "jedis" % "2.9.0",
   guice,
-  "redis.clients" % "jedis" % "2.9.0",
-  cacheApi,
+  ehcache,
   javaWs,
   filters,
   "io.mikael" % "urlbuilder" % "2.0.7",
@@ -26,7 +25,6 @@ libraryDependencies ++= Seq(
   "com.spotify" % "completable-futures" % "0.3.2",
   "org.apache.commons" % "commons-collections4" % "4.1",
   "org.glassfish" % "javax.el" % "3.0.1-b08",
-  "com.github.karelcemus" %% "play-redis" % "2.0.1",
   "org.assertj" % "assertj-core" % "3.5.2" % "test",
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.5.8" % "test"
 )

@@ -7,6 +7,8 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +37,14 @@ public class UploadGuiceModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("virusServiceAddress")).to(config.getString("virusService.address"));
     bindConstant().annotatedWith(Names.named("virusServiceTimeout")).to(config.getString("virusService.timeout"));
     bindConstant().annotatedWith(Names.named("virusServiceCredentials")).to(config.getString("virusService.credentials"));
+  }
+
+  @Singleton
+  @Provides
+  UploadValidationConfig provideUploadValidationConfig() {
+    long maxSize = config.getLong("upload.validation.maxSize");
+    String allowedExtensions = config.getString("upload.validation.allowedExtensions");
+    return new UploadValidationConfig(maxSize, allowedExtensions);
   }
 
   private AWSCredentialsProvider getAwsCredentialsProvider() {

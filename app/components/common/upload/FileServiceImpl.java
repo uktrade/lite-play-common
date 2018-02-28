@@ -16,6 +16,7 @@ import play.mvc.Http;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -65,6 +66,20 @@ public class FileServiceImpl implements FileService {
     }
   }
 
+  @Override
+  public UploadResult uploadToS3(String folder, String filename, Path path) {
+    String id = generateFileId();
+    File file = path.toFile();
+    try {
+      amazonS3.putObject(new PutObjectRequest(awsBucketName, folder + "/" + id, file));
+    } catch (Exception exception) {
+      LOGGER.error("Unable to upload file with filename {} and path {} to amazon s3", filename, path, exception);
+      return UploadResult.failedUpload(filename, "An unexpected error occurred.");
+    }
+    long size = file.length();
+    return UploadResult.successfulUpload(id, filename, awsBucketName, folder, size, null);
+  }
+
   private CompletionStage<UploadResult> processUpload(String folder, MultipartResult multipartResult) {
     if (multipartResult.isValid()) {
       return checkForVirus(multipartResult).thenApplyAsync(result -> uploadToS3AndDeleteMultipartResult(folder, result), context.current());
@@ -76,17 +91,7 @@ public class FileServiceImpl implements FileService {
   private UploadResult uploadToS3AndDeleteMultipartResult(String folder, MultipartResult multipartResult) {
     try {
       if (multipartResult.isValid()) {
-        String id = generateFileId();
-        File file = multipartResult.getPath().toFile();
-        try {
-          amazonS3.putObject(new PutObjectRequest(awsBucketName, folder + "/" + id, file));
-        } catch (Exception exception) {
-          LOGGER.error("Unable to upload file with filename {} and path {} to amazon s3", multipartResult.getFilename(),
-              multipartResult.getPath(), exception);
-          return UploadResult.failedUpload(multipartResult.getFilename(), "An unexpected error occurred.");
-        }
-        long size = file.length();
-        return UploadResult.successfulUpload(id, multipartResult.getFilename(), awsBucketName, folder, size, null);
+        return uploadToS3(folder, multipartResult.getFilename(), multipartResult.getPath());
       } else {
         return UploadResult.failedUpload(multipartResult.getFilename(), multipartResult.getError());
       }
@@ -114,7 +119,7 @@ public class FileServiceImpl implements FileService {
               return multipartResult;
             } else {
               LOGGER.error("File with filename {} and path {} did not pass virus check", multipartResult.getFilename(), multipartResult.getPath());
-              return new MultipartResult(multipartResult.getFilename(), multipartResult.getPath(), "Invalid file");
+              return new MultipartResult(multipartResult.getFilename(), multipartResult.getPath(), "Not a valid file");
             }
           })
           .exceptionally(error -> {
