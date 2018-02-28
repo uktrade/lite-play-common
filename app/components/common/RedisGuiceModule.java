@@ -1,12 +1,10 @@
 package components.common;
 
 import com.google.inject.AbstractModule;
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
-import play.Configuration;
-import play.Environment;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Protocol;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -20,19 +18,19 @@ import javax.net.ssl.X509TrustManager;
 
 public class RedisGuiceModule extends AbstractModule {
 
-  private Configuration configuration;
+  private final Config config;
 
-  public RedisGuiceModule(Environment environment, Configuration configuration) {
-    this.configuration = configuration;
+  public RedisGuiceModule(Config config) {
+    this.config = config;
   }
 
   @Override
   protected void configure() {
 
-    bind(JedisPool.class).toInstance(createJedisPool(configuration));
+    bind(JedisPool.class).toInstance(createJedisPool(config));
   }
 
-  private JedisPool createJedisPool(Configuration configuration) {
+  private JedisPool createJedisPool(Config configuration) {
     JedisPoolConfig poolConfig = new JedisPoolConfig();
     poolConfig.setMaxTotal(configuration.getInt("redis.pool.maxTotal"));
     poolConfig.setMaxIdle(configuration.getInt("redis.pool.maxIdle"));
@@ -43,7 +41,7 @@ public class RedisGuiceModule extends AbstractModule {
 
     if (configuration.getBoolean("redis.ssl")) {
       //Disable SSL certificate verification on the Redis connection (but still connect using SSL)
-      TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+      TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
           return null;
         }
@@ -68,12 +66,12 @@ public class RedisGuiceModule extends AbstractModule {
 
       return new JedisPool(poolConfig, configuration.getString("redis.host"), configuration.getInt("redis.port"),
           configuration.getInt("redis.timeout"), StringUtils.defaultIfBlank(configuration.getString("redis.password"), null),
-          configuration.getInt("redis.database", Protocol.DEFAULT_DATABASE), true, sslContext.getSocketFactory(),
+          configuration.getInt("redis.database"), true, sslContext.getSocketFactory(),
           sslParameters, hostnameVerifier);
     } else {
       return new JedisPool(poolConfig, configuration.getString("redis.host"), configuration.getInt("redis.port"),
           configuration.getInt("redis.timeout"), StringUtils.defaultIfBlank(configuration.getString("redis.password"), null),
-          configuration.getInt("redis.database", Protocol.DEFAULT_DATABASE));
+          configuration.getInt("redis.database"));
     }
 
   }

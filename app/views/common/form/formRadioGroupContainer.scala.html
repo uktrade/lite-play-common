@@ -1,5 +1,6 @@
 @import play.data.Form
 @import utils.common.ViewUtil
+@import play.twirl.api.HtmlFormat
 
 @(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
 
@@ -7,7 +8,7 @@
   <h2 class="@promptCssClass">@prompt</h2>
 }
 
-<div id="@field.name" class="form-group @if(field.error.isDefined) { form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined) { form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

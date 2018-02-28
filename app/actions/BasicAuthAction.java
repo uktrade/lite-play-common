@@ -2,13 +2,14 @@ package actions;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import play.Logger;
+import org.apache.commons.lang3.StringUtils;
 import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.Result;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -29,32 +30,22 @@ public class BasicAuthAction extends Action.Simple {
     this.basicAuthPassword = basicAuthPassword;
     this.basicAuthRealm = basicAuthRealm;
   }
+
   @Override
   public CompletionStage<Result> call(Http.Context context) {
-
-    String authHeader = context.request().getHeader(AUTHORIZATION);
-    if (authHeader == null) {
-      return unauthorizedResult(context);
-    }
-
-    try {
-      String auth = authHeader.substring(6);
+    Optional<String> authHeader = context.request().header(AUTHORIZATION);
+    if (authHeader.isPresent() && StringUtils.startsWith(authHeader.get(), "Basic ")) {
+      String auth = authHeader.get().substring(6);
       byte[] decodedAuth = Base64.getDecoder().decode(auth);
-
-      String[] credString = new String(decodedAuth, "UTF-8").split(":");
-      if (credString.length != 2) {
+      String[] credString = new String(decodedAuth, StandardCharsets.UTF_8).split(":");
+      if (credString.length == 2 && authenticate(credString[0], credString[1])) {
+        return delegate.call(context);
+      } else {
         return unauthorizedResult(context);
       }
-
-      boolean isAuthenticated = authenticate(credString[0], credString[1]);
-
-      return isAuthenticated ? delegate.call(context) : unauthorizedResult(context);
-
-    } catch (IOException e) {
-      Logger.error("Failed to authenticate user.", e);
-      throw new RuntimeException(e);
+    } else {
+      return unauthorizedResult(context);
     }
-
   }
 
   private CompletionStage<Result> unauthorizedResult(Http.Context context) {

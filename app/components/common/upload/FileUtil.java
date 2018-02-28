@@ -1,6 +1,9 @@
 package components.common.upload;
 
+import static play.mvc.Controller.flash;
+
 import play.data.Form;
+import play.mvc.Http;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -18,13 +21,21 @@ public class FileUtil {
     }
   }
 
-  public static void addUploadErrorsToForm(Form form, List<UploadResult> uploadResults) {
-    uploadResults.stream()
-        .filter(uploadResult -> !uploadResult.isValid())
-        .forEach(uploadResult -> {
-          form.reject("fileupload",
-              "Error for file " + uploadResult.getFilename() + ": " + uploadResult.getError());
-        });
+  public static <T> Form<T> addUploadErrorsToForm(Form<T> form, List<UploadResult> uploadResults) {
+    for (UploadResult uploadResult : uploadResults) {
+      if (!uploadResult.isValid()) {
+        String error = String.format("Error for file %s: %s", uploadResult.getFilename(), uploadResult.getError());
+        form = form.withError(FileService.FILE_UPLOAD_FORM_FIELD, error);
+      }
+    }
+    return form;
+  }
+
+  public static void addFlash(Http.Request request, UploadValidationConfig uploadValidationConfig) {
+    if (Boolean.parseBoolean(request.getQueryString(FileService.INVALID_FILE_SIZE_QUERY_PARAM))) {
+      flash("message", "Unable to upload");
+      flash("detail", "The maximum file size is " + getReadableFileSize(uploadValidationConfig.getMaxSize()));
+    }
   }
 
 }

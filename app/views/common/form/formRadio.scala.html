@@ -1,8 +1,10 @@
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field, prompt: String, optionValue: String, isPromptHtml: Boolean = false, cssClass : String = "")
 
 <div class="multiple-choice">
-  <input id="@field.name@optionValue" name="@field.name" value="@optionValue" type="radio" @if(field.value != null && field.value.equals(optionValue)){ checked="checked" }>
-  <label class="@cssClass" for="@field.name@optionValue">
+  <input id="@field.getName.get@optionValue" name="@field.getName.get" value="@optionValue" type="radio" @if(field.getValue.isPresent && field.getValue.get.equals(optionValue)){ checked="checked" }>
+  <label class="@cssClass" for="@field.getName.get@optionValue">
       @if(isPromptHtml) {
         @Html(prompt.replace("\n", "<br/>"))
       } else {

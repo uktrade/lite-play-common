@@ -1,3 +1,5 @@
+@import utils.common.ViewUtil
+
 @(form: Form[_], title: Option[Html] = None, description: Option[Html] = None, fieldOrder: Seq[String] = Seq.empty)
 @if(form.hasErrors) {
 
@@ -13,13 +15,13 @@
 
     <ul class="error-summary-list">
       @* Print all errors without a defined order first *@
-      @for(error <- form.errors().entrySet().filter(e => !fieldOrder.contains(e.getKey)).flatMap(e => e.getValue())) {
-        <li><a href="#@form.field(error.key).id">@Messages(error.message())</a></li>
+      @for(error <- form.allErrors().filter(e => !fieldOrder.contains(e.key))) {
+        <li><a href="#@form.field(error.key).id">@ViewUtil.formatError(error)</a></li>
       }
 
       @* For errors with defined order, print in correct order *@
-      @for(error <- fieldOrder.filter(e => form.errors.containsKey(e)).flatMap(e => form.errors().get(e))) {
-        <li><a href="#@form.field(error.key).id">@Messages(error.message())</a></li>
+      @for(error <- form.allErrors().filter(e => fieldOrder.contains(e.key))) {
+        <li><a href="#@form.field(error.key).id">@ViewUtil.formatError(error)</a></li>
       }
     </ul>
 
