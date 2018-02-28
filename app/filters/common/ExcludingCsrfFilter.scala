@@ -14,6 +14,8 @@ import play.filters.csrf.CSRFFilter
   */
 class ExcludingCsrfFilter @Inject()(filter: CSRFFilter) extends EssentialFilter {
 
+  //TODO REMOVE!
+
   override def apply(nextFilter: EssentialAction) = new EssentialAction {
 
     import play.api.mvc._

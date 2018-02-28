@@ -52,7 +52,7 @@ public class NotificationServiceClient {
     templateParams.forEach((k, v) -> nameValueJson.put(k, v));
 
     CompletionStage<WSResponse> wsResponse = ws.url(wsUrl)
-        .withRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(CorrelationId.requestFilter)
         .setHeader("Content-Type", "application/json")
         .setRequestTimeout(wsTimeout)
         .setQueryParameter(TEMPLATE_QUERY_NAME, templateName)

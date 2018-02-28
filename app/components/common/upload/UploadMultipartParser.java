@@ -39,7 +39,7 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
 
   @Inject
   public UploadMultipartParser(Materializer materializer, HttpConfiguration httpConfig) {
-    super(materializer, httpConfig.parser().maxDiskBuffer());
+    super(materializer, httpConfig.parser().maxDiskBuffer(), null);
   }
 
   @Override
@@ -93,7 +93,7 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
         } else {
           Path path;
           try {
-            path = Files.createTempFile("lite-exporter-dashboard", null);
+            path = Files.createTempFile("lite", null);
           } catch (IOException ioe) {
             throw new RuntimeException("Unable to create temp file", ioe);
           }

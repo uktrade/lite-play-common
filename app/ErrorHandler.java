@@ -1,5 +1,4 @@
 import components.common.logging.CorrelationId;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import play.Configuration;
 import play.Environment;
 import play.Logger;
@@ -53,7 +52,7 @@ public class ErrorHandler implements HttpErrorHandler {
   public CompletionStage<Result> onClientError(RequestHeader request, int statusCode, String message) {
     Option<Exception> optionalException = Option.empty();
 
-    String outputMessage = HttpResponseStatus.valueOf(statusCode).toString();
+    String outputMessage = "TODO";//HttpResponseStatus.valueOf(statusCode).toString();
     if (message != null && !message.isEmpty()) {
       outputMessage += " - " + message;
     }
