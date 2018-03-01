@@ -13,13 +13,13 @@ import java.util.Optional;
 public class UploadMultipartParserTest {
 
   private static final HttpConfiguration HTTP_CONFIGURATION = new HttpConfiguration(null,
-      new ParserConfiguration(1, 1), null, null, null, null);
+      new ParserConfiguration(1, 1), null, null, null, null, null, null);
   private static final long MAX_SIZE = 10485760;
 
   @Test
   public void extensionListCannotBeEmpty() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "");
-    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig))
+    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("All extensions must be alphanumeric");
   }
@@ -27,7 +27,7 @@ public class UploadMultipartParserTest {
   @Test
   public void extensionCannotBeEmpty() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt, ,pdf");
-    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig))
+    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("All extensions must be alphanumeric");
   }
@@ -36,7 +36,7 @@ public class UploadMultipartParserTest {
   public void extensionCannotBeMoreThanTenCharacters() {
     String longString = StringUtils.repeat("a", 11);
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, longString);
-    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig))
+    assertThatThrownBy(() -> new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("All extensions must have length less than 11");
   }
@@ -44,7 +44,7 @@ public class UploadMultipartParserTest {
   @Test
   public void normalizeFilenameShouldRemoveSpaces() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt");
-    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig);
+    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig);
     Optional<String> normalizedFilename = uploadMultipartParser.normalizeFilename("a b c.txt");
     assertThat(normalizedFilename).hasValue("abc.txt");
   }
@@ -52,7 +52,7 @@ public class UploadMultipartParserTest {
   @Test
   public void normalizeFilenameShouldRemoveSpecialCharacters() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt");
-    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig);
+    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig);
     Optional<String> normalizedFilename = uploadMultipartParser.normalizeFilename("a*b.c.txt");
     assertThat(normalizedFilename).hasValue("abc.txt");
   }
@@ -60,7 +60,7 @@ public class UploadMultipartParserTest {
   @Test
   public void normalizeFilenameShouldLeaveDashesAndUnderscores() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt");
-    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig);
+    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig);
     Optional<String> normalizedFilename = uploadMultipartParser.normalizeFilename("-_-_.txt");
     assertThat(normalizedFilename).hasValue("-_-_.txt");
   }
@@ -68,7 +68,7 @@ public class UploadMultipartParserTest {
   @Test
   public void normalizeFilenameShouldReturnEmptyOptionalForEmptyFilename() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt");
-    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig);
+    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig);
     Optional<String> normalizedFilename = uploadMultipartParser.normalizeFilename("*&%.txt");
     assertThat(normalizedFilename).isEmpty();
   }
@@ -76,7 +76,7 @@ public class UploadMultipartParserTest {
   @Test
   public void normalizeFilenameShouldReturnEmptyOptionalForTooLongFilename() {
     UploadValidationConfig uploadValidationConfig = new UploadValidationConfig(MAX_SIZE, "txt");
-    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, uploadValidationConfig);
+    UploadMultipartParser uploadMultipartParser = new UploadMultipartParser(null, HTTP_CONFIGURATION, null, uploadValidationConfig);
     String longString = StringUtils.repeat("a", 241) + ".txt";
     Optional<String> normalizedFilename = uploadMultipartParser.normalizeFilename(longString);
     assertThat(normalizedFilename).isEmpty();
