@@ -1,0 +1,15 @@
+@import org.apache.commons.lang3.StringUtils
+
+@(statusType: String = "neutral", statusText: String = "")
+<div class="status-label status-label-@statusType">
+  @if(StringUtils.isBlank(statusText)) {
+    @{statusType match {
+      case "progress" => "In progress"
+      case "finished" => "Completed"
+      case "cancelled" => "Withdrawn"
+      case _ => "Not started"
+    }}
+  } else {
+    @statusText
+  }
+</div>
