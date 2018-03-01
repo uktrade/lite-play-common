@@ -73,7 +73,7 @@ public class CorrelationId {
    * <p>Example Usage:</p>
    * <pre>{@code
    * ws.url("http://www.example.com/api/v1/example")
-   *  .withRequestFilter(CorrelationId.requestFilter)
+   *  .setRequestFilter(CorrelationId.requestFilter)
    *  .get()
    *  .handleAsync((response, error) -> {
    *    if (error != null) {

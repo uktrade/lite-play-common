@@ -104,7 +104,7 @@ Example usage with `WSClient`:
 ```java
 public void doGet() {
   JwtRequestFilter filter; // Injected
-  wsClient.url("/example").withRequestFilter(filter); 
+  wsClient.url("/example").setRequestFilter(filter);
 }
 ```
 

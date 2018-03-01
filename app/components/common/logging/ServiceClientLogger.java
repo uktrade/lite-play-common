@@ -58,7 +58,7 @@ public class ServiceClientLogger {
    * <p>Example usage:</p>
    * <pre>{@code
    * ws.url("http://www.example.com/api")
-   *  .withRequestFilter(serviceClientLogger.requestFilter("Example", "GET"))
+   *  .setRequestFilter(serviceClientLogger.requestFilter("Example", "GET"))
    *  .setQueryParameter("version", 1)
    *  .get()
    *  .thenApplyAsync(response -> {
