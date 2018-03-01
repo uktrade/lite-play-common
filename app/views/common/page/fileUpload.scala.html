@@ -8,7 +8,7 @@
   ctx().args.get(FileService.CTX_UPLOAD_VALIDATION_CONFIG).asInstanceOf[UploadValidationConfig]
 }
 
-<div id="file-upload-container" @if(form.error(FileService.FILE_UPLOAD_FORM_FIELD) != null){ class="form-group-error" }>
+<div id="file-upload-container" @if(form.getError(FileService.FILE_UPLOAD_FORM_FIELD).isPresent){ class="form-group-error" }>
 
   @twoThirdsColumn {
     <div id="file-upload-label-fileupload" @if(labelVisuallyHidden) { class="visually-hidden" }>
@@ -20,8 +20,8 @@
     </div>
   }
 
-  @if(form.error(FileService.FILE_UPLOAD_FORM_FIELD) != null) {
-    <span class="error-message">@form.error(FileService.FILE_UPLOAD_FORM_FIELD).message</span>
+  @if(form.getError(FileService.FILE_UPLOAD_FORM_FIELD).isPresent) {
+    <span class="error-message">@form.getError(FileService.FILE_UPLOAD_FORM_FIELD).get.message</span>
   }
 
   <div class="file-upload-drop-target">

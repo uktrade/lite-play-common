@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.api.http.HttpConfiguration;
+import play.api.http.HttpErrorHandler;
 import play.core.parsers.Multipart;
 import play.libs.F;
 import play.libs.streams.Accumulator;
@@ -46,8 +47,9 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
   @Inject
   public UploadMultipartParser(Materializer materializer,
                                HttpConfiguration httpConfig,
+                               HttpErrorHandler errorHandler,
                                UploadValidationConfig uploadValidationConfig) {
-    super(materializer, httpConfig.parser().maxDiskBuffer());
+    super(materializer, httpConfig.parser().maxDiskBuffer(), errorHandler);
     this.maxSize = uploadValidationConfig.getMaxSize();
     this.allowedExtensions = createAllowedExtensions(uploadValidationConfig);
   }

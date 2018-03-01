@@ -1,90 +1,74 @@
 package components.common.auth;
 
+import com.typesafe.config.Config;
 import org.apache.commons.io.IOUtils;
 import org.pac4j.core.authorization.authorizer.Authorizer;
 import org.pac4j.core.client.Clients;
-import org.pac4j.core.config.Config;
-import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.http.HttpActionAdapter;
-import org.pac4j.core.io.Resource;
-import org.pac4j.core.util.CommonHelper;
-import org.pac4j.play.PlayWebContext;
+import org.pac4j.play.store.PlaySessionStore;
 import org.pac4j.saml.client.SAML2Client;
 import org.pac4j.saml.client.SAML2ClientConfiguration;
-import play.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class SamlUtil {
 
-  public static Config buildConfig(Configuration configuration,
-                                   SpireAuthManager authManager,
-                                   SessionStore<PlayWebContext> playCacheStore,
-                                   HttpActionAdapter httpActionAdapter,
-                                   Map<String, Authorizer> authorizers) {
-    SAML2ClientConfiguration samlConfig = buildSaml2ClientConfiguration(configuration);
+  public static org.pac4j.core.config.Config buildConfig(Config config,
+                                                         PlaySessionStore playSessionStore,
+                                                         HttpActionAdapter httpActionAdapter,
+                                                         Map<String, Authorizer> authorizers) {
+    SAML2ClientConfiguration samlConfig = buildSaml2ClientConfiguration(config);
 
     //Custom SAML client which will store response attributes on the Saml Profile
-    SAML2Client saml2Client = new SpireSAML2Client(samlConfig, authManager);
+    SAML2Client saml2Client = new SpireSAML2Client(samlConfig);
 
-    Clients clients = new Clients(configuration.getString("saml.callbackUrl"), saml2Client);
+    Clients clients = new Clients(config.getString("saml.callbackUrl"), saml2Client);
 
     clients.setDefaultClient(saml2Client);
-    saml2Client.setCallbackUrl(configuration.getString("saml.callbackUrl"));
+    saml2Client.setCallbackUrl(config.getString("saml.callbackUrl"));
     saml2Client.setIncludeClientNameInCallbackUrl(false);
 
-    Config config = new Config(clients);
+    org.pac4j.core.config.Config pacConfig = new org.pac4j.core.config.Config(clients);
 
-    config.setHttpActionAdapter(httpActionAdapter);
+    pacConfig.setHttpActionAdapter(httpActionAdapter);
+    pacConfig.setSessionStore(playSessionStore);
+    pacConfig.setAuthorizers(authorizers);
 
-    config.setSessionStore(playCacheStore);
-
-    config.setAuthorizers(authorizers);
-
-    return config;
+    return pacConfig;
   }
 
-  private static SAML2ClientConfiguration buildSaml2ClientConfiguration(Configuration configuration) {
-    SAML2ClientConfiguration samlConfig = new SAML2ClientConfiguration(CommonHelper.getResource("resource:saml/keystore.jks"),
+  private static SAML2ClientConfiguration buildSaml2ClientConfiguration(Config config) {
+    SAML2ClientConfiguration samlConfig = new SAML2ClientConfiguration(new ClassPathResource("saml/keystore.jks"),
         "lite-ogel-registration",
         "jks",
         "keypass",
         "keypass",
-        getIdentityProviderMetadataResource(configuration));
+        getIdentityProviderMetadataResource(config));
 
     //Maximum permitted age of IdP response in seconds
     samlConfig.setMaximumAuthenticationLifetime(3600);
 
     //AKA Saml2:Issuer
-    samlConfig.setServiceProviderEntityId(configuration.getString("saml.issuer"));
-    samlConfig.setServiceProviderMetadataPath("");
+    samlConfig.setServiceProviderEntityId(config.getString("saml.issuer"));
 
     return samlConfig;
   }
 
-  private static Resource getIdentityProviderMetadataResource(Configuration configuration) {
-    return new Resource() {
-      @Override
-      public boolean exists() {
-        return true;
-      }
-
-      @Override
-      public String getFilename() {
-        return "metadata.xml";
-      }
-
-      @Override
-      public InputStream getInputStream() throws IOException {
-        String filePath = "resource:saml/template-metadata.xml";
-        String fileToString = IOUtils.toString(CommonHelper.getResource(filePath).getInputStream(), StandardCharsets.UTF_8);
-        String replaced = fileToString.replace("${samlLocation}", configuration.getString("saml.location"));
-        return IOUtils.toInputStream(replaced, StandardCharsets.UTF_8);
-      }
-    };
+  private static Resource getIdentityProviderMetadataResource(Config config) {
+    String filePath = "saml/template-metadata.xml";
+    String fileToString = null;
+    try {
+      fileToString = IOUtils.toString(new ClassPathResource(filePath).getInputStream(), StandardCharsets.UTF_8);
+    } catch (IOException ioe) {
+      throw new RuntimeException("Unable to read " + filePath, ioe);
+    }
+    String replaced = fileToString.replace("${samlLocation}", config.getString("saml.location"));
+    return new InputStreamResource(IOUtils.toInputStream(replaced, StandardCharsets.UTF_8));
   }
 
 }

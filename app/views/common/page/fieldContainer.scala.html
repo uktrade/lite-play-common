@@ -1,7 +1,9 @@
 @import utils.common.ViewUtil
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field)(content: Html)
 
-<div id="@field.name" class="form-group @if(field.error.isDefined){ form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined){ form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

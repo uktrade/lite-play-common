@@ -52,7 +52,7 @@ public class JwtRequestFilter implements WSRequestFilter {
         throw new RuntimeException(e);
       }
 
-      request.setHeader("Authorization", "Bearer " + token);
+      request.addHeader("Authorization", "Bearer " + token);
 
       return executor.apply(request);
     };
