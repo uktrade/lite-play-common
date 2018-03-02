@@ -1,3 +1,5 @@
+@import play.twirl.api.HtmlFormat
+
 @(title: Option[String],
   bodyClasses: Option[String],
   htmlLang: Option[String] = None
@@ -17,7 +19,8 @@
   skipLinkTarget:String = "content",
   logoLinkTitle:Option[Html] = None,
   licenceMessage:Html,
-  crownCopyrightMessage:Option[Html] = None
+  crownCopyrightMessage:Option[Html] = None,
+  includeUploadScripts: Boolean = false
 )(content:Html)
 <!DOCTYPE html>
 <!--[if lt IE 9]><html class="lte-ie8" lang="@htmlLang.getOrElse("en")"><![endif]-->
@@ -69,7 +72,6 @@
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/vendor/jquery/jquery-1.12.4.min.js")"></script>
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/vendor/jquery/jquery-ui.min.js")"></script>
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/vendor/jquery/jquery.select-to-autocomplete.js")"></script>
-
 
     <link rel="shortcut icon" href="@controllers.common.routes.Assets.versioned("template/images/favicon.ico")" type="image/x-icon" />
     <link rel="mask-icon" href="@controllers.common.routes.Assets.versioned("template/images/gov.uk_logotype_crown.svg")" color="#0b0c0c">
@@ -150,6 +152,11 @@
     </footer>
 
     <div id="global-app-error" class="app-error hidden"></div>
+
+    @if(includeUploadScripts) {
+      <script src="@controllers.common.routes.Assets.versioned("template/javascripts/jquery-file-upload/js/jquery.fileupload.js")"></script>
+      <script src="@controllers.common.routes.Assets.versioned("template/javascripts/lite-file-upload.js")"></script>
+    }
 
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/govuk-template.js")"></script>
     <script src="@controllers.common.routes.Assets.versioned("template/javascripts/govuk/show-hide-content.js")"></script>

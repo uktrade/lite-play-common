@@ -10,6 +10,7 @@ import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -49,14 +50,14 @@ public class NotificationServiceClient {
     Logger.info("notification [" + templateName + "|" + emailAddress + "]");
 
     ObjectNode nameValueJson = Json.newObject();
-    templateParams.forEach((k, v) -> nameValueJson.put(k, v));
+    templateParams.forEach(nameValueJson::put);
 
     CompletionStage<WSResponse> wsResponse = ws.url(wsUrl)
-        .withRequestFilter(CorrelationId.requestFilter)
-        .setHeader("Content-Type", "application/json")
-        .setRequestTimeout(wsTimeout)
-        .setQueryParameter(TEMPLATE_QUERY_NAME, templateName)
-        .setQueryParameter(RECIPIENT_EMAIL_QUERY_NAME, emailAddress)
+        .setRequestFilter(CorrelationId.requestFilter)
+        .addHeader("Content-Type", "application/json")
+        .setRequestTimeout(Duration.ofMillis(wsTimeout))
+        .addQueryParameter(TEMPLATE_QUERY_NAME, templateName)
+        .addQueryParameter(RECIPIENT_EMAIL_QUERY_NAME, emailAddress)
         .setAuth(credentials)
         .post(nameValueJson);
 

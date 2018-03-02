@@ -3,18 +3,19 @@ package components.common.logging;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import play.Logger;
-import play.libs.ws.WSRequestExecutor;
 import play.libs.ws.WSRequestFilter;
 import play.mvc.Http;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Utility class providing support for Correlation ID related functions.
- *
+ * <p>
  * A Correlation ID is an ID value to uniquely identify an entity across a varying array of systems.
  */
 public class CorrelationId {
+
   /**
    * HTTP Header that should contain the Correlation ID when receiving or creating a request
    */
@@ -33,11 +34,10 @@ public class CorrelationId {
    *                      with an existing Correlation ID in it
    */
   public static void setUp(Http.RequestHeader requestHeader) {
-    String header = requestHeader.getHeader(HTTP_HEADER_NAME);
-    if (StringUtils.isNoneBlank(header)) {
-      MDC.put(MDC_KEY, header);
-    }
-    else {
+    Optional<String> header = requestHeader.header(HTTP_HEADER_NAME);
+    if (header.isPresent() && StringUtils.isNoneBlank(header.get())) {
+      MDC.put(MDC_KEY, header.get());
+    } else {
       createCorrelationId();
     }
   }
@@ -69,11 +69,11 @@ public class CorrelationId {
 
   /**
    * <p>Request filter for use with WSClient which will apply the current Correlation ID to outgoing requests.</p>
-   *
+   * <p>
    * <p>Example Usage:</p>
    * <pre>{@code
    * ws.url("http://www.example.com/api/v1/example")
-   *  .withRequestFilter(CorrelationId.requestFilter)
+   *  .setRequestFilter(CorrelationId.requestFilter)
    *  .get()
    *  .handleAsync((response, error) -> {
    *    if (error != null) {
@@ -87,11 +87,8 @@ public class CorrelationId {
    *  }, httpExecutionContext.current());
    * }</pre>
    */
-  public static final WSRequestFilter requestFilter = executor -> {
-    WSRequestExecutor next = request -> {
-      request.setHeader(HTTP_HEADER_NAME, CorrelationId.get());
-      return executor.apply(request);
-    };
-    return next;
+  public static final WSRequestFilter requestFilter = executor -> request -> {
+    request.addHeader(HTTP_HEADER_NAME, CorrelationId.get());
+    return executor.apply(request);
   };
 }

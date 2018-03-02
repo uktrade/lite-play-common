@@ -1,6 +1,5 @@
+import com.typesafe.config.Config;
 import components.common.logging.CorrelationId;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import play.Configuration;
 import play.Environment;
 import play.Logger;
 import play.api.OptionalSourceMapper;
@@ -10,6 +9,7 @@ import play.http.HttpErrorHandler;
 import play.mvc.Http.RequestHeader;
 import play.mvc.Result;
 import play.mvc.Results;
+import play.shaded.ahc.io.netty.handler.codec.http.HttpResponseStatus;
 import scala.Option;
 import views.html.common.error.serverError;
 
@@ -23,11 +23,12 @@ import javax.inject.Singleton;
 
 /**
  * Custom error handler that renders using a Gov UK styled page
- *
+ * <p>
  * Set config 'errorDetailEnabled = true' to get error detail output even when running in production mode.
  */
 @Singleton
 public class ErrorHandler implements HttpErrorHandler {
+
   private final Environment environment;
   private final OptionalSourceMapper sourceMapper;
   private final boolean isErrorDetailEnabled;
@@ -35,24 +36,23 @@ public class ErrorHandler implements HttpErrorHandler {
   @Inject
   public ErrorHandler(Environment environment,
                       OptionalSourceMapper sourceMapper,
-                      Configuration configuration) {
+                      Config config) {
     this.environment = environment;
     this.sourceMapper = sourceMapper;
     // Error detail is enabled if configured to true or if the environment is running in dev mode
-    this.isErrorDetailEnabled = configuration.getBoolean("errorDetailEnabled", false) || environment.isDev();
+    this.isErrorDetailEnabled = config.getBoolean("errorDetailEnabled") || environment.isDev();
   }
 
 
   /**
    * Invoked when a client error occurs, that is, an error in the 4xx series.
    *
-   * @param request The request that caused the client error.
+   * @param request    The request that caused the client error.
    * @param statusCode The error status code.
-   * @param message The error message.
+   * @param message    The error message.
    */
   public CompletionStage<Result> onClientError(RequestHeader request, int statusCode, String message) {
     Option<Exception> optionalException = Option.empty();
-
     String outputMessage = HttpResponseStatus.valueOf(statusCode).toString();
     if (message != null && !message.isEmpty()) {
       outputMessage += " - " + message;
@@ -74,7 +74,7 @@ public class ErrorHandler implements HttpErrorHandler {
   /**
    * Invoked when a server error occurs.
    *
-   * @param request The request that triggered the server error.
+   * @param request   The request that triggered the server error.
    * @param exception The server error.
    */
   public CompletionStage<Result> onServerError(RequestHeader request, Throwable exception) {
@@ -101,6 +101,7 @@ public class ErrorHandler implements HttpErrorHandler {
    * Exception that will only display the message and not show a stack trace.
    */
   private class MessageOnlyException extends Exception {
+
     MessageOnlyException(String message) {
       super(message, null, true, false);
     }

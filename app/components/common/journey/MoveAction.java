@@ -3,7 +3,7 @@ package components.common.journey;
 final class MoveAction implements TransitionAction {
 
   public enum Direction {
-    FORWARD, BACKWARD;
+    FORWARD, BACKWARD
   }
 
   private final CommonStage destinationStage;

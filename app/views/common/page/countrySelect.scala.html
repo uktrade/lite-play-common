@@ -1,7 +1,9 @@
 @import models.common.Country
 @import utils.common.ViewUtil
+@import play.twirl.api.HtmlFormat
+
 @(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None,
-  detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
+detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
 <div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error }">
 
   @if(labelText.isDefined) {
@@ -12,7 +14,7 @@
     <p class="error-message">@Messages(field.error.get.message)</p>
   }
 
-  <select name="@field.name" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }"
+  <select name="@field.getName.get" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }"
   autocorrect="off" autocomplete="off" data-ui-autocomplete="ui-autocomplete" data-ui-autocomplete-type="country" data-ui-autocomplete-id="@Html(field.id + "-s")"
     @{
       val fieldValidationData = ViewUtil.fieldValidationJSON(field);
@@ -24,23 +26,19 @@
       @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
     }
   >
-    <option value="" @if(field.value == null || "".equals(field.value)) {selected="selected"}> </option>
+    <option value="" @if(!field.getValue.isPresent || "".equals(field.getValue.get)) {selected="selected"}> </option>
     @for(country <- countries) {
       <option value="@country.getCountryRef" data-alternative-spellings="@country.getSynonymsAsString"
-      data-relevancy-booster="1" @if(field.value != null && country.getCountryRef.equals(field.value)){selected="selected"}>@country.getCountryName</option>
+          data-relevancy-booster="1" @if(field.getValue.isPresent && country.getCountryRef.equals(field.getValue.get)){selected="selected"}>@country.getCountryName</option>
     }
   </select>
 
   @if(removeButton.isDefined) {
-
     @removeButton.get
-
   }
 
   @if(detailPanel.isDefined) {
-
     @detailPanel.get
-
   }
 
 </div>
