@@ -29,7 +29,7 @@ public class SpireAuthManager {
   private static final String EMAIL_ADDRESS_ATTRIBUTE = "PRIMARY_EMAIL_ADDRESS";
   private static final String FORENAME_ATTRIBUTE = "FORENAME";
   private static final String SURNAME_ATTRIBUTE = "SURNAME";
-  private static final String ROLES_ATTRIBUTE = "ROLE";
+  private static final String ROLES_ATTRIBUTE = "ROLES";
 
   private final PlaySessionStore playSessionStore;
 
