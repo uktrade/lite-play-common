@@ -65,13 +65,15 @@ public class ViewUtil {
         // Get the field from the backed type class for the form field parameter
         Optional<String> name = field.getName();
         if (name.isPresent()) {
-          Field f = getField(backedTypeClass, name.get());
+          // Remove the array syntax suffix for collection based fields (e.g. "countrySelect[0] -> countrySelect")
+          String normalized = name.get().replaceAll("\\[[0-9]+]", "");
+          Field f = getField(backedTypeClass, normalized);
           Map<String, Object> validationMap = getValidationMap(f);
-          return javaMapToJSON(validationMap);
+          return convertMapToJson(validationMap);
         }
       }
     }
-    return javaMapToJSON(new HashMap());
+    return convertMapToJson(new HashMap());
   }
 
   @SuppressWarnings("unchecked")
@@ -91,6 +93,14 @@ public class ViewUtil {
     } catch (NoSuchFieldException exception) {
       throw new RuntimeException("Unable to read validation constraints from form field: " + name, exception);
     }
+  }
+
+  public static Map<String, Object> getRequiredValidationMap() {
+    Map<String, Object> validationData = new HashMap<>();
+    Map<String, Object> requiredDetails = new HashMap<>();
+    requiredDetails.put("message", getMessage(Constraints.RequiredValidator.message));
+    validationData.put("required", requiredDetails);
+    return validationData;
   }
 
   private static Map<String, Object> getValidationMap(Field field) {
@@ -176,7 +186,7 @@ public class ViewUtil {
    * @param map java map to convert to a JSON object
    * @return String representation of a JSON object with members and values from the map parameter
    */
-  private static String javaMapToJSON(Map map) {
+  public static String convertMapToJson(Map map) {
     try {
       return MAPPER.writeValueAsString(map);
     } catch (JsonProcessingException e) {
