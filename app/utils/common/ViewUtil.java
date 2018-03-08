@@ -242,4 +242,14 @@ public class ViewUtil {
     return count + " " + pluralise(count, singular, plural);
   }
 
+  /*
+   * Checks whether the tagName passed is a heading (h1-h6)
+   *
+   * @param tagName The name of the HTML tag to check
+   * @return Boolean true if tagName is h1, h2, h3, h4, h5 or h6, otherwise false
+   */
+  public static Boolean isHeadingTag(String tagName) {
+    return tagName.matches("^h[1-6]$");
+  }
+
 }

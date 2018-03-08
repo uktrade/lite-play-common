@@ -2,13 +2,15 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "h2", promptCssClass: String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
 
-@if(prompt != null) {
-  <h2 class="@promptCssClass">@prompt</h2>
+@errorMessage = {
+  @if(field.error.isDefined) {
+    <span class="error-message">@Messages(field.error.get.message)</span>
+  }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined) { form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.isHeadingTag(promptHeadingTag)) { form-group-error }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -20,13 +22,22 @@
   }>
 
   <fieldset @if(inline) { class="inline" }>
-    <legend class="visually-hidden">@prompt</legend>
+    <legend>
+      <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
+      @if(field.error.isDefined && ViewUtil.isHeadingTag(promptHeadingTag)) {
+        <div class="form-group-error">@errorMessage</div>
+      } else {
+        @errorMessage
+      }
+    </legend>
 
-    @if(field.error.isDefined) {
-      <p class="error-message">@Messages(field.error.get.message)</p>
+    @if(field.error.isDefined && ViewUtil.isHeadingTag(promptHeadingTag)) {
+      <div class="form-group-error">
+        @radioContent
+      </div>
+    } else {
+      @radioContent
     }
-
-    @radioContent
 
   </fieldset>
 
