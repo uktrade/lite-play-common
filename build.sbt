@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-collections4" % "4.1",
   "org.glassfish" % "javax.el" % "3.0.1-b08",
   "org.assertj" % "assertj-core" % "3.5.2" % "test",
-  "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.5.8" % "test"
+  "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.5.13" % "test"
 )
 
 lazy val `zzz-common` = (project in file(".")).enablePlugins(PlayJava)
