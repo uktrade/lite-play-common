@@ -62,7 +62,7 @@ public class SpireAuthManager {
    * @param profile Profile to read attributes from.
    * @return AuthInfo details for the current user.
    */
-  private AuthInfo getAuthInfoFromSamlProfile(SAML2Profile profile) {
+  public AuthInfo getAuthInfoFromSamlProfile(SAML2Profile profile) {
 
     Map<String, Object> attributes = profile.getAttributes();
 
