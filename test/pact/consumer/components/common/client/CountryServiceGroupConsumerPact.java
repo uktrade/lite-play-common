@@ -3,12 +3,12 @@ package pact.consumer.components.common.client;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRule;
+import au.com.dius.pact.consumer.PactProviderRuleMk2;
 import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.PactFragment;
+import au.com.dius.pact.model.RequestResponsePact;
 import com.google.common.collect.ImmutableMap;
 import components.common.client.CountryServiceClient;
 import models.common.Country;
@@ -18,11 +18,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
-import play.libs.ws.WS;
 import play.libs.ws.WSClient;
 import play.test.WSTestClient;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -47,11 +45,11 @@ public class CountryServiceGroupConsumerPact {
   public WSClient ws;
 
   @Rule
-  public PactProviderRule mockProvider = new PactProviderRule(PROVIDER, this);
+  public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
 
   @Before
   public void setUp() throws Exception {
-    ws = WSTestClient.newClient(mockProvider.getConfig().getPort());
+    ws = WSTestClient.newClient(mockProvider.getPort());
   }
 
   @After
@@ -67,18 +65,18 @@ public class CountryServiceGroupConsumerPact {
     return COUNTRY_GROUP_BASE_PATH + DOES_NOT_EXIST;
   }
 
-  public static CountryServiceClient buildCountryGroupExistsClient(PactProviderRule mockProvider, WSClient wsClient) {
+  public static CountryServiceClient buildCountryGroupExistsClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
     return CountryServiceClient.buildCountryServiceGroupClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
-        mockProvider.getConfig().url(), "service:password", EXISTS, Json.newDefaultMapper());
+        mockProvider.getUrl(), "service:password", EXISTS, Json.newDefaultMapper());
   }
 
-  public static CountryServiceClient buildCountryGroupDoesNotExistClient(PactProviderRule mockProvider, WSClient wsClient) {
+  public static CountryServiceClient buildCountryGroupDoesNotExistClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
     return CountryServiceClient.buildCountryServiceGroupClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
-        mockProvider.getConfig().url(), "service:password", DOES_NOT_EXIST, Json.newDefaultMapper());
+        mockProvider.getUrl(), "service:password", DOES_NOT_EXIST, Json.newDefaultMapper());
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
-  public static PactFragment countryGroupExists(PactDslWithProvider builder) {
+  public static RequestResponsePact countryGroupExists(PactDslWithProvider builder) {
     PactDslJsonArray body = PactDslJsonArray.arrayMinLike(0,3)
       .stringType("countryRef", COUNTRY_REF)
       .stringType("countryName", COUNTRY_NAME)
@@ -94,11 +92,11 @@ public class CountryServiceGroupConsumerPact {
           .status(200)
           .headers(CONTENT_TYPE_HEADERS)
           .body(body)
-        .toFragment();
+        .toPact();
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
-  public static PactFragment countryGroupDoesNotExist(PactDslWithProvider builder) {
+  public static RequestResponsePact countryGroupDoesNotExist(PactDslWithProvider builder) {
     PactDslJsonBody body = new PactDslJsonBody()
         .integerType("code", 404)
         .stringType("message", "Country group does not exist - " + DOES_NOT_EXIST)
@@ -113,7 +111,7 @@ public class CountryServiceGroupConsumerPact {
           .status(404)
           .headers(CONTENT_TYPE_HEADERS)
           .body(body)
-        .toFragment();
+        .toPact();
   }
 
   @Test
