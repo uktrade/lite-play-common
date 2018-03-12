@@ -2,11 +2,8 @@
 @import components.common.upload.FileView
 @import components.common.upload.UploadValidationConfig
 
+@this(uploadValidationConfig: UploadValidationConfig)
 @(form: Form[_], url: String, fileViews: java.util.List[FileView], labelVisuallyHidden: Boolean = false)(label: Html)
-
-@uploadValidationConfig = @{
-  ctx().args.get(FileService.CTX_UPLOAD_VALIDATION_CONFIG).asInstanceOf[UploadValidationConfig]
-}
 
 <div id="file-upload-container" @if(form.getError(FileService.FILE_UPLOAD_FORM_FIELD).isPresent){ class="form-group-error" }>
 

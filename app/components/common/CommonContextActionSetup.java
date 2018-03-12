@@ -20,7 +20,6 @@ public class CommonContextActionSetup {
   private final ContextParamManager contextParamManager;
   private final SpireAuthManager authManager;
   private final MessagesApi messagesApi;
-  private final UploadValidationConfig uploadValidationConfig;
 
   @Inject
   public CommonContextActionSetup(JourneyManager journeyManager,
@@ -32,7 +31,6 @@ public class CommonContextActionSetup {
     this.contextParamManager = contextParamManager;
     this.authManager = authManager;
     this.messagesApi = messagesApi;
-    this.uploadValidationConfig = uploadValidationConfig;
   }
 
   public void setupContext(Http.Context ctx) {
@@ -46,7 +44,5 @@ public class CommonContextActionSetup {
     ctx.args.put(ContextParamManager.CTX_PARAM_NAME, contextParamManager);
 
     ctx.args.put(CTX_MESSAGE_API_NAME, messagesApi);
-
-    ctx.args.put(FileService.CTX_UPLOAD_VALIDATION_CONFIG, uploadValidationConfig);
   }
 }
