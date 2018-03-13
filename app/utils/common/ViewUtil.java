@@ -8,6 +8,7 @@ import components.common.CommonContextActionSetup;
 import components.common.journey.BackLink;
 import components.common.state.ContextParamManager;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import play.data.Form;
 import play.data.validation.Constraints;
 import play.data.validation.ValidationError;
@@ -15,6 +16,7 @@ import play.i18n.Lang;
 import play.i18n.MessagesApi;
 import play.mvc.Call;
 import play.mvc.Http;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -250,6 +252,14 @@ public class ViewUtil {
    */
   public static String pluraliseWithCount(Number count, String singular, String plural) {
     return count + " " + pluralise(count, singular, plural);
+  }
+
+  public static String getSynonymsAsString(CountryView countryView) {
+    if (CollectionUtils.isEmpty(countryView.getSynonyms())) {
+      return "";
+    } else {
+      return String.join(" ", countryView.getSynonyms());
+    }
   }
 
 }

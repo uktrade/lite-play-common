@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.RequestResponsePact;
 import com.google.common.collect.ImmutableMap;
 import components.common.client.CountryServiceClient;
-import models.common.Country;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,6 +19,7 @@ import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.test.WSTestClient;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.util.List;
 import java.util.Map;
@@ -128,7 +128,7 @@ public class CountryServiceGroupConsumerPact {
 
   @SuppressWarnings("Duplicates")
   public static void doCountryGroupExistsTest(CountryServiceClient client) {
-    List<Country> countries;
+    List<CountryView> countries;
     try {
       countries = client.getCountries().toCompletableFuture().get();
     }
@@ -137,14 +137,14 @@ public class CountryServiceGroupConsumerPact {
     }
     assertThat(countries).isNotNull();
     assertThat(countries.isEmpty()).isFalse();
-    Country country = countries.get(0);
-    assertThat(country.getCountryRef()).isEqualTo(COUNTRY_REF);
-    assertThat(country.getCountryName()).isEqualTo(COUNTRY_NAME);
+    CountryView countryView = countries.get(0);
+    assertThat(countryView.getCountryRef()).isEqualTo(COUNTRY_REF);
+    assertThat(countryView.getCountryName()).isEqualTo(COUNTRY_NAME);
   }
 
   @SuppressWarnings("Duplicates")
   public static void doCountryGroupDoesNotExistTest(CountryServiceClient client) {
-    List<Country> countries;
+    List<CountryView> countries;
     try {
       countries = client.getCountries().toCompletableFuture().get();
     }
