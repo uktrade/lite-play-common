@@ -6,7 +6,6 @@ import static play.mvc.Results.ok;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import components.common.client.CountryServiceClient.CountryServiceEndpoint;
-import models.common.Country;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +15,7 @@ import play.libs.ws.WSClient;
 import play.routing.RoutingDsl;
 import play.server.Server;
 import play.test.WSTestClient;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.io.InputStream;
 import java.util.List;
@@ -50,9 +50,9 @@ public class CountryServiceClientTest {
   @Test
   public void shouldGetCountries() throws Exception {
 
-    CompletionStage<List<Country>> completionStage = client.getCountries();
+    CompletionStage<List<CountryView>> completionStage = client.getCountries();
 
-    List<Country> countries = completionStage.toCompletableFuture().get();
+    List<CountryView> countries = completionStage.toCompletableFuture().get();
 
     assertThat(countries).isNotEmpty();
     assertThat(countries.size()).isEqualTo(18);

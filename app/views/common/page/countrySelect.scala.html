@@ -1,8 +1,8 @@
-@import models.common.Country
+@import uk.gov.bis.lite.countryservice.api.CountryView
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None,
+@(field: Form.Field, countries: List[CountryView], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None,
 detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
 <div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error }">
 
@@ -28,7 +28,7 @@ detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
   >
     <option value="" @if(!field.getValue.isPresent || "".equals(field.getValue.get)) {selected="selected"}> </option>
     @for(country <- countries) {
-      <option value="@country.getCountryRef" data-alternative-spellings="@country.getSynonymsAsString"
+      <option value="@country.getCountryRef" data-alternative-spellings="@ViewUtil.getSynonymsAsString(country)"
           data-relevancy-booster="1" @if(field.getValue.isPresent && country.getCountryRef.equals(field.getValue.get)){selected="selected"}>@country.getCountryName</option>
     }
   </select>
