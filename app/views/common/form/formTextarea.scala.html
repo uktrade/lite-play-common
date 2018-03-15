@@ -1,31 +1,56 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
+@import org.apache.commons.lang3.StringUtils
 
-@(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
+@(field: Form.Field, hint: Option[Html] = None, rows: String = "2", cssClass: String = "", validationGroup: Option[String] = None, labelWrapperTag: String = "", labelClass: String = "form-label")(label: Html)
 
-<div class="form-group @if(field.error.isDefined){ form-group-error }">
+@formattedLabel = {
+  <label for="@field.id">
+    <span class="@labelClass">@label</span>
 
-  <label class="form-label" for="@field.id">@label</label>
+    @if(field.error.isDefined && ViewUtil.isHeadingTag(labelWrapperTag)) {
+      <div class="form-group-error">
+    }
 
-  @if(hint.isDefined){
-    <label class="form-label" for="@field.id">
-      <span class="form-hint">@hint</span>
-    </label>
-  }
-
-  @if(field.error.isDefined) {
-    <p class="error-message">@Messages(field.error.get.message)</p>
-  }
-
-  <textarea class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" rows="@rows" name="@field.getName.get"
-    @{
-      val fieldValidationData = ViewUtil.fieldValidationJSON(field);
-      if(fieldValidationData != null){
-        HtmlFormat.raw("data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+      @if(hint.isDefined){
+        <span class="form-hint">@hint</span>
       }
+      @if(field.error.isDefined) {
+        <span class="error-message">@Messages(field.error.get.message)</span>
+      }
+
+    @if(field.error.isDefined && ViewUtil.isHeadingTag(labelWrapperTag)) {
+      </div>
     }
-    @if(validationGroup.isDefined) {
-      @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
-    }
-  >@field.getValue.orElse(null)</textarea>
+  </label>
+}
+
+<div class="form-group @if(field.error.isDefined && !ViewUtil.isHeadingTag(labelWrapperTag)){ form-group-error }">
+
+  @if(!StringUtils.isBlank(labelWrapperTag)) {
+    <@labelWrapperTag>@formattedLabel</@labelWrapperTag>
+  } else {
+    @formattedLabel
+  }
+
+  @if(field.error.isDefined && ViewUtil.isHeadingTag(labelWrapperTag)) {
+    <div class="form-group-error">
+  }
+
+    <textarea class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" @if(field.error.isDefined){ aria-invalid="true" } id="@field.id" rows="@rows" name="@field.getName.get"
+      @{
+        val fieldValidationData = ViewUtil.fieldValidationJSON(field);
+        if(fieldValidationData != null){
+          HtmlFormat.raw("data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
+        }
+      }
+      @if(validationGroup.isDefined) {
+        @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
+      }
+    >@field.getValue.orElse(null)</textarea>
+
+  @if(field.error.isDefined && ViewUtil.isHeadingTag(labelWrapperTag)) {
+    </div>
+  }
+
 </div>
