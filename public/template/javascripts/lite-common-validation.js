@@ -4,6 +4,7 @@
 var LITECommon = LITECommon || {};
 LITECommon.ClientSideValidation = {
   clientSideDataAttrName: 'data-clientside-validation',
+  headerSelector: 'h1,h2,h3,h4,h5,h6',
   _validationFunction: null,
 
   /**
@@ -55,6 +56,7 @@ LITECommon.ClientSideValidation = {
       validationFailures = LITECommon.ClientSideValidation.standardValidation($form, $triggeringElement)
     }
 
+    LITECommon.ClientSideValidation._addErrorToPageTitle(validationFailures);
     LITECommon.ClientSideValidation._addErrorSummary(validationFailures);
     return validationFailures.length === 0;
   },
@@ -216,19 +218,30 @@ LITECommon.ClientSideValidation = {
   _clearFieldClientSideError: function (field) {
     "use strict";
 
-    var formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
-    var errorMessages = $(formGroup).find("p.error-message");
-    var clientsideErrorMessages = $(formGroup).find("p.error-message["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]");
+    var $formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
+    var $formGroupLegend = $formGroup.find('legend');
+    var $errorMessages = $formGroup.find(".error-message");
+    var $clientsideErrorMessages = $formGroup.find(".error-message["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]");
 
-    $(field).removeClass('form-control-error');
+    var onlyErrorsAreClientSide = ($errorMessages.length === $clientsideErrorMessages.length);
 
-    // Clear the error class on the form-group if the only messages in the group are client side ones
-    if (errorMessages.length === clientsideErrorMessages.length) {
-      formGroup.removeClass('form-group-error');
+    $clientsideErrorMessages.remove();
+
+    if (onlyErrorsAreClientSide) {
+      $(field).removeClass('form-control-error');
     }
-
-    // Remove the client side messages
-    clientsideErrorMessages.remove();
+    else {
+      return;
+    }
+    
+    if((LITECommon.ClientSideValidation._formGroupHasLegend($formGroup) && LITECommon.ClientSideValidation._hasChildHeader($formGroupLegend)) || LITECommon.ClientSideValidation._hasChildHeader($formGroup)) {
+      $formGroup.find('.form-group-error>*').unwrap();
+      // There might be form-group-errors left over if they were empty (so not caught by .unwrap())
+      $formGroup.find('.form-group-error').remove();
+    }
+    else {
+      $formGroup.removeClass('form-group-error');
+    }
   },
 
   /**
@@ -242,40 +255,71 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     var $formGroup = LITECommon.ClientSideValidation._findFieldFormGroup(field);
-    if (!$formGroup.hasClass('form-group-error')) {
-      $formGroup.addClass('form-group-error');
+
+    // If there's already a matching error message for this field, don't add another
+    if ($(".error-message:contains('" + message + "')", $formGroup).length > 0) {
+      return;
     }
 
-    if (!$(field).hasClass('form-control-error') && LITECommon.ClientSideValidation._isTextField(field)) {
+    var $formGroupLegend = $formGroup.find('legend');
+
+    var $errorMessage = $("<span/>");
+    $errorMessage.text(message);
+    $errorMessage.addClass("error-message");
+    $errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
+
+    if (LITECommon.ClientSideValidation._isTextField(field)) {
       $(field).addClass('form-control-error');
     }
 
-    // Only add the message if there's not already a matching error message for this field
-    if ($("p.error-message:contains('" + message + "')", $formGroup).length === 0) {
-      var $errorMessage = $("<p/>");
-      $errorMessage.text(message);
-      $errorMessage.addClass("error-message");
-      $errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
+    // If the field already contains an error message the form group already has the necessary styling,
+    // so just put this error message after the existing one
+    if ($formGroup.find('.error-message').length > 0) {
+      $formGroup.find('.error-message:last').after($errorMessage);
+      return;
+    }
 
-      if (field === $formGroup[0]) {
-        // If the 'field' is the form-group put the message at the top of the form-group content
-        $formGroup.prepend($errorMessage);
-      }
-      else if (LITECommon.ClientSideValidation._isDatePartField(field)) {
-        // If the 'field' is part of a three-field date put the message at the end of the legend element
-        $formGroup.find('legend').append($errorMessage);
+    // Add the error styling to the form group and insert the error message
+    if (LITECommon.ClientSideValidation._formGroupHasLegend($formGroup)) {
+      if (LITECommon.ClientSideValidation._hasChildHeader($formGroupLegend)) {
+        // Move anything in the legend that's not the header to a new form-group-error
+        // and put the error message inside the form-group-error too
+        var $formGroupError = $('<div class="form-group-error"></div>')
+        $formGroupLegend.children().not(LITECommon.ClientSideValidation.headerSelector).detach().appendTo($formGroupError);
+        $errorMessage.appendTo($formGroupError);
+        $formGroupError.appendTo($formGroupLegend);
+
+        // Move anything in the fieldset that's not the legend to a new form-group-error
+        var $formGroupError = $('<div class="form-group-error"></div>')
+        $formGroup.children('fieldset').children().not('legend').detach().appendTo($formGroupError);
+        $formGroupError.appendTo($formGroup.children('fieldset'));
       }
       else {
-        // If the 'field' is an individual field put the message before it
-        $(field).before($errorMessage);
+        $errorMessage.appendTo($formGroupLegend);
+        $formGroup.addClass('form-group-error');
       }
+    }
+    else if (LITECommon.ClientSideValidation._hasChildHeader($formGroup)) {
+      var $formGroupError = $('<div class="form-group-error"></div>');
+      $formGroup.children(LITECommon.ClientSideValidation.headerSelector).children('label').children().not('*[class^="heading-"], *[class*=" heading-"]').detach().appendTo($formGroupError);
+      $errorMessage.appendTo($formGroupError);
+      $formGroupError.appendTo($formGroup.children(LITECommon.ClientSideValidation.headerSelector).children('label'));
+      $(field).wrap('<div class="form-group-error"></div>');
+    }
+    else if (LITECommon.ClientSideValidation._hasChildLabel($formGroup)) {
+      $formGroup.addClass('form-group-error');
+      $formGroup.children('label').append($errorMessage);
+    }
+    else {
+      $formGroup.addClass('form-group-error');
+      $(field).before($errorMessage);
     }
   },
 
   /**
    * Add or update the error summary box typically at the top of the page
    *
-   * @param validationFailures Array of objects containing a message and a HMTL object field the message is associated with
+   * @param validationFailures Array of objects containing a message and an HTML object field the message is associated with
    * @private
    */
   _addErrorSummary: function (validationFailures) {
@@ -304,7 +348,7 @@ LITECommon.ClientSideValidation = {
           }
         }
         // Create new summary and insert after anchor
-        var newSummary = $('<div data-clientside-validation="true" class="error-summary" role="group" aria-labelledby="error-summary-heading" tabindex="-1">' +
+        var newSummary = $('<div data-clientside-validation="true" class="error-summary" role="alert" aria-labelledby="error-summary-heading" tabindex="-1">' +
           '<h2 class="heading-medium error-summary-heading" id="error-summary-heading">There are errors on this page</h2>' +
           '<ul class="error-summary-list"></ul>' +
           '</div>');
@@ -326,6 +370,23 @@ LITECommon.ClientSideValidation = {
     else {
       // Clear client side if there's no errors this time
       $("div.error-summary["+LITECommon.ClientSideValidation.clientSideDataAttrName+"]").remove();
+    }
+  },
+
+  /**
+   * Add 'Error: ' to the start of the page's <title> element if there are errors, or remove it if there aren't
+   *
+   * @param validationFailures Array of objects containing a message and a HMTL object field the message is associated with
+   * @private
+   */
+  _addErrorToPageTitle: function (validationFailures) {
+    "use strict";
+
+    if (validationFailures.length > 0 && document.title.indexOf('Error: ') !== 0) {
+      document.title = 'Error: ' + document.title;
+    }
+    else if (validationFailures.length === 0 && document.title.indexOf('Error: ') === 0) {
+      document.title = document.title.replace('Error: ', '');
     }
   },
 
@@ -365,6 +426,45 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     return $(field).closest('.form-date').length > 0;
+  },
+
+  /**
+   * Determines whether the form group has a legend
+   *
+   * @param $formGroup
+   * @returns {boolean}
+   * @private
+   */
+  _formGroupHasLegend: function($formGroup) {
+    "use strict";
+
+    return $formGroup.find('legend').length > 0;
+  },
+
+  /**
+   * Determines whether the element has a direct child h1-h6
+   *
+   * @param $element
+   * @returns {boolean}
+   * @private
+   */
+  _hasChildHeader: function($element) {
+    "use strict";
+
+    return $element.children(LITECommon.ClientSideValidation.headerSelector).length > 0;
+  },
+
+  /**
+   * Determines whether the form group has a direct child label
+   *
+   * @param $formGroup
+   * @returns {boolean}
+   * @private
+   */
+  _hasChildLabel: function($formGroup) {
+    "use strict";
+
+    return $formGroup.children('label').length > 0;
   }
 
 };
