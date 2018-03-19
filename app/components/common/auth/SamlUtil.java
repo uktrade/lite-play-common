@@ -67,7 +67,9 @@ public class SamlUtil {
     } catch (IOException ioe) {
       throw new RuntimeException("Unable to read " + filePath, ioe);
     }
-    String replaced = fileToString.replace("${samlLocation}", config.getString("saml.location"));
+    String replaced = fileToString.replace("${entityId}", config.getString("saml.entityId"))
+        .replace("${x509Certificate}", config.getString("saml.x509Certificate"))
+        .replace("${samlLocation}", config.getString("saml.location"));
     return new InputStreamResource(IOUtils.toInputStream(replaced, StandardCharsets.UTF_8));
   }
 
