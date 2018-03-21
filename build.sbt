@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-collections4" % "4.1",
   "org.glassfish" % "javax.el" % "3.0.1-b08",
   "uk.gov.bis.lite" % "lite-country-service-api" % "1.2",
+  "uk.gov.bis.lite" % "lite-user-service-api" % "1.0",
   "org.assertj" % "assertj-core" % "3.5.2" % "test",
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.5.13" % "test"
 )
