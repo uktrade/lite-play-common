@@ -95,7 +95,7 @@ $(function () {
 
         setTimeout( function() {
           //Add download link, success label and filesize
-          data.context.find('.file-upload-filename').html('<a href="' + url + '" target="_blank"><span class="visually-hidden">Download</span> ' + filename + '</a>');
+          data.context.find('.file-upload-filename').html('<a href="' + url + '"><span class="visually-hidden">Download</span> ' + filename + '</a>');
           data.context.find('.file-upload-status').html('<span class="status-label status-label-finished">Success</span><span class="file-upload-size">' + size + '</span>');
 
           // After 2 seconds, fade out the success label to reveal the file size
