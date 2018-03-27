@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "org.pac4j" % "pac4j" % "2.2.0",
   "org.pac4j" % "pac4j-saml" % "2.2.0",
   "org.pac4j" %% "play-pac4j" % "5.0.0",
+  "org.redisson" % "redisson" % "3.6.3",
   "org.bitbucket.b_c" % "jose4j" % "0.6.1",
   "com.github.tomakehurst" % "wiremock" % "2.9.0",
   "commons-io" % "commons-io" % "2.6",
