@@ -43,7 +43,7 @@ public class RedissonSyncCacheApi implements SyncCacheApi {
       try {
         object = block.call();
       } catch (Exception e) {
-        e.printStackTrace();
+        throw new RuntimeException("Failed to retrieve cache value from Callable", e);
       }
 
       if (expiration != null) {
