@@ -224,7 +224,7 @@ public class ViewUtil {
    * @return String The plural of the word if count is not 1, otherwise the singular
    */
   public static String pluralise(Number count, String singular, String plural) {
-    if (count.equals(1)) {
+    if (count.intValue() == 1) {
       return singular;
     } else {
       return plural;
