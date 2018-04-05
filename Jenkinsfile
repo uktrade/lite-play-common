@@ -29,5 +29,17 @@ pipeline {
         }
       }
     }
+    stage('sonarqube') {
+      steps {
+        script {
+          deployer.inside {
+            withSonarQubeEnv('sonarqube') {
+              sh 'sbt -no-colors compile test:compile'
+              sh "${env.SONAR_SCANNER_PATH}/sonar-scanner"
+            }
+          }
+        }
+      }
+    }
   }
 }
