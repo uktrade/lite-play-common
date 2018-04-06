@@ -1,4 +1,4 @@
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None, inline: Boolean = true)
-@formRadioBooleanWithContent(field, prompt, truePrompt, falsePrompt, hideHeading, validationGroup, inline)(HtmlFormat.empty)(HtmlFormat.empty)
+@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)
+@formRadioBooleanWithContent(field, prompt, promptHeadingTag, promptCssClass, truePrompt, falsePrompt, validationGroup, inline, legendContent)(HtmlFormat.empty)(HtmlFormat.empty)

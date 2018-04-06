@@ -1,8 +1,9 @@
+@import org.apache.commons.lang3.StringUtils
 @import play.data.Form
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "h2", promptCssClass: String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
 
 @errorMessage = {
   @if(field.error.isDefined) {
@@ -24,9 +25,14 @@
   <fieldset @if(inline) { class="inline" }>
     <legend>
       <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
+
       @if(field.error.isDefined && ViewUtil.isHeadingTag(promptHeadingTag)) {
-        <div class="form-group-error">@errorMessage</div>
+        <div class="form-group-error">
+          @legendContent
+          @errorMessage
+        </div>
       } else {
+        @legendContent
         @errorMessage
       }
     </legend>

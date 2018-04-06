@@ -1,8 +1,9 @@
+@import org.apache.commons.lang3.StringUtils
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: String, optionValue: String, isPromptHtml: Boolean = false, cssClass : String = "")
+@(field: Form.Field, prompt: String, optionValue: String, isPromptHtml: Boolean = false, cssClass: String = "", disclosurePanelId: String = "")
 
-<div class="multiple-choice">
+<div class="multiple-choice" @if(!StringUtils.isBlank(disclosurePanelId)) { data-target="@disclosurePanelId"}>
   <input id="@field.getName.get@optionValue" name="@field.getName.get" value="@optionValue" type="radio" @if(field.getValue.isPresent && field.getValue.get.equals(optionValue)){ checked="checked" }>
   <label class="@cssClass" for="@field.getName.get@optionValue">
       @if(isPromptHtml) {
