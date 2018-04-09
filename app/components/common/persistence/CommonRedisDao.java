@@ -2,7 +2,6 @@ package components.common.persistence;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import components.common.transaction.TransactionIdProvider;
-import org.redisson.api.RedissonClient;
 
 import java.util.Optional;
 
@@ -11,9 +10,8 @@ public class CommonRedisDao {
   private final StatelessRedisDao statelessRedisDao;
   private final TransactionIdProvider transactionIdProvider;
 
-  public CommonRedisDao(RedisKeyConfig keyConfig, RedissonClient redissonClient,
-                        TransactionIdProvider transactionIdProvider) {
-    this.statelessRedisDao = new StatelessRedisDao(keyConfig, redissonClient);
+  public CommonRedisDao(StatelessRedisDao statelessRedisDao, TransactionIdProvider transactionIdProvider) {
+    this.statelessRedisDao = statelessRedisDao;
     this.transactionIdProvider = transactionIdProvider;
   }
 
