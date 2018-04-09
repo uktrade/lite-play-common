@@ -1,5 +1,7 @@
 package modules.common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -7,6 +9,7 @@ import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.SingleServerConfig;
 import play.Logger;
 import play.inject.ApplicationLifecycle;
@@ -32,7 +35,11 @@ public class RedissonGuiceModule extends AbstractModule {
     boolean useSsl = config.getBoolean("redis.ssl");
     String protocol = useSsl ? "rediss://" : "redis://"; //add additional "s" to protocol for SSL
 
-    org.redisson.config.Config redissonConfig = new org.redisson.config.Config();
+    //Create ObjectMapper with JodaTime support for Pac4j SAML2 Condition attributes
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+    org.redisson.config.Config redissonConfig = new org.redisson.config.Config()
+        .setCodec(new JsonJacksonCodec(objectMapper));
+
     SingleServerConfig singleServerConfig = redissonConfig.useSingleServer()
         .setAddress(protocol + config.getString("redis.host") + ":" + config.getString("redis.port"))
         .setPassword(StringUtils.defaultIfBlank(config.getString("redis.password"), null))
