@@ -1,19 +1,15 @@
 package components.common.persistence;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
-import org.apache.commons.lang.StringUtils;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import play.Logger;
-import play.libs.Json;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class StatelessRedisDao {
-
-  private static final ObjectMapper OBJECT_MAPPER = Json.newDefaultMapper();
 
   private final RedissonClient redissonClient;
   private final RedisKeyConfig keyConfig;
@@ -35,7 +31,7 @@ public class StatelessRedisDao {
   public void writeObject(String transactionId, String fieldName, Object object) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      writeInternal(transactionId, fieldName, OBJECT_MAPPER.writeValueAsString(object));
+      writeInternal(transactionId, fieldName, object);
     } catch (Exception exception) {
       throw new RuntimeException("Unable to write object", exception);
     } finally {
@@ -46,21 +42,18 @@ public class StatelessRedisDao {
   public String readString(String transactionId, String fieldName) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      return readInternal(transactionId, fieldName);
+      return (String) getMap(transactionId).get(fieldName);
     } finally {
       log("readString", fieldName, stopwatch);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public <T> Optional<T> readObject(String transactionId, String fieldName, Class<T> clazz) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      String value = readInternal(transactionId, fieldName);
-      if (StringUtils.isBlank(value)) {
-        return Optional.empty();
-      } else {
-        return Optional.of(OBJECT_MAPPER.readValue(value, clazz));
-      }
+      T object = (T) getMap(transactionId).get(fieldName);
+      return Optional.ofNullable(object);
     } catch (Exception exception) {
       throw new RuntimeException("Unable to read object", exception);
     } finally {
@@ -68,15 +61,12 @@ public class StatelessRedisDao {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public <T> Optional<T> readObject(String transactionId, String fieldName, TypeReference<T> typeReference) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      String value = readInternal(transactionId, fieldName);
-      if (StringUtils.isBlank(value)) {
-        return Optional.empty();
-      } else {
-        return Optional.of(OBJECT_MAPPER.readValue(value, typeReference));
-      }
+      T object = (T) getMap(transactionId).get(fieldName);
+      return Optional.ofNullable(object);
     } catch (Exception exception) {
       throw new RuntimeException("Unable to read object", exception);
     } finally {
@@ -87,7 +77,7 @@ public class StatelessRedisDao {
   public void deleteString(String transactionId, String fieldName) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      redissonClient.getMap(hashKey(transactionId)).remove(fieldName);
+      getMap(transactionId).remove(fieldName);
     } finally {
       log("deleteString", fieldName, stopwatch);
     }
@@ -96,7 +86,7 @@ public class StatelessRedisDao {
   public boolean transactionExists(String transactionId, String fieldName) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     try {
-      return redissonClient.getMap(hashKey(transactionId)).get(fieldName) != null;
+      return getMap(transactionId).get(fieldName) != null;
     } finally {
       log("transactionExists", fieldName, stopwatch);
     }
@@ -111,17 +101,17 @@ public class StatelessRedisDao {
     }
   }
 
-  private void writeInternal(String transactionId, String fieldName, String value) {
+  private void writeInternal(String transactionId, String fieldName, Object value) {
     expireInternal(transactionId);
-    redissonClient.getMap(hashKey(transactionId)).put(fieldName, value);
-  }
-
-  private String readInternal(String transactionId, String fieldName) {
-    return (String) redissonClient.getMap(hashKey(transactionId)).get(fieldName);
+    getMap(transactionId).put(fieldName, value);
   }
 
   private void expireInternal(String transactionId) {
-    redissonClient.getMap(hashKey(transactionId)).expire(keyConfig.getHashTtlSeconds(), TimeUnit.SECONDS);
+    getMap(transactionId).expire(keyConfig.getHashTtlSeconds(), TimeUnit.SECONDS);
+  }
+
+  private RMap<Object, Object> getMap(String transactionId) {
+    return redissonClient.getMap(hashKey(transactionId));
   }
 
   private String hashKey(String transactionId) {
