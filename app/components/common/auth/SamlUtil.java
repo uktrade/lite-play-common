@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.pac4j.core.authorization.authorizer.Authorizer;
 import org.pac4j.core.client.Clients;
 import org.pac4j.core.http.HttpActionAdapter;
+import org.pac4j.play.LogoutController;
 import org.pac4j.play.store.PlaySessionStore;
 import org.pac4j.saml.client.SAML2Client;
 import org.pac4j.saml.client.SAML2ClientConfiguration;
@@ -17,6 +18,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class SamlUtil {
+
+  public static LogoutController createLogoutController(Config config, String defaultUrl) {
+    LogoutController logoutController = new LogoutController();
+    logoutController.setLocalLogout(true);
+    logoutController.setDestroySession(true);
+    String logoutUrl = config.getString("saml.logoutUrl");
+    if ("default".equals(logoutUrl)) {
+      logoutController.setDefaultUrl(defaultUrl);
+    } else {
+      logoutController.setDefaultUrl(logoutUrl);
+    }
+    return logoutController;
+  }
 
   public static org.pac4j.core.config.Config buildConfig(Config config,
                                                          PlaySessionStore playSessionStore,
