@@ -223,7 +223,8 @@
       }
       var filter_options_exact = function( term ) {
         return $.grep( context.options, function( option ) {
-          return option.matches.toLowerCase().startsWith( term.toLowerCase() );
+          // https://stackoverflow.com/a/4579228
+          return option.matches.toLowerCase().lastIndexOf( term.toLowerCase(), 0 ) === 0;
         });
       }
       // update the select field value using either selected option or current input in the text field
