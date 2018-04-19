@@ -4,7 +4,11 @@
 var LITECommon = LITECommon || {};
 LITECommon.ClientSideValidation = {
   clientSideDataAttrName: 'data-clientside-validation',
-  headerSelector: 'h1,h2,h3,h4,h5,h6',
+  // These selectors exclude error targets and message parents inside panels, such as radio booleans with content.
+  // This stops the error styling and message being applied to any fields inside these panels.
+  // Fields inside panels are never validated client-side as dependent validation isn't implemented.
+  formGroupErrorTargetSelector: '.clientside-form-group-error-target:not(.form-group .panel .form-group .clientside-form-group-error-target):not(.form-group .panel .form-group.clientside-form-group-error-target)',
+  errorMessageParentSelector: '.clientside-error-message-parent:not(.form-group .panel .form-group .clientside-error-message-parent):not(.form-group .panel .form-group.clientside-error-message-parent)',
   _validationFunction: null,
 
   /**
@@ -233,15 +237,9 @@ LITECommon.ClientSideValidation = {
     else {
       return;
     }
-    
-    if((LITECommon.ClientSideValidation._formGroupHasLegend($formGroup) && LITECommon.ClientSideValidation._hasChildHeader($formGroupLegend)) || LITECommon.ClientSideValidation._hasChildHeader($formGroup)) {
-      $formGroup.find('.form-group-error>*').unwrap();
-      // There might be form-group-errors left over if they were empty (so not caught by .unwrap())
-      $formGroup.find('.form-group-error').remove();
-    }
-    else {
-      $formGroup.removeClass('form-group-error');
-    }
+
+    // Remove the error class, wherever it is
+    $formGroup.find('.form-group-error').addBack().removeClass('form-group-error');
   },
 
   /**
@@ -279,41 +277,17 @@ LITECommon.ClientSideValidation = {
       return;
     }
 
-    // Add the error styling to the form group and insert the error message
-    if (LITECommon.ClientSideValidation._formGroupHasLegend($formGroup)) {
-      if (LITECommon.ClientSideValidation._hasChildHeader($formGroupLegend)) {
-        // Move anything in the legend that's not the header to a new form-group-error
-        // and put the error message inside the form-group-error too
-        var $formGroupError = $('<div class="form-group-error"></div>')
-        $formGroupLegend.children().not(LITECommon.ClientSideValidation.headerSelector).detach().appendTo($formGroupError);
-        $errorMessage.appendTo($formGroupError);
-        $formGroupError.appendTo($formGroupLegend);
+    // Add the error styling to the appropriate elements
+    $formGroup
+      .find(LITECommon.ClientSideValidation.formGroupErrorTargetSelector)
+      .addBack(LITECommon.ClientSideValidation.formGroupErrorTargetSelector)
+      .addClass('form-group-error');
 
-        // Move anything in the fieldset that's not the legend to a new form-group-error
-        var $formGroupError = $('<div class="form-group-error"></div>')
-        $formGroup.children('fieldset').children().not('legend').detach().appendTo($formGroupError);
-        $formGroupError.appendTo($formGroup.children('fieldset'));
-      }
-      else {
-        $errorMessage.appendTo($formGroupLegend);
-        $formGroup.addClass('form-group-error');
-      }
-    }
-    else if (LITECommon.ClientSideValidation._hasChildHeader($formGroup)) {
-      var $formGroupError = $('<div class="form-group-error"></div>');
-      $formGroup.children(LITECommon.ClientSideValidation.headerSelector).children('label').children().not('*[class^="heading-"], *[class*=" heading-"]').detach().appendTo($formGroupError);
-      $errorMessage.appendTo($formGroupError);
-      $formGroupError.appendTo($formGroup.children(LITECommon.ClientSideValidation.headerSelector).children('label'));
-      $(field).wrap('<div class="form-group-error"></div>');
-    }
-    else if (LITECommon.ClientSideValidation._hasChildLabel($formGroup)) {
-      $formGroup.addClass('form-group-error');
-      $formGroup.children('label').append($errorMessage);
-    }
-    else {
-      $formGroup.addClass('form-group-error');
-      $(field).before($errorMessage);
-    }
+    // Add the error message
+    $formGroup
+      .find(LITECommon.ClientSideValidation.errorMessageParentSelector)
+      .addBack(LITECommon.ClientSideValidation.errorMessageParentSelector)
+      .append($errorMessage);
   },
 
   /**
@@ -439,32 +413,6 @@ LITECommon.ClientSideValidation = {
     "use strict";
 
     return $formGroup.find('legend').length > 0;
-  },
-
-  /**
-   * Determines whether the element has a direct child h1-h6
-   *
-   * @param $element
-   * @returns {boolean}
-   * @private
-   */
-  _hasChildHeader: function($element) {
-    "use strict";
-
-    return $element.children(LITECommon.ClientSideValidation.headerSelector).length > 0;
-  },
-
-  /**
-   * Determines whether the form group has a direct child label
-   *
-   * @param $formGroup
-   * @returns {boolean}
-   * @private
-   */
-  _hasChildLabel: function($formGroup) {
-    "use strict";
-
-    return $formGroup.children('label').length > 0;
   }
 
 };

@@ -11,7 +11,7 @@
   }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.isHeadingTag(promptHeadingTag)) { form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -23,11 +23,11 @@
   }>
 
   <fieldset @if(inline) { class="inline" }>
-    <legend>
+    <legend @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { class="clientside-error-message-parent" }>
       <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
 
-      @if(field.error.isDefined && ViewUtil.isHeadingTag(promptHeadingTag)) {
-        <div class="form-group-error">
+      @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
+        <div class="clientside-form-group-error-target clientside-error-message-parent @if(field.error.isDefined) { form-group-error }">
           @legendContent
           @errorMessage
         </div>
@@ -37,8 +37,8 @@
       }
     </legend>
 
-    @if(field.error.isDefined && ViewUtil.isHeadingTag(promptHeadingTag)) {
-      <div class="form-group-error">
+    @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
+      <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
         @radioContent
       </div>
     } else {

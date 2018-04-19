@@ -2,7 +2,7 @@
 @import play.twirl.api.HtmlFormat
 
 @(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
-<div class="form-group @if(field.error.isDefined){ form-group-error }">
+<div class="form-group clientside-form-group-error-target @if(field.error.isDefined){ form-group-error }">
 
   <label class="form-label" for="@field.id">@label</label>
 
@@ -12,9 +12,11 @@
     </label>
   }
 
-  @if(field.error.isDefined) {
-    <p class="error-message">@Messages(field.error.get.message)</p>
-  }
+  <div class="clientside-error-message-parent">
+    @if(field.error.isDefined) {
+      <span class="error-message">@Messages(field.error.get.message)</span>
+    }
+  </div>
 
   <input class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" name="@field.getName.get" type="text" value="@field.getValue.orElse(null)"
   @{

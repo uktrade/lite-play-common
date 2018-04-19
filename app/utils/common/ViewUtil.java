@@ -24,6 +24,8 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ViewUtil {
 
@@ -255,13 +257,15 @@ public class ViewUtil {
   }
 
   /*
-   * Checks whether the tagName passed is a heading (h1-h6)
+   * Checks whether the cssClass passed contains a heading class (eg 'heading-large')
    *
-   * @param tagName The name of the HTML tag to check
-   * @return Boolean true if tagName is h1, h2, h3, h4, h5 or h6, otherwise false
+   * @param tagName The name of the class to check. Can contain multiple classes separated by spaces
+   * @return Boolean true if className contains a heading class, otherwise false
    */
-  public static Boolean isHeadingTag(String tagName) {
-    return tagName.matches("^h[1-6]$");
+  public static Boolean cssClassContainsHeading(String cssClass) {
+    Pattern p = Pattern.compile("(^| )heading-(xlarge|large|medium|small)");
+    Matcher m = p.matcher(cssClass);
+    return m.find();
   }
 
   public static String getSynonymsAsString(CountryView countryView) {
