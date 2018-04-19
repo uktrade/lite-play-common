@@ -3,10 +3,10 @@ package components.common.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import components.common.logging.CorrelationId;
-import models.common.Country;
 import play.Logger;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -18,7 +18,8 @@ public class CountryServiceClient {
 
   public enum CountryServiceEndpoint {
     SET,
-    GROUP
+    GROUP,
+    ALL
   }
 
   private final HttpExecutionContext httpExecutionContext;
@@ -48,7 +49,7 @@ public class CountryServiceClient {
     this.objectMapper = objectMapper;
   }
 
-  public CompletionStage<List<Country>> getCountries() {
+  public CompletionStage<List<CountryView>> getCountries() {
     return wsClient.url(buildUrl())
         .setAuth(credentials)
         .setRequestFilter(CorrelationId.requestFilter)
@@ -61,7 +62,7 @@ public class CountryServiceClient {
           } else {
             try {
               String json = result.asJson().toString();
-              return objectMapper.readValue(json, new TypeReference<List<Country>>() {
+              return objectMapper.readValue(json, new TypeReference<List<CountryView>>() {
               });
             } catch (IOException e) {
               Logger.error("Failed to parse Country service response as JSON.", e);
@@ -78,9 +79,27 @@ public class CountryServiceClient {
         return countryServiceUrl + "/countries/set/" + countryParamName;
       case GROUP:
         return countryServiceUrl + "/countries/group/" + countryParamName;
+      case ALL:
+        return countryServiceUrl + "/country-data";
       default:
         return null;
     }
+  }
+
+  public static CountryServiceClient buildCountryServiceAllClient(HttpExecutionContext httpExecutionContext,
+                                                                  WSClient wsClient,
+                                                                  int countryServiceTimeout,
+                                                                  String countryServiceUrl,
+                                                                  String credentials,
+                                                                  ObjectMapper objectMapper) {
+    return new CountryServiceClient(httpExecutionContext,
+        wsClient,
+        countryServiceTimeout,
+        countryServiceUrl,
+        credentials,
+        CountryServiceEndpoint.ALL,
+        null,
+        objectMapper);
   }
 
   public static CountryServiceClient buildCountryServiceGroupClient(HttpExecutionContext httpExecutionContext,

@@ -20,8 +20,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class SpireAuthManager {
 
-  private static final String CONTEXT_ARG_NAME = "auth_manager";
-
   private static final String ID_ATTRIBUTE = "ID";
   private static final String EMAIL_ADDRESS_ATTRIBUTE = "PRIMARY_EMAIL_ADDRESS";
   private static final String FORENAME_ATTRIBUTE = "FORENAME";
@@ -62,7 +60,7 @@ public class SpireAuthManager {
    * @param profile Profile to read attributes from.
    * @return AuthInfo details for the current user.
    */
-  private AuthInfo getAuthInfoFromSamlProfile(SAML2Profile profile) {
+  public AuthInfo getAuthInfoFromSamlProfile(SAML2Profile profile) {
 
     Map<String, Object> attributes = profile.getAttributes();
 
@@ -87,26 +85,6 @@ public class SpireAuthManager {
       Logger.error("Size of saml attribute {} is not 1", name);
       return Optional.empty();
     }
-  }
-
-  /**
-   * Sets this instance as an argument on the given context, for later retrieval in views. This can be removed when
-   * DI is supported in views.
-   *
-   * @param context Context to set arg on.
-   */
-  public void setAsContextArgument(Http.Context context) {
-    context.args.put(CONTEXT_ARG_NAME, this);
-  }
-
-  /**
-   * Gets the current AuthInfo from the AuthManager defined on the given context.
-   *
-   * @param context Context.
-   * @return Current AuthInfo.
-   */
-  public static AuthInfo currentAuthInfo(Http.Context context) {
-    return ((SpireAuthManager) context.args.get(CONTEXT_ARG_NAME)).getAuthInfoFromContext();
   }
 
 }

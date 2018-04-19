@@ -3,18 +3,17 @@ package pact.consumer.components.common.client;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRule;
+import au.com.dius.pact.consumer.PactProviderRuleMk2;
 import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.PactFragment;
+import au.com.dius.pact.model.RequestResponsePact;
 import components.common.client.NotificationServiceClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import play.libs.concurrent.HttpExecutionContext;
-import play.libs.ws.WS;
 import play.libs.ws.WSClient;
 import play.test.WSTestClient;
 
@@ -31,11 +30,11 @@ public class NotificationClientConsumerPact {
   public WSClient ws;
 
   @Rule
-  public PactProviderRule mockProvider = new PactProviderRule(PROVIDER, this);
+  public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
 
   @Before
   public void setUp() throws Exception {
-    ws = WSTestClient.newClient(mockProvider.getConfig().getPort());
+    ws = WSTestClient.newClient(mockProvider.getPort());
   }
 
   @After
@@ -56,12 +55,12 @@ public class NotificationClientConsumerPact {
     return headers;
   }
 
-  public static NotificationServiceClient buildNotificationServiceClient(PactProviderRule mockProvider, WSClient wsClient) {
-    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getConfig().url(), 1000, "service:password");
+  public static NotificationServiceClient buildNotificationServiceClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
+    return new NotificationServiceClient(new HttpExecutionContext(Runnable::run), wsClient, mockProvider.getUrl(), 1000, "service:password");
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
-  public static PactFragment successfulNotification(PactDslWithProvider builder) {
+  public static RequestResponsePact successfulNotification(PactDslWithProvider builder) {
     PactDslJsonBody requestBody = new PactDslJsonBody()
       .stringType("valid_param_1", "param1")
       .stringType("valid_param_2", "param2");
@@ -78,11 +77,11 @@ public class NotificationClientConsumerPact {
           .status(200)
           .headers(jsonHeaderResponse())
           .body(new PactDslJsonBody().stringValue("status", "success"))
-        .toFragment();
+        .toPact();
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
-  public static PactFragment unsuccessfulNotification(PactDslWithProvider builder) {
+  public static RequestResponsePact unsuccessfulNotification(PactDslWithProvider builder) {
     return builder
         .given("provided template information is invalid")
         .uponReceiving("a request to send an email notification")
@@ -94,7 +93,7 @@ public class NotificationClientConsumerPact {
           .status(400)
           .headers(jsonHeaderResponse())
           .body(new PactDslJsonBody().numberValue("code", 400).stringType("message", "incorrect template"))
-        .toFragment();
+        .toPact();
   }
 
   @Test

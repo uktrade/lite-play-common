@@ -1,5 +1,8 @@
 // The Play plugin
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.11")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.12")
+
+// Jacoco code coverage reporting
+addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.0.3")
 
 // Play enhancer - this automatically generates getters/setters for public fields
 // and rewrites accessors of these fields to use the getters/setters. Remove this
