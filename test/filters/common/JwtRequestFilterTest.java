@@ -1,20 +1,29 @@
 package filters.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static play.mvc.Results.internalServerError;
+import static play.mvc.Results.notFound;
+import static play.mvc.Results.ok;
+import static play.mvc.Results.unauthorized;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import components.common.auth.AuthInfo;
 import components.common.auth.SpireAuthManager;
+import components.common.client.userservice.UserServiceClientBasicAuth;
+import org.apache.commons.lang3.StringUtils;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.ReservedClaimNames;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.keys.HmacKey;
 import org.junit.Before;
 import org.junit.Test;
+import play.libs.Json;
+import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.StandaloneWSResponse;
 import play.libs.ws.WSClient;
@@ -26,18 +35,34 @@ import play.routing.RoutingDsl;
 import play.server.Server;
 import play.test.WSTestClient;
 
+import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 public class JwtRequestFilterTest {
-
+  private static String NOT_FOUND_USER_ID = "NOT_FOUND";
+  private static String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
+  private static String ERROR_USER_ID = "ERROR";
   private Server server;
 
   @Before
   public void setUp() throws Exception {
     server = Server.forRouter(builtInComponents -> RoutingDsl.fromComponents(builtInComponents)
         .GET("/test").routeTo((Supplier<Result>) Results::ok)
+        .GET("/user-account-type/:id").routeTo(id -> {
+          if (StringUtils.equals((String) id, NOT_FOUND_USER_ID)) {
+            return notFound();
+          } else if (StringUtils.equals((String) id, UNAUTHORIZED_USER_ID)) {
+            return unauthorized();
+          } else if (StringUtils.equals((String) id, ERROR_USER_ID)) {
+            return internalServerError();
+          } else {
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("common/client/user-account-type.json");
+            JsonNode jsonNode = Json.parse(inputStream);
+            return ok(jsonNode);
+          }
+        })
         .build());
   }
 
@@ -60,7 +85,11 @@ public class JwtRequestFilterTest {
     // Custom executor, for retrieving the WSRequest object during execution
     WSRequestExecutorTestHarness executor = new WSRequestExecutorTestHarness();
 
-    JwtRequestFilter filter = new JwtRequestFilter(spireAuthManager, new JwtRequestFilterConfig(key, issuer));
+    // Construct user service client
+    String serviceUrl = "http://localhost:" + server.httpPort();
+    UserServiceClientBasicAuth userServiceClientBasicAuth = new UserServiceClientBasicAuth(serviceUrl, 1000, "service:password", wsClient, new HttpExecutionContext(Runnable::run));
+
+    JwtRequestFilter filter = new JwtRequestFilter(spireAuthManager, new JwtRequestFilterConfig(key, issuer), userServiceClientBasicAuth);
     filter.apply(executor)
         .apply(wsClient.url("/test"))
         .toCompletableFuture().get();
@@ -128,12 +157,17 @@ public class JwtRequestFilterTest {
 
   @Test
   public void emptyClaimsTest() throws Exception {
-    // Mock auth manager with test data
+    // Mock auth manager with test data, empty id first
     AuthInfo authInfo = mock(AuthInfo.class);
     when(authInfo.getId()).thenReturn("");
     when(authInfo.getEmail()).thenReturn("");
     when(authInfo.getFullName()).thenReturn("");
 
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class).hasMessage("id provided by auth info is invalid '%s'", "");
+
+    // Now with populated id
+    when(authInfo.getId()).thenReturn("123456");
     JwtClaims claims = doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service");
 
     // Generated claims
@@ -144,19 +178,24 @@ public class JwtRequestFilterTest {
 
     // Configurable claims
     assertThat(claims.getIssuer()).isEqualTo("some-service");
-    assertThat(claims.getSubject()).isEqualTo("");
+    assertThat(claims.getSubject()).isEqualTo("123456");
     assertThat(claims.getStringClaimValue("email")).isEqualTo("");
     assertThat(claims.getStringClaimValue("fullName")).isEqualTo("");
   }
 
   @Test
-  public void nullClaimsTest() throws Exception {
-    // Mock auth manager with test data
+  public void blankClaimsTest() throws Exception {
+    // Mock auth manager with test data, empty id first
     AuthInfo authInfo = mock(AuthInfo.class);
-    when(authInfo.getId()).thenReturn(null);
-    when(authInfo.getEmail()).thenReturn(null);
-    when(authInfo.getFullName()).thenReturn(null);
+    when(authInfo.getId()).thenReturn(" ");
+    when(authInfo.getEmail()).thenReturn(" ");
+    when(authInfo.getFullName()).thenReturn(" ");
 
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class).hasMessage("id provided by auth info is invalid '%s'", " ");
+
+    // Now with populated id
+    when(authInfo.getId()).thenReturn("123456");
     JwtClaims claims = doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service");
 
     // Generated claims
@@ -167,17 +206,63 @@ public class JwtRequestFilterTest {
 
     // Configurable claims
     assertThat(claims.getIssuer()).isEqualTo("some-service");
+    assertThat(claims.getSubject()).isEqualTo("123456");
+    assertThat(claims.getStringClaimValue("email")).isEqualTo(" ");
+    assertThat(claims.getStringClaimValue("fullName")).isEqualTo(" ");
+  }
+
+  @Test
+  public void nullClaimsTest() throws Exception {
+    // Mock auth manager with test data, null id first
+    AuthInfo authInfo = mock(AuthInfo.class);
+    when(authInfo.getId()).thenReturn(null);
+    when(authInfo.getEmail()).thenReturn(null);
+    when(authInfo.getFullName()).thenReturn(null);
+
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class).hasMessage("id provided by auth info is invalid '%s'", null);
+
+    // Now with populated id
+    when(authInfo.getId()).thenReturn("123456");
+    JwtClaims claims = doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service");
+
+    // Generated claims
+    assertThat(claims.getJwtId()).isNotEmpty();
+    assertThat(claims.getIssuedAt()).isNotNull();
+    assertThat(claims.getNotBefore()).isNotNull();
+    assertThat(claims.getExpirationTime()).isNotNull();
+
+    // Configurable claims
+    assertThat(claims.getIssuer()).isEqualTo("some-service");
+    assertThat(claims.getSubject()).isEqualTo("123456");
 
     Map<String, Object> claimsMap = claims.getClaimsMap();
-
-    assertThat(claimsMap.containsKey(ReservedClaimNames.SUBJECT)).isTrue();
-    assertThat(claimsMap.get(ReservedClaimNames.SUBJECT)).isNull();
 
     assertThat(claimsMap.containsKey("email")).isTrue();
     assertThat(claimsMap.get("email")).isNull();
 
     assertThat(claimsMap.containsKey("fullName")).isTrue();
     assertThat(claimsMap.get("fullName")).isNull();
+  }
+
+  @Test
+  public void userServiceError() throws Exception {
+    AuthInfo authInfo = mock(AuthInfo.class);
+
+    when(authInfo.getId()).thenReturn(NOT_FOUND_USER_ID);
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class)
+        .hasMessage("Error requesting user account type for id '%s'", NOT_FOUND_USER_ID);
+
+    when(authInfo.getId()).thenReturn(ERROR_USER_ID);
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class)
+        .hasMessage("Error requesting user account type for id '%s'", ERROR_USER_ID);
+
+    when(authInfo.getId()).thenReturn(UNAUTHORIZED_USER_ID);
+    assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, "some-service"))
+        .isExactlyInstanceOf(JwtRequestFilterException.class)
+        .hasMessage("Error requesting user account type for id '%s'", UNAUTHORIZED_USER_ID);
   }
 }
 
