@@ -77,7 +77,8 @@ public class ServiceClientLogger {
    * @param httpExecutionContext The HTTP context in which the logs will be written
    * @return a request filter which logs the request
    */
-  public static WSRequestFilter requestFilter(String serviceName, String method, HttpExecutionContext httpExecutionContext) {
+  public static WSRequestFilter requestFilter(String serviceName, String method,
+                                              HttpExecutionContext httpExecutionContext) {
     return executor -> request -> {
       String url = requestToURL(request);
       Logger.info(String.format("%s service request - URL: %s, method: %s", serviceName, url, method));

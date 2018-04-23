@@ -7,8 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import components.common.logging.CorrelationId;
 import components.common.logging.ServiceClientLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
@@ -21,8 +19,6 @@ import java.util.Arrays;
 import java.util.concurrent.CompletionStage;
 
 public class VirusCheckerClient {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(VirusCheckerClient.class);
 
   private final HttpExecutionContext httpExecutionContext;
   private final WSClient wsClient;
