@@ -1,22 +1,44 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
+@import org.apache.commons.lang3.StringUtils
 
-@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None)(label: Html)
-<div class="form-group clientside-form-group-error-target @if(field.error.isDefined){ form-group-error }">
+@(field: Form.Field, hint: Option[Html] = None, cssClass : String = "", validationGroup: Option[String] = None, labelWrapperTag: String = "", labelClass: String = "form-label")(label: Html)
 
-  <label class="form-label" for="@field.id">@label</label>
+@formattedLabel = {
+  <label for="@field.id">
+    <span class="@labelClass">@label</span>
 
-  @if(hint.isDefined){
-    <label class="form-label" for="@field.id">
-      <span class="form-hint">@hint</span>
-    </label>
+    @if(ViewUtil.cssClassContainsHeading(labelClass)) {
+      <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+    }
+
+      @if(hint.isDefined){
+        <span class="form-hint">@hint</span>
+      }
+
+      <div class="clientside-error-message-parent">
+        @if(field.error.isDefined) {
+          <span class="error-message">@Messages(field.error.get.message)</span>
+        }
+      </div>
+
+    @if(ViewUtil.cssClassContainsHeading(labelClass)) {
+      </div>
+    }
+  </label>
+}
+
+<div class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(labelWrapperTag)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(labelClass)) { clientside-form-group-error-target }>
+
+  @if(!StringUtils.isBlank(labelWrapperTag)) {
+    <@labelWrapperTag>@formattedLabel</@labelWrapperTag>
+  } else {
+    @formattedLabel
   }
 
-  <div class="clientside-error-message-parent">
-    @if(field.error.isDefined) {
-      <span class="error-message">@Messages(field.error.get.message)</span>
-    }
-  </div>
+  @if(ViewUtil.cssClassContainsHeading(labelClass)) {
+    <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+  }
 
   <input class="form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" name="@field.getName.get" type="text" value="@field.getValue.orElse(null)"
   @{
@@ -27,6 +49,10 @@
   }
   @if(validationGroup.isDefined) {
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
-  }/>
+  }>
+
+  @if(ViewUtil.cssClassContainsHeading(labelClass)) {
+    </div>
+  }
 
 </div>
