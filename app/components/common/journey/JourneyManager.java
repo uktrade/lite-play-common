@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -55,11 +56,11 @@ public class JourneyManager {
         .flatMap(e -> e.buildAll().stream())
         .collect(Collectors.toSet());
 
-    if (journeyDefinitions.size() == 0) {
+    if (journeyDefinitions.isEmpty()) {
       throw new JourneyManagerException("At least one JourneyDefinition must be provided");
     }
 
-    Map<String, JourneyDefinition> journeyNameToDefinitionMap = new HashMap<>();
+    Map<String, JourneyDefinition> journeyDefinitionMap = new HashMap<>();
     for (JourneyDefinition definition : journeyDefinitions) {
       //Check journey names don't contain the special delimiter character as this will break deserialisation
       if (definition.getJourneyName().contains(JOURNEY_NAME_SEPARATOR_CHAR)) {
@@ -67,11 +68,13 @@ public class JourneyManager {
       }
 
       //Don't allow duplicate journey names from multiple builders
-      journeyNameToDefinitionMap.merge(definition.getJourneyName(), definition,
-          (a,b) -> {throw new JourneyManagerException("Attempt to create duplicate journey named " + definition.getJourneyName());});
+      journeyDefinitionMap.merge(definition.getJourneyName(), definition,
+          (a, b) -> {
+            throw new JourneyManagerException("Attempt to create duplicate journey named " + definition.getJourneyName());
+          });
     }
 
-    this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyNameToDefinitionMap);
+    this.journeyNameToDefinitionMap = Collections.unmodifiableMap(journeyDefinitionMap);
   }
 
   public String getCurrentInternalStageName() {
@@ -139,9 +142,10 @@ public class JourneyManager {
   /**
    * Updates the journey state (back link and journey history string) on the current HttpContext to reflect the given transition.
    * Also saves the journey using the current serialiser.
-   * @param transitionResult Transition which has just occurred.
-   * @param eventMnemonic For logging.
-   * @param journey The current Journey state.
+   *
+   * @param transitionResult  Transition which has just occurred.
+   * @param eventMnemonic     For logging.
+   * @param journey           The current Journey state.
    * @param previousStageName For logging.
    * @return A completable JourneyStage result (i.e. call or render)
    */
@@ -206,7 +210,8 @@ public class JourneyManager {
     return performTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event), event.getEventMnemonic());
   }
 
-  public <T extends ParameterisedJourneyEvent<U>, U> CompletionStage<Result> performTransition(T event, U eventArgument) {
+  public <T extends ParameterisedJourneyEvent<U>, U> CompletionStage<Result> performTransition(T event,
+                                                                                               U eventArgument) {
 
     return performTransitionInternal(
         (journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument), event.getEventMnemonic());
@@ -217,7 +222,7 @@ public class JourneyManager {
     return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event));
   }
 
-  public <T extends ParameterisedJourneyEvent<U>, U>  String uriForTransition(T event, U eventArgument) {
+  public <T extends ParameterisedJourneyEvent<U>, U> String uriForTransition(T event, U eventArgument) {
     return uriForTransitionInternal((journeyDefinition, stage) -> journeyDefinition.fireEvent(httpExecutionContext, stage, event, eventArgument));
   }
 
@@ -236,12 +241,15 @@ public class JourneyManager {
 
       JourneyStage newPreviousStage = journeyDefinition.resolveStageFromHash(previousStageHash);
       setBackLinkPrompt(newPreviousStage.getBackLinkPrompt());
-    } else if (journeyDefinition.getExitBackLink().isPresent()) {
-      String exitPrompt = journeyDefinition.getExitBackLink().get().getPrompt();
-      setBackLinkPrompt(exitPrompt);
     } else {
-      //don't show the back link if no back history is available
-      hideBackLink();
+      Optional<BackLink> exitBackLinkOptional = journeyDefinition.getExitBackLink();
+      if (exitBackLinkOptional.isPresent()) {
+        String exitPrompt = exitBackLinkOptional.get().getPrompt();
+        setBackLinkPrompt(exitPrompt);
+      } else {
+        //don't show the back link if no back history is available
+        hideBackLink();
+      }
     }
   }
 
@@ -281,15 +289,18 @@ public class JourneyManager {
 
       return stageAsResult(stage);
 
-    } else if (journeyDefinition.getExitBackLink().isPresent()) {
-      //We are exiting the current journey - wipe context info
-      journeyContextParamProvider.updateParamValueOnContext("");
-      hideBackLink();
-
-      BackLink exitBackLink = journeyDefinition.getExitBackLink().get();
-      return contextParamManager.addParamsAndRedirect(exitBackLink.getCall());
     } else {
-      throw new RuntimeException("Cannot go back any further");
+      Optional<BackLink> exitBackLinkOptional = journeyDefinition.getExitBackLink();
+      if (exitBackLinkOptional.isPresent()) {
+        //We are exiting the current journey - wipe context info
+        journeyContextParamProvider.updateParamValueOnContext("");
+        hideBackLink();
+
+        BackLink exitBackLink = exitBackLinkOptional.get();
+        return contextParamManager.addParamsAndRedirect(exitBackLink.getCall());
+      } else {
+        throw new RuntimeException("Cannot go back any further");
+      }
     }
   }
 

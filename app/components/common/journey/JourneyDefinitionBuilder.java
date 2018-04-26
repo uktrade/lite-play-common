@@ -153,7 +153,8 @@ public abstract class JourneyDefinitionBuilder {
   /**
    * Validates that all TransitionActions in the JourneyDefinition about to be built are registered on this Builder.
    */
-  private void validateStages(Collection<TransitionAction> standardTransitionActions, Collection<DecisionLogic> decisions) {
+  private void validateStages(Collection<TransitionAction> standardTransitionActions,
+                              Collection<DecisionLogic> decisions) {
     // Flatten TransitionActions (moves/branches) into their ultimate destination stages. These may come from standard
     // transitions, or the branch map/else condition of decision stages. Concat the 3 sources together so only one stream
     // needs to be searched.
@@ -168,7 +169,7 @@ public abstract class JourneyDefinitionBuilder {
         .filter(e -> !knownStages.containsKey(e.getInternalName()))
         .collect(Collectors.toSet());
 
-    if (unregisteredStages.size() > 0) {
+    if (!unregisteredStages.isEmpty()) {
       String unregistered = unregisteredStages.stream()
           .map(CommonStage::getInternalName)
           .sorted()
@@ -229,7 +230,8 @@ public abstract class JourneyDefinitionBuilder {
    * @param formRenderSupplier Supplier which can produce a Play Result.
    * @return A new Stage. This object must be used when defining transitions.
    */
-  protected final JourneyStage defineStage(String name, String backLinkPrompt, Supplier<CompletionStage<Result>> formRenderSupplier) {
+  protected final JourneyStage defineStage(String name, String backLinkPrompt,
+                                           Supplier<CompletionStage<Result>> formRenderSupplier) {
     return defineStage(name, backLinkPrompt, null, formRenderSupplier);
   }
 
@@ -306,7 +308,8 @@ public abstract class JourneyDefinitionBuilder {
    * @param <U>       Type produced by the converter, for use in branching logic. Requires a comparable toString value.
    * @return New DecisionStage.
    */
-  protected final <T, U> DecisionStage<U> defineDecisionStage(String name, Decider<T> decider, Function<T, U> converter) {
+  protected final <T, U> DecisionStage<U> defineDecisionStage(String name, Decider<T> decider,
+                                                              Function<T, U> converter) {
     DecisionStage<U> decisionStage = new DecisionStage<>(name, decider, converter);
 
     knownStages.merge(name, decisionStage,
@@ -354,7 +357,8 @@ public abstract class JourneyDefinitionBuilder {
       this.stage = stage;
     }
 
-    private void addIfNotDefined(JourneyStage stage, CommonJourneyEvent event, ActionBuilderContainer resultBuilderContainer) {
+    private void addIfNotDefined(JourneyStage stage, CommonJourneyEvent event,
+                                 ActionBuilderContainer resultBuilderContainer) {
       if (stageTransitionBuilderMap.contains(stage, event)) {
         throw new JourneyDefinitionException(String.format("Transition for %s, %s has already been defined", stage, event));
       } else {
@@ -422,7 +426,7 @@ public abstract class JourneyDefinitionBuilder {
     private DecisionLogic build() {
       Map<Object, TransitionAction> transitionActionMap = branchBuilder.conditionMap.entrySet()
           .stream()
-          .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
+          .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
 
       TransitionAction elseCondition = null;
       if (branchBuilder.elseCondition != null) {
@@ -468,7 +472,7 @@ public abstract class JourneyDefinitionBuilder {
     }
   }
 
-  protected static abstract class ActionBuilderContainer {
+  protected abstract static class ActionBuilderContainer {
 
     private final StageBuilder owningStageBuilder;
 

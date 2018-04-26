@@ -71,31 +71,35 @@ public class UploadMultipartParser extends BodyParser.DelegatingMultipartFormDat
   }
 
   @Override
-  public Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> apply(Http.RequestHeader request) {
-    String header = request.getHeader("Content-Length");
-    if (header == null) {
+  public Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> apply(
+      Http.RequestHeader request) {
+    Optional<String> headerOptional = request.header("Content-Length");
+    if (!headerOptional.isPresent()) {
       LOGGER.warn("Rejecting request with no Content-Length header");
       return redirect(request);
-    }
-    long contentLength;
-    try {
-      contentLength = Long.parseLong(header);
-    } catch (NumberFormatException nfe) {
-      LOGGER.warn("Rejecting request of size " + header);
-      return redirect(request);
-    }
-    if (contentLength < 1) {
-      LOGGER.warn("Rejecting request of size " + header);
-      return Accumulator.done(F.Either.Left(badRequest("bad content length")));
-    } else if (contentLength > maxSize) {
-      LOGGER.warn("Rejecting request of size " + header);
-      return redirect(request);
     } else {
-      return super.apply(request);
+      String header = headerOptional.get();
+      long contentLength;
+      try {
+        contentLength = Long.parseLong(header);
+      } catch (NumberFormatException nfe) {
+        LOGGER.warn("Rejecting request of size {}", header);
+        return redirect(request);
+      }
+      if (contentLength < 1) {
+        LOGGER.warn("Rejecting request of size {}", header);
+        return Accumulator.done(F.Either.Left(badRequest("bad content length")));
+      } else if (contentLength > maxSize) {
+        LOGGER.warn("Rejecting request of size {}", header);
+        return redirect(request);
+      } else {
+        return super.apply(request);
+      }
     }
   }
 
-  private Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> redirect(Http.RequestHeader request) {
+  private Accumulator<ByteString, F.Either<Result, Http.MultipartFormData<MultipartResult>>> redirect(
+      Http.RequestHeader request) {
     String modifier;
     if (request.uri().contains("?")) {
       modifier = "&";
