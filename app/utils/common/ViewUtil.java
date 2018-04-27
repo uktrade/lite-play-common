@@ -31,6 +31,7 @@ public class ViewUtil {
 
   private static final String BACK_LINK_CONTEXT_PARAM_NAME = "back_link";
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final Pattern HEADING_CSS_CLASS_PATTERN = Pattern.compile("(^| )heading-(xlarge|large|medium|small)");
 
   public static ContextParamManager currentParamManager() {
     return (ContextParamManager) ctx().args.get(ContextParamManager.CTX_PARAM_NAME);
@@ -263,8 +264,7 @@ public class ViewUtil {
    * @return Boolean true if className contains a heading class, otherwise false
    */
   public static Boolean cssClassContainsHeading(String cssClass) {
-    Pattern p = Pattern.compile("(^| )heading-(xlarge|large|medium|small)");
-    Matcher m = p.matcher(cssClass);
+    Matcher m = HEADING_CSS_CLASS_PATTERN.matcher(cssClass);
     return m.find();
   }
 
