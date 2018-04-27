@@ -1,14 +1,17 @@
+@import org.apache.commons.lang3.StringUtils
 @import play.data.Form
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field)(prompt: Html, promptCssClass : String = "heading-medium", validationGroup: Option[String] = None, inline: Boolean = false)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
 
-@if(prompt != null) {
-  <h2 class="@promptCssClass">@prompt</h2>
+@errorMessage = {
+  @if(field.error.isDefined) {
+    <span class="error-message">@Messages(field.error.get.message)</span>
+  }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined) { form-group-error }"
+<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -20,13 +23,27 @@
   }>
 
   <fieldset @if(inline) { class="inline" }>
-    <legend class="visually-hidden">@prompt</legend>
+    <legend @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { class="clientside-error-message-parent" }>
+      <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
 
-    @if(field.error.isDefined) {
-      <p class="error-message">@Messages(field.error.get.message)</p>
+      @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
+        <div class="clientside-form-group-error-target clientside-error-message-parent @if(field.error.isDefined) { form-group-error }">
+          @legendContent
+          @errorMessage
+        </div>
+      } else {
+        @legendContent
+        @errorMessage
+      }
+    </legend>
+
+    @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
+      <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+        @radioContent
+      </div>
+    } else {
+      @radioContent
     }
-
-    @radioContent
 
   </fieldset>
 

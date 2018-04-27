@@ -24,11 +24,14 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ViewUtil {
 
   private static final String BACK_LINK_CONTEXT_PARAM_NAME = "back_link";
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final Pattern HEADING_CSS_CLASS_PATTERN = Pattern.compile("(^| )heading-(xlarge|large|medium|small)");
 
   public static ContextParamManager currentParamManager() {
     return (ContextParamManager) ctx().args.get(ContextParamManager.CTX_PARAM_NAME);
@@ -252,6 +255,17 @@ public class ViewUtil {
    */
   public static String pluraliseWithCount(Number count, String singular, String plural) {
     return count + " " + pluralise(count, singular, plural);
+  }
+
+  /*
+   * Checks whether the cssClass passed contains a heading class (eg 'heading-large')
+   *
+   * @param tagName The name of the class to check. Can contain multiple classes separated by spaces
+   * @return Boolean true if className contains a heading class, otherwise false
+   */
+  public static Boolean cssClassContainsHeading(String cssClass) {
+    Matcher m = HEADING_CSS_CLASS_PATTERN.matcher(cssClass);
+    return m.find();
   }
 
   public static String getSynonymsAsString(CountryView countryView) {

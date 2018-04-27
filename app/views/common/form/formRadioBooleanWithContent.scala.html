@@ -1,58 +1,42 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: Html, truePrompt: String = "Yes", falsePrompt: String = "No", hideHeading: Boolean = false, validationGroup: Option[String] = None, inline: Boolean = true)(trueContent: Html)(falseContent: Html)
+@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)(trueContent: Html)(falseContent: Html)
 
-@if(!hideHeading) {
-  <h2 class="heading-medium">@prompt</h2>
+@trueDisclosurePanelId = {
+  @if(trueContent.body.nonEmpty) {
+    @field.getName.get-T-content
+  }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined){ form-group-error }"
-  @{
-    val fieldValidationData = ViewUtil.fieldValidationJSON(field);
-    if(fieldValidationData != null){
-      HtmlFormat.raw(" data-validation=\"" + HtmlFormat.escape(fieldValidationData) + "\"")
-    }
+@falseDisclosurePanelId = {
+  @if(falseContent.body.nonEmpty) {
+    @field.getName.get-F-content
   }
-  @if(validationGroup.isDefined) { 
-    @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"") 
-  }>
+}
 
-  <fieldset @if(inline) { class="inline" }>
-    <legend class="visually-hidden">@prompt</legend>
+@formRadioGroupContainer(field)(prompt, promptHeadingTag, promptCssClass, validationGroup, inline, legendContent){
 
-    @if(field.error.isDefined) {
-      <p class="error-message">@Messages(field.error.get.message)</p>
-    }
+  @formRadio(field, truePrompt, "true", disclosurePanelId=trueDisclosurePanelId.toString().trim)
 
-    <div class="multiple-choice" @if(trueContent.body.nonEmpty){data-target="@field.getName.get-T-content"}>
-      <input id="@field.getName.get-T" name="@field.getName.get" value="true" type="radio" @if(field.getValue.isPresent && "true".equals(field.getValue.get)){ checked="checked" }>
-      <label for="@field.getName.get-T">@truePrompt</label>
+  @if(trueContent.body.nonEmpty && !inline) {
+    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
+    @trueContent
     </div>
+  }
 
-    @if(trueContent.body.nonEmpty && !inline) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
-      @trueContent
-      </div>
-    }
+  @formRadio(field, falsePrompt, "false", disclosurePanelId=falseDisclosurePanelId.toString().trim)
 
-    <div class="multiple-choice" @if(falseContent.body.nonEmpty){data-target="@field.getName.get-F-content"}>
-      <input id="@field.getName.get-F" name="@field.getName.get" value="false" type="radio" @if(field.getValue.isPresent && "false".equals(field.getValue.get)){ checked="checked" }>
-      <label for="@field.getName.get-F">@falsePrompt</label>
+  @if(trueContent.body.nonEmpty && inline) {
+    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
+    @trueContent
     </div>
+  }
 
-    @if(trueContent.body.nonEmpty && inline) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
-      @trueContent
-      </div>
-    }
+  @if(falseContent.body.nonEmpty) {
+    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-F-content">
+    @falseContent
+    </div>
+  }
 
-    @if(falseContent.body.nonEmpty) {
-      <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-F-content">
-      @falseContent
-      </div>
-    }
-
-  </fieldset>
-
-</div>
+}
