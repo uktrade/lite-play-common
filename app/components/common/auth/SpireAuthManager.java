@@ -106,8 +106,7 @@ public class SpireAuthManager {
   }
 
   /**
-   * Sets this instance as an argument on the given context, for later retrieval in views. This can be removed when
-   * DI is supported in views.
+   * Sets this instance as an argument on the given context, for later retrieval from entities where DI cannot be accessed.
    *
    * @param context Context to set arg on.
    */
@@ -115,14 +114,26 @@ public class SpireAuthManager {
     context.args.put(CONTEXT_ARG_NAME, this);
   }
 
+  private static Optional<AuthInfo> currentAuthInfo(Http.Context context) {
+    Object authManagerContext = context.args.get(CONTEXT_ARG_NAME);
+    if(authManagerContext == null) {
+      return Optional.empty();
+    }
+    else {
+      return Optional.of( ((SpireAuthManager) authManagerContext).getAuthInfoFromContext() );
+    }
+  }
+
   /**
-   * Gets the current AuthInfo from the AuthManager defined on the given context.
+   * Gets the current userId from the AuthManager defined on the given HTTP context.
+   *
+   * Note that DI should be used to retrieve the {@link SpireAuthManager} instance where possible.
    *
    * @param context Context.
-   * @return Current AuthInfo.
+   * @return The current userId if present.
    */
-  public static AuthInfo currentAuthInfo(Http.Context context) {
-    return ((SpireAuthManager) context.args.get(CONTEXT_ARG_NAME)).getAuthInfoFromContext();
+  public static Optional<String> getCurrentUserId(Http.Context context) {
+    return currentAuthInfo(context).map(AuthInfo::getId);
   }
 
 }
