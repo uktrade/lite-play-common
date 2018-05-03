@@ -21,13 +21,13 @@ public class JwtRequestFilter implements WSRequestFilter {
 
   private final SpireAuthManager authManager;
   private final JwtRequestFilterConfig config;
-  private final UserServiceClientBasicAuth userServiceClient;
+  private final UserServiceClientBasicAuth userServiceClientBasicAuth;
 
   @Inject
-  public JwtRequestFilter(SpireAuthManager authManager, JwtRequestFilterConfig config, UserServiceClientBasicAuth userServiceClient) {
+  public JwtRequestFilter(SpireAuthManager authManager, JwtRequestFilterConfig config, UserServiceClientBasicAuth userServiceClientBasicAuth) {
     this.authManager = authManager;
     this.config = config;
-    this.userServiceClient = userServiceClient;
+    this.userServiceClientBasicAuth = userServiceClientBasicAuth;
   }
 
   @Override
@@ -42,7 +42,7 @@ public class JwtRequestFilter implements WSRequestFilter {
 
       UserAccountTypeView userAccountTypeView;
       try {
-        userAccountTypeView = userServiceClient.getUserAccountTypeView(authInfo.getId()).toCompletableFuture().get();
+        userAccountTypeView = userServiceClientBasicAuth.getUserAccountTypeView(authInfo.getId()).toCompletableFuture().get();
       } catch (InterruptedException | ExecutionException e) {
         throw new JwtRequestFilterException(String.format("Error requesting user account type for id '%s'", authInfo.getId()), e);
       }

@@ -24,7 +24,7 @@ import uk.gov.bis.lite.user.api.view.UserAccountTypeView;
 import java.io.InputStream;
 
 public class UserServiceClientBasicAuthTest {
-  private static String NOT_FOUND_USER_ID = "NOT_FOUND";
+  private static String USER_ID = "USER_ID";
   private static String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
   private static String ERROR_USER_ID = "ERROR";
 
@@ -36,16 +36,16 @@ public class UserServiceClientBasicAuthTest {
   public void setUp() {
     server = Server.forRouter(builtInComponents -> RoutingDsl.fromComponents(builtInComponents)
         .GET("/user-account-type/:id").routeTo(id -> {
-          if (StringUtils.equals((String) id, NOT_FOUND_USER_ID)) {
-            return notFound();
+          if (USER_ID.equals(id)) {
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("common/client/user-account-type.json");
+            JsonNode jsonNode = Json.parse(inputStream);
+            return ok(jsonNode);
           } else if (StringUtils.equals((String) id, UNAUTHORIZED_USER_ID)) {
             return unauthorized();
           } else if (StringUtils.equals((String) id, ERROR_USER_ID)) {
             return internalServerError();
           } else {
-            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("common/client/user-account-type.json");
-            JsonNode jsonNode = Json.parse(inputStream);
-            return ok(jsonNode);
+            return notFound();
           }
         })
         .build());
@@ -58,13 +58,13 @@ public class UserServiceClientBasicAuthTest {
 
   @Test
   public void getUserAccountTypeViewTest() throws Exception {
-    UserAccountTypeView userAccountTypeView = client.getUserAccountTypeView("123456").toCompletableFuture().get();
+    UserAccountTypeView userAccountTypeView = client.getUserAccountTypeView(USER_ID).toCompletableFuture().get();
     assertThat(userAccountTypeView.getAccountType()).isEqualTo(AccountType.EXPORTER);
   }
 
   @Test
   public void userServiceError() throws Exception {
-    assertThatThrownBy(() ->  client.getUserAccountTypeView(NOT_FOUND_USER_ID).toCompletableFuture().get())
+    assertThatThrownBy(() ->  client.getUserAccountTypeView("NOT_FOUND").toCompletableFuture().get())
         .hasMessageContaining("Unexpected HTTP status code");
 
     assertThatThrownBy(() ->  client.getUserAccountTypeView(ERROR_USER_ID).toCompletableFuture().get())

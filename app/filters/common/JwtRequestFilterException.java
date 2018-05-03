@@ -8,8 +8,4 @@ public class JwtRequestFilterException extends RuntimeException {
   public JwtRequestFilterException(String message, Throwable cause) {
     super(message, cause);
   }
-
-  public JwtRequestFilterException(Throwable cause) {
-    super(cause);
-  }
 }
