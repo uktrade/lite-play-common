@@ -35,7 +35,7 @@ public class NotificationServiceClient {
   public void sendEmail(String templateName, String emailAddress, Map<String, String> personalisation) {
     EmailNotification emailNotification = new EmailNotification();
     emailNotification.setTemplate(templateName);
-    emailNotification.setEmail(emailAddress);
+    emailNotification.setEmailAddress(emailAddress);
     emailNotification.setPersonalisation(personalisation);
     String message;
     try {
@@ -46,7 +46,7 @@ public class NotificationServiceClient {
     try {
       amazonSQS.sendMessage(notificationServiceAwsSqsQueueUrl, message);
     } catch (Exception exception) {
-      LOGGER.error("Unable to send message {}", message);
+      LOGGER.error("Unable to send message {}", message, exception);
     }
   }
 
