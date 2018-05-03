@@ -18,8 +18,8 @@ import play.libs.ws.WSClient;
 import play.routing.RoutingDsl;
 import play.server.Server;
 import play.test.WSTestClient;
-import uk.gov.bis.lite.user.api.view.AccountType;
 import uk.gov.bis.lite.user.api.view.UserAccountTypeView;
+import uk.gov.bis.lite.user.api.view.enums.AccountType;
 
 import java.io.InputStream;
 

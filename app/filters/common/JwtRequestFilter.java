@@ -56,7 +56,7 @@ public class JwtRequestFilter implements WSRequestFilter {
       claims.setSubject(authInfo.getId());
       claims.setClaim("email", authInfo.getEmail());
       claims.setClaim("fullName", authInfo.getFullName());
-      claims.setClaim("accountType", userAccountTypeView.getAccountType().getValue());
+      claims.setClaim("accountType", userAccountTypeView.getAccountType().toString());
 
       JsonWebSignature jws = new JsonWebSignature();
       jws.setHeader(HeaderParameterNames.TYPE, "JWT");
