@@ -3,6 +3,7 @@ package components.common.client.userservice;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import components.common.logging.CorrelationId;
+import components.common.logging.ServiceClientLogger;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
@@ -38,6 +39,7 @@ public class UserServiceClientBasicAuth {
     String url = address + USER_ACCOUNT_TYPE_PATH + userId;
     return wsClient.url(url)
         .setRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(ServiceClientLogger.requestFilter("User", "GET", httpExecutionContext))
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
         .get()
