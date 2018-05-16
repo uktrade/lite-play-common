@@ -1,15 +1,24 @@
 @import org.apache.commons.lang3.StringUtils
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: String, optionValue: String, isPromptHtml: Boolean = false, cssClass: String = "", disclosurePanelId: String = "")
+@(field: Form.Field, prompt: String, optionValue: String, isPromptHtml: Boolean = false, cssClass: String = "", disclosurePanelId: String = "", promptNewlineToBr: Boolean = false, contentAfterLabel: Option[Html] = None)
 
 <div class="multiple-choice" @if(!StringUtils.isBlank(disclosurePanelId)) { data-target="@disclosurePanelId"}>
   <input id="@field.getName.get@optionValue" name="@field.getName.get" value="@optionValue" type="radio" @if(field.getValue.isPresent && field.getValue.get.equals(optionValue)){ checked="checked" }>
-  <label class="@cssClass" for="@field.getName.get@optionValue">
+  <label class="@cssClass" for="@field.getName.get@optionValue" id="@field.getName.get@optionValue-label">
+    @if(promptNewlineToBr) {
       @if(isPromptHtml) {
         @Html(prompt.replace("\n", "<br/>"))
       } else {
         @Html(HtmlFormat.escape(prompt).toString.replace("\n", "<br/>"))
       }
+    } else {
+      @if(isPromptHtml) {
+        @Html(prompt)
+      } else {
+        HtmlFormat.escape(prompt)
+      }
+    }
   </label>
+  @contentAfterLabel
 </div>
