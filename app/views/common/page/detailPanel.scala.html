@@ -1,7 +1,9 @@
-@(id: String)(summary: Html)(detailContent: Html)
+@import org.apache.commons.lang3.StringUtils
+
+@(id: String, summaryDescribedBy: String = "")(summary: Html)(detailContent: Html)
 
 <details class="expanded-details" role="group">
-  <summary aria-expanded="false" aria-controls="@id" role="button">
+  <summary aria-expanded="false" aria-controls="@id" @if(StringUtils.isNotBlank(summaryDescribedBy)){aria-describedby="@summaryDescribedBy"} role="button">
     <span class="summary">@summary</span>
   </summary>
   <div aria-hidden="true" class="panel panel-border-wide" id="@id">
