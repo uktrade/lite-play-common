@@ -16,7 +16,7 @@
     @if(isPromptHtml) {
       @Html(prompt)
     } else {
-      HtmlFormat.escape(prompt)
+      @HtmlFormat.escape(prompt)
     }
   }
   </label>
