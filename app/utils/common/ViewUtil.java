@@ -8,6 +8,7 @@ import components.common.CommonContextActionSetup;
 import components.common.journey.BackLink;
 import components.common.state.ContextParamManager;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import play.data.Form;
 import play.data.validation.Constraints;
 import play.data.validation.ValidationError;
@@ -15,6 +16,7 @@ import play.i18n.Lang;
 import play.i18n.MessagesApi;
 import play.mvc.Call;
 import play.mvc.Http;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -24,11 +26,14 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ViewUtil {
 
   private static final String BACK_LINK_CONTEXT_PARAM_NAME = "back_link";
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final Pattern HEADING_CSS_CLASS_PATTERN = Pattern.compile("(^| )heading-(xlarge|large|medium|small)");
 
   public static ContextParamManager currentParamManager() {
     return (ContextParamManager) ctx().args.get(ContextParamManager.CTX_PARAM_NAME);
@@ -67,13 +72,15 @@ public class ViewUtil {
         // Get the field from the backed type class for the form field parameter
         Optional<String> name = field.getName();
         if (name.isPresent()) {
-          Field f = getField(backedTypeClass, name.get());
+          // Remove the array syntax suffix for collection based fields (e.g. "countrySelect[0] -> countrySelect")
+          String normalized = name.get().replaceAll("\\[[0-9]+]", "");
+          Field f = getField(backedTypeClass, normalized);
           Map<String, Object> validationMap = getValidationMap(f);
-          return javaMapToJSON(validationMap);
+          return convertMapToJson(validationMap);
         }
       }
     }
-    return javaMapToJSON(new HashMap());
+    return convertMapToJson(new HashMap());
   }
 
   @SuppressWarnings("unchecked")
@@ -142,6 +149,14 @@ public class ViewUtil {
     } catch (NoSuchFieldException exception) {
       throw new RuntimeException("Unable to read validation constraints from form field: " + name, exception);
     }
+  }
+
+  public static Map<String, Object> getRequiredValidationMap() {
+    Map<String, Object> validationData = new HashMap<>();
+    Map<String, Object> requiredDetails = new HashMap<>();
+    requiredDetails.put("message", getMessage(Constraints.RequiredValidator.message));
+    validationData.put("required", requiredDetails);
+    return validationData;
   }
 
   private static Map<String, Object> getValidationMap(Field field) {
@@ -227,7 +242,7 @@ public class ViewUtil {
    * @param map java map to convert to a JSON object
    * @return String representation of a JSON object with members and values from the map parameter
    */
-  private static String javaMapToJSON(Map map) {
+  public static String convertMapToJson(Map map) {
     try {
       return MAPPER.writeValueAsString(map);
     } catch (JsonProcessingException e) {
@@ -263,7 +278,7 @@ public class ViewUtil {
    * @return String The plural of the word if count is not 1, otherwise the singular
    */
   public static String pluralise(Number count, String singular, String plural) {
-    if (count.equals(1)) {
+    if (count.intValue() == 1) {
       return singular;
     } else {
       return plural;
@@ -291,6 +306,25 @@ public class ViewUtil {
    */
   public static String pluraliseWithCount(Number count, String singular, String plural) {
     return count + " " + pluralise(count, singular, plural);
+  }
+
+  /*
+   * Checks whether the cssClass passed contains a heading class (eg 'heading-large')
+   *
+   * @param tagName The name of the class to check. Can contain multiple classes separated by spaces
+   * @return Boolean true if className contains a heading class, otherwise false
+   */
+  public static Boolean cssClassContainsHeading(String cssClass) {
+    Matcher m = HEADING_CSS_CLASS_PATTERN.matcher(cssClass);
+    return m.find();
+  }
+
+  public static String getSynonymsAsString(CountryView countryView) {
+    if (CollectionUtils.isEmpty(countryView.getSynonyms())) {
+      return "";
+    } else {
+      return String.join(" ", countryView.getSynonyms());
+    }
   }
 
 }

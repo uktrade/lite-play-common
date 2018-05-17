@@ -1,7 +1,7 @@
 @import utils.common.SelectOption
-@(field: Form.Field, options: List[SelectOption], promptCssClass: String = "heading-medium", inline: Boolean = false)(prompt: Html)
+@(field: Form.Field, options: List[SelectOption], promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", inline: Boolean = false, legendContent: Option[Html] = None)(prompt: Html)
 
-@formRadioGroupContainer(field)(prompt, promptCssClass, None, inline) {
+@formRadioGroupContainer(field)(prompt, promptHeadingTag, promptCssClass, None, inline, legendContent) {
   @for(option <- options) {
     @formRadio(field, option.prompt, option.value, option.isPromptHtml)
   }

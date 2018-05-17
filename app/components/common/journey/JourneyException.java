@@ -27,9 +27,14 @@ public class JourneyException extends RuntimeException {
 
   @Override
   public String getMessage() {
-    return super.getMessage() +
-        ((stage != null || event != null) ? " [" + (stage != null ? stage : "unknown stage") + " " +
-        (event != null ? event : "unknown event") + "]" : "");
+    String detailMessage = super.getMessage();
+    if (stage == null && event == null) {
+      return detailMessage;
+    } else {
+      String stageMessage = stage != null ? stage.toString() : "unknown stage";
+      String eventMessage = event != null ? event.toString() : "unknown event";
+      return detailMessage + " [" + stageMessage + " " + eventMessage + "]";
+    }
   }
 }
 

@@ -1,10 +1,12 @@
 package components.common.cache;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import components.common.client.CountryServiceClient;
-import models.common.Country;
 import play.Logger;
+import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -12,11 +14,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.toMap;
-
 public class CountryProvider {
 
-  private Map<String, Country> cache = new HashMap<>();
+  private volatile Map<String, CountryView> cache = new HashMap<>();
   private final CountryServiceClient countryServiceClient;
 
   @Inject
@@ -24,21 +24,19 @@ public class CountryProvider {
     this.countryServiceClient = countryServiceClient;
   }
 
-  public Country getCountry(String countryRef) {
+  public CountryView getCountry(String countryRef) {
     if (countryRef == null) {
       return null;
+    } else {
+      return cache.get(countryRef);
     }
-
-    Map<String, Country> countries = getCountriesMap();
-    return countries.get(countryRef);
   }
 
-  public Collection<Country> getCountries() {
-    Map<String, Country> countries = getCountriesMap();
-    return countries.values();
+  public Collection<CountryView> getCountries() {
+    return Collections.unmodifiableCollection(cache.values());
   }
 
-  public Map<String, Country> getCountriesMap() {
+  public Map<String, CountryView> getCountriesMap() {
     return Collections.unmodifiableMap(cache);
   }
 
@@ -46,19 +44,19 @@ public class CountryProvider {
 
     Logger.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
-      .thenAcceptAsync(countries -> {
-        if (!countries.isEmpty()) {
-          cache = countries.stream()
-            .collect(toMap(Country::getCountryRef, Function.identity()));
-          Logger.info("Successfully refreshed the country cache.");
-        } else {
-          Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
-        }
-      });
+        .thenAcceptAsync(countries -> {
+          if (!countries.isEmpty()) {
+            cache = countries.stream()
+                .collect(toMap(CountryView::getCountryRef, Function.identity()));
+            Logger.info("Successfully refreshed the country cache.");
+          } else {
+            Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
+          }
+        });
   }
 
   @VisibleForTesting
-  void setCache(Map<String, Country> cache) {
+  void setCache(Map<String, CountryView> cache) {
     this.cache = cache;
   }
 }

@@ -6,7 +6,6 @@ public class ParameterisedJourneyEvent<T> implements CommonJourneyEvent {
   private final String eventMnem;
 
   public ParameterisedJourneyEvent(String eventMnem, Class<T> paramType) {
-    //super(eventMnem);
     this.eventMnem = eventMnem;
     this.paramType = paramType;
   }
@@ -22,6 +21,6 @@ public class ParameterisedJourneyEvent<T> implements CommonJourneyEvent {
 
   @Override
   public String toString() {
-    return "event '" + eventMnem +  "'";
+    return "event '" + eventMnem + "'";
   }
 }

@@ -3,7 +3,7 @@
 
 @(dayField: Form.Field, monthField: Form.Field, yearField: Form.Field, hint: Option[Html] = None, validationGroup: Option[String] = None)(label: Html)
 
-<div class="form-group @if(dayField.error.isDefined || monthField.error.isDefined || yearField.error.isDefined){ form-group-error }">
+<div class="form-group clientside-form-group-error-target @if(dayField.error.isDefined || monthField.error.isDefined || yearField.error.isDefined){ form-group-error }">
   <fieldset>
     <legend>
       <span class="form-label-bold">
@@ -16,9 +16,11 @@
           For example, 31 3 1980
         }
       </span>
-      @if(dayField.error.isDefined) { <div class="error-message">@Messages(dayField.error.get.message)</div> }
-      @if(monthField.error.isDefined) { <div class="error-message">@Messages(monthField.error.get.message)</div> }
-      @if(yearField.error.isDefined) { <div class="error-message">@Messages(yearField.error.get.message)</div> }
+      <div class="clientside-error-message-parent">
+        @if(dayField.error.isDefined) { <span class="error-message">@Messages(dayField.error.get.message)</span> }
+        @if(monthField.error.isDefined) { <span class="error-message">@Messages(monthField.error.get.message)</span> }
+        @if(yearField.error.isDefined) { <span class="error-message">@Messages(yearField.error.get.message)</span> }
+      </div>
     </legend>
     <div class="form-date">
       <div class="form-group form-group-day">

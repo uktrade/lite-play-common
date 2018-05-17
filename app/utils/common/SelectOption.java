@@ -31,7 +31,8 @@ public class SelectOption {
     }, LinkedHashMap::new));
   }
 
-  public static LinkedHashMap<SelectOption, Boolean> fromSelected(List<SelectOption> allOptions, List<String> selectedOptions) {
+  public static LinkedHashMap<SelectOption, Boolean> fromSelected(List<SelectOption> allOptions,
+                                                                  List<String> selectedOptions) {
     return allOptions.stream().collect(Collectors.toMap(e -> e, e -> selectedOptions.contains(e.value), (u, v) -> {
       throw new IllegalArgumentException();
     }, LinkedHashMap::new));

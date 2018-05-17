@@ -1,18 +1,20 @@
-@import models.common.Country
+@import uk.gov.bis.lite.countryservice.api.CountryView
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, countries: List[Country], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None,
+@(field: Form.Field, countries: List[CountryView], labelText: Option[String] = None, labelCssClass: Option[String] = None, removeButton: Option[Html] = None,
 detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
-<div id="@field.id" class="form-group @if(field.error.isDefined) { form-group-error }">
+<div id="@field.id" class="form-group clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
 
   @if(labelText.isDefined) {
     <label class="@if(labelCssClass.isDefined) { @labelCssClass } else { form-label }" for="@Html(field.id + "-s")">@labelText</label>
   }
 
+  <div class="clientside-error-message-parent">
   @if(field.error.isDefined) {
-    <p class="error-message">@Messages(field.error.get.message)</p>
+    <span class="error-message">@Messages(field.error.get.message)</span>
   }
+  </div>
 
   <select name="@field.getName.get" id="@Html(field.id + "-s")" class="form-control ui-autocomplete-base @if(field.error.isDefined) { form-control-error }"
   autocorrect="off" autocomplete="off" data-ui-autocomplete="ui-autocomplete" data-ui-autocomplete-type="country" data-ui-autocomplete-id="@Html(field.id + "-s")"
@@ -28,7 +30,7 @@ detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
   >
     <option value="" @if(!field.getValue.isPresent || "".equals(field.getValue.get)) {selected="selected"}> </option>
     @for(country <- countries) {
-      <option value="@country.getCountryRef" data-alternative-spellings="@country.getSynonymsAsString"
+      <option value="@country.getCountryRef" data-alternative-spellings="@ViewUtil.getSynonymsAsString(country)"
           data-relevancy-booster="1" @if(field.getValue.isPresent && country.getCountryRef.equals(field.getValue.get)){selected="selected"}>@country.getCountryName</option>
     }
   </select>
