@@ -3,7 +3,7 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", containerCssClass: String = "form-group", promptCssClass: String = "form-label-bold", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
 
 @errorMessage = {
   @if(field.error.isDefined) {
@@ -11,7 +11,7 @@
   }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
+<div id="@field.getName.get" class="@containerCssClass @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

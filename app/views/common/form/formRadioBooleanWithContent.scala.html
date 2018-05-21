@@ -1,7 +1,7 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)(trueContent: Html)(falseContent: Html)
+@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", containerCssClass: String = "form-group", promptCssClass: String = "form-label-bold", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)(trueContent: Html)(falseContent: Html)
 
 @trueDisclosurePanelId = {
   @if(trueContent.body.nonEmpty) {
@@ -16,7 +16,7 @@
   }
 }
 
-@formRadioGroupContainer(field)(prompt, promptHeadingTag, promptCssClass, validationGroup, inline, legendContent){
+@formRadioGroupContainer(field)(prompt, promptHeadingTag, containerCssClass, promptCssClass, validationGroup, inline, legendContent){
 
   @formRadio(field, truePrompt, "true", disclosurePanelId=trueDisclosurePanelId.toString().trim)
 

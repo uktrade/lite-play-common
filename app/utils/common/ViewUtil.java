@@ -72,9 +72,7 @@ public class ViewUtil {
         // Get the field from the backed type class for the form field parameter
         Optional<String> name = field.getName();
         if (name.isPresent()) {
-          // Remove the array syntax suffix for collection based fields (e.g. "countrySelect[0] -> countrySelect")
-          String normalized = name.get().replaceAll("\\[[0-9]+]", "");
-          Field f = getField(backedTypeClass, normalized);
+          Field f = getField(backedTypeClass, name.get());
           Map<String, Object> validationMap = getValidationMap(f);
           return convertMapToJson(validationMap);
         }
