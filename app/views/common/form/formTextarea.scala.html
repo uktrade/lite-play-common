@@ -28,7 +28,7 @@
   </label>
 }
 
-<div class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(labelWrapperTag)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(labelClass)) { clientside-form-group-error-target }>
+<div class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(labelWrapperTag)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(labelClass)) { clientside-form-group-error-target }">
 
   @if(!StringUtils.isBlank(labelWrapperTag)) {
     <@labelWrapperTag>@formattedLabel</@labelWrapperTag>
