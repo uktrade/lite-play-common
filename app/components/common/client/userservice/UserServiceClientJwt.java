@@ -27,7 +27,7 @@ public class UserServiceClientJwt {
   @Inject
   public UserServiceClientJwt(@Named("userServiceAddress") String address,
                               @Named("userServiceTimeout") int timeout,
-                              JwtRequestFilter jwtRequestFilter,
+                              @Named("jwtRequestFilter") JwtRequestFilter jwtRequestFilter,
                               WSClient wsClient,
                               HttpExecutionContext httpExecutionContext) {
     this.address = address;
