@@ -1,13 +1,11 @@
 package filters.common;
 
-import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 
 public class JwtRequestFilterConfig {
   private final String key;
   private final String issuer;
 
-  @Inject
   public JwtRequestFilterConfig(String key, String issuer) {
     validate(key, issuer);
     this.key = key;
