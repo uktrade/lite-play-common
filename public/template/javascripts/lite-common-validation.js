@@ -10,6 +10,7 @@ LITECommon.ClientSideValidation = {
   formGroupErrorTargetSelector: '.clientside-form-group-error-target:not(.form-group .panel .form-group .clientside-form-group-error-target):not(.form-group .panel .form-group.clientside-form-group-error-target)',
   errorMessageParentSelector: '.clientside-error-message-parent:not(.form-group .panel .form-group .clientside-error-message-parent):not(.form-group .panel .form-group.clientside-error-message-parent)',
   _validationFunction: null,
+  _$triggeringElement: null,
 
   /**
    * Handle validation via a submit event by parsing the event and find the triggering element and then calling the
@@ -22,17 +23,18 @@ LITECommon.ClientSideValidation = {
     "use strict";
     var $form = $(event.target);
 
-    var $triggeringElement = $(document.activeElement);
-    if (
-      $triggeringElement.length &&
-      $form.has($triggeringElement) &&
-      $triggeringElement.is('[data-skip-validation]')
-    ) {
+    //Default to the first submit element in the form if none clicked
+    var $triggeringElement = LITECommon.ClientSideValidation._$triggeringElement || $form.find('button[type=submit]').get(0);
+    if ($triggeringElement.length && $form.has($triggeringElement) && $triggeringElement.is('[data-skip-validation]')) {
       // Skip validation if the active element (typically the element that cause the form submit) contains a data-skip-validation attribute
       return true;
     }
 
     return LITECommon.ClientSideValidation.validateForm($form, $triggeringElement);
+  },
+
+  onSubmitClick: function(event) {
+    LITECommon.ClientSideValidation._$triggeringElement = $(event.target);
   },
 
   /**
@@ -423,6 +425,7 @@ $(document).ready(function (){
     // For each form see if it has fields with validation attributes on them
     if ($(form).find('[data-validation]').length > 0) {
       // If so add a submit hook
+      $(form).find('button[type=submit]').click(LITECommon.ClientSideValidation.onSubmitClick);
       $(form).submit(LITECommon.ClientSideValidation.handleSubmit);
     }
   });
