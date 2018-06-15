@@ -22,22 +22,22 @@ public class JourneyDefinitionTest {
   private JourneyStage STAGE_1;
   private JourneyStage STAGE_2;
   private JourneyStage STAGE_3;
-  private JourneyStage UNKNOWN_STAGE = new CallableJourneyStage("UNKNOWN", "UNKNOWN", "UNKNOWN", null);
+  private final JourneyStage UNKNOWN_STAGE = new CallableJourneyStage("UNKNOWN", "UNKNOWN", "UNKNOWN", null);
 
   private final JourneyEvent EVENT_1 = new JourneyEvent("E1");
   private final JourneyEvent EVENT_2 = new JourneyEvent("E2");
   private final JourneyEvent EVENT_3 = new JourneyEvent("E3");
-  private HttpExecutionContext hec = new HttpExecutionContext(Runnable::run);
+  private final HttpExecutionContext hec = new HttpExecutionContext(Runnable::run);
 
   enum EventEnum {
-    EV1, EV2, EV3;
+    EV1, EV2, EV3
   }
 
   /**
    * Class to use as an event param with fixed toString method to assert comparisons are done on .equals() and not .toString()
    */
   private static class EventClass {
-    int id;
+    final int id;
 
     public EventClass(int id) {
       this.id = id;
@@ -93,7 +93,7 @@ public class JourneyDefinitionTest {
       }
     }
 
-    JourneyDefinition journeyDefinition =  new TestBuilder().buildAll().iterator().next();
+    JourneyDefinition journeyDefinition = new TestBuilder().buildAll().iterator().next();
 
     TransitionResult transitionResult = journeyDefinition.startJourney(hec).getImmediateResult();
     assertEquals(STAGE_1, transitionResult.getNewStage());
@@ -142,12 +142,12 @@ public class JourneyDefinitionTest {
     JourneyDefinition journeyDefinition = new TestBuilder().buildAll().iterator().next();
 
     //Event argument is null
-    assertThatThrownBy(() ->  journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, null))
+    assertThatThrownBy(() -> journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, null))
         .isInstanceOf(JourneyException.class)
         .hasMessageContaining("Event argument cannot be null");
 
     //Converter function produces null
-    assertThatThrownBy(() ->  journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1))
+    assertThatThrownBy(() -> journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV1))
         .isInstanceOf(JourneyException.class)
         .hasMessageContaining("Transition argument cannot be null");
   }
@@ -176,7 +176,7 @@ public class JourneyDefinitionTest {
     transitionResult = journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV2).getImmediateResult();
     assertEquals(STAGE_3, transitionResult.getNewStage());
 
-    assertThatThrownBy(() -> journeyDefinition.fireEvent(hec, STAGE_1.getHash(),  ENUM_PARAM_EVENT, EV3))
+    assertThatThrownBy(() -> journeyDefinition.fireEvent(hec, STAGE_1.getHash(), ENUM_PARAM_EVENT, EV3))
         .isInstanceOf(JourneyException.class)
         .hasMessageContaining("Branch not matched with argument EV3");
 

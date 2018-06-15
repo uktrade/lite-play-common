@@ -106,7 +106,8 @@ public class JourneyDefinition {
     }
   }
 
-  private CompletionStage<MoveAction> buildDecisionChain(HttpExecutionContext httpExecutionContext, MoveAction moveAction) {
+  private CompletionStage<MoveAction> buildDecisionChain(HttpExecutionContext httpExecutionContext,
+                                                         MoveAction moveAction) {
 
     if (moveAction.getDestinationStage() instanceof DecisionStage) {
       DecisionStage decisionStage = (DecisionStage) moveAction.getDestinationStage();
@@ -210,11 +211,10 @@ public class JourneyDefinition {
       }
     }
 
-    decisionLogicMap.forEach((stage, decisionLogic) -> {
-      decisionLogic.getConditionMap().forEach((conditionValue, action) -> {
-        allTransitions.add(new GraphViewTransition(stage, asMoveAction(action).getDestinationStage(), conditionValue.toString(), null));
-      });
-    });
+    decisionLogicMap.forEach((stage, decisionLogic) ->
+        decisionLogic.getConditionMap().forEach((conditionValue, action) ->
+            allTransitions.add(
+                new GraphViewTransition(stage, asMoveAction(action).getDestinationStage(), conditionValue.toString(), null))));
 
     return allTransitions;
   }

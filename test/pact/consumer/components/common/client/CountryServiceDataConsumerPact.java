@@ -38,7 +38,7 @@ public class CountryServiceDataConsumerPact {
   private WSClient ws;
 
   @Rule
-  public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
+  public final PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
 
   @Before
   public void setUp() throws Exception {
