@@ -75,7 +75,7 @@ public class SamlUtil {
 
   private static Resource getIdentityProviderMetadataResource(Config config) {
     String filePath = "saml/template-metadata.xml";
-    String fileToString = null;
+    String fileToString;
     try {
       fileToString = IOUtils.toString(new ClassPathResource(filePath).getInputStream(), StandardCharsets.UTF_8);
     } catch (IOException ioe) {

@@ -24,9 +24,9 @@ import uk.gov.bis.lite.user.api.view.enums.AccountType;
 import java.io.InputStream;
 
 public class UserServiceClientBasicAuthTest {
-  private static String USER_ID = "USER_ID";
-  private static String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
-  private static String ERROR_USER_ID = "ERROR";
+  private static final String USER_ID = "USER_ID";
+  private static final String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
+  private static final String ERROR_USER_ID = "ERROR";
 
   private UserServiceClientBasicAuth client;
   private WSClient ws;

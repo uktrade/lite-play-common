@@ -23,9 +23,9 @@ public class JourneyDefinitionBuilderTest {
   private DecisionStage<Boolean> BOOLEAN_DECISION_STAGE;
   private DecisionStage<SimpleEnum> ENUM_DECISION_STAGE;
 
-  private JourneyStage UNKNOWN_STAGE_1 = new RenderedJourneyStage("US1", "US1", "US1", () -> null);
-  private JourneyStage UNKNOWN_STAGE_2 = new RenderedJourneyStage("US2", "US2", "US2", () -> null);
-  private DecisionStage<Boolean> UNKNOWN_DECISION_STAGE = new DecisionStage<>("UDS", () -> null, Function.identity());
+  private final JourneyStage UNKNOWN_STAGE_1 = new RenderedJourneyStage("US1", "US1", "US1", () -> null);
+  private final JourneyStage UNKNOWN_STAGE_2 = new RenderedJourneyStage("US2", "US2", "US2", () -> null);
+  private final DecisionStage<Boolean> UNKNOWN_DECISION_STAGE = new DecisionStage<>("UDS", () -> null, Function.identity());
 
   private final JourneyEvent EVENT_1 = new JourneyEvent("E1");
 

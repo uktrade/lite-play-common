@@ -41,10 +41,10 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 public class JwtRequestFilterTest {
-  private static String USER_ID = "USER_ID";
-  private static String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
-  private static String ERROR_USER_ID = "ERROR";
-  private static String ISSUER = "some-service";
+  private static final String USER_ID = "USER_ID";
+  private static final String UNAUTHORIZED_USER_ID = "UNAUTHORIZED";
+  private static final String ERROR_USER_ID = "ERROR";
+  private static final String ISSUER = "some-service";
   private Server server;
 
   @Before
@@ -234,7 +234,7 @@ public class JwtRequestFilterTest {
     when(authInfo.getFullName()).thenReturn(null);
 
     assertThatThrownBy(() -> doRequestFilterTestWithGivenAuthInfo(authInfo, ISSUER))
-        .isExactlyInstanceOf(JwtRequestFilterException.class).hasMessage("id provided by auth info is invalid '%s'", null);
+        .isExactlyInstanceOf(JwtRequestFilterException.class).hasMessage("id provided by auth info is invalid 'null'");
   }
 
   @Test
