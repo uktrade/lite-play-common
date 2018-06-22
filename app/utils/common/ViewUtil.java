@@ -16,6 +16,7 @@ import play.i18n.Lang;
 import play.i18n.MessagesApi;
 import play.mvc.Call;
 import play.mvc.Http;
+import play.twirl.api.HtmlFormat;
 import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.io.UnsupportedEncodingException;
@@ -274,6 +275,20 @@ public class ViewUtil {
     } else {
       return String.join(" ", countryView.getSynonyms());
     }
+  }
+
+  /**
+   * Converts newlines in a string to p or br tags as appropriate
+   *
+   * @param input    The plaintext string to add paragraphs to
+   * @return String  The input with single newlines converted to br tags and double newlines converted to p tags
+   */
+  public static String newlinesToParagraphs(String input) {
+    String output = "<p>" + HtmlFormat.escape(input) + "</p>";
+    output = output.replace("\r", "");
+    output = output.replace("\n", "<br>");
+    output = output.replace("<br><br>", "</p><p>");
+    return output;
   }
 
 }
