@@ -1,9 +1,0 @@
-@import utils.common.ViewUtil
-@import views.html.common.journey.journeyBackLink
-
-@()
-@if(ViewUtil.currentBackLink.isPresent) {
-  <a class="link-back" href="@ViewUtil.urlFor(ViewUtil.currentBackLink.get.getCall)">@ViewUtil.currentBackLink.get.getPrompt</a>
-} else {
-  @journeyBackLink()
-}

@@ -4,7 +4,6 @@ import static play.mvc.Controller.ctx;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import components.common.CommonContextActionSetup;
 import components.common.journey.BackLink;
 import components.common.state.ContextParamManager;
 import org.apache.commons.lang3.StringUtils;
@@ -149,8 +148,10 @@ public class ViewUtil {
     return validation;
   }
 
+  public static final String CTX_MESSAGE_API_NAME = "message_api";
+
   private static MessagesApi messagesApi() {
-    return (MessagesApi) ctx().args.get(CommonContextActionSetup.CTX_MESSAGE_API_NAME);
+    return (MessagesApi) ctx().args.get(CTX_MESSAGE_API_NAME);
   }
 
   private static String getMessage(String message, Object... args) {

@@ -4,5 +4,3 @@
 GET     /assets/*file               controllers.common.Assets.versioned(path="/public/lib/zzz-common", file: Asset)
 
 GET     /public/*file               controllers.common.Assets.versioned(path="/public/lib/zzz-common", file: Asset)
-
-POST    /journey-back               controllers.common.journey.JourneyBackController.handleBack
