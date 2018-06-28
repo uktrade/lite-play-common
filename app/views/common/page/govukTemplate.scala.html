@@ -89,7 +89,7 @@
   </head>
 
   <body class="@bodyClasses.getOrElse("") js-disabled">
-    <script>document.body.className = ((document.body.className) ? document.body.className.replace(" js-disabled","") + ' js-enabled' : 'js-enabled');</script>
+    <script src="@controllers.common.routes.Assets.versioned("template/javascripts/js-status.js")"></script>
 
     @bodyStart
 
