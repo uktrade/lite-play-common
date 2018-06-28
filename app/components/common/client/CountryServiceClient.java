@@ -3,7 +3,7 @@ package components.common.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import components.common.logging.CorrelationId;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import uk.gov.bis.lite.countryservice.api.CountryView;
@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 
 public class CountryServiceClient {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CountryServiceClient.class);
 
   public enum CountryServiceEndpoint {
     SET,
@@ -56,16 +58,16 @@ public class CountryServiceClient {
         .setRequestTimeout(Duration.ofMillis(countryServiceTimeout))
         .get().handleAsync((result, error) -> {
           if (error != null) {
-            Logger.error("Country service client failure.", error);
+            LOGGER.error("Country service client failure.", error);
           } else if (result.getStatus() != 200) {
-            Logger.error("Country service error - {}", result.getBody());
+            LOGGER.error("Country service error - {}", result.getBody());
           } else {
             try {
               String json = result.asJson().toString();
               return objectMapper.readValue(json, new TypeReference<List<CountryView>>() {
               });
             } catch (IOException e) {
-              Logger.error("Failed to parse Country service response as JSON.", e);
+              LOGGER.error("Failed to parse Country service response as JSON.", e);
             }
           }
 

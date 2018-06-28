@@ -1,7 +1,7 @@
 package components.common.journey;
 
 import com.google.common.collect.Table;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.libs.concurrent.HttpExecutionContext;
 
 import java.util.ArrayList;
@@ -18,6 +18,8 @@ import java.util.concurrent.CompletionStage;
  * or may have been supplied by another method)
  */
 public class JourneyDefinition {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(JourneyDefinition.class);
 
   private final String journeyName;
 
@@ -127,7 +129,7 @@ public class JourneyDefinition {
   private MoveAction doDecision(DecisionStage stage, DecisionLogic decisionLogic, Object deciderResult) {
     //Convert raw decision result using the converter function (could just be identity for simple cases)
     Object conversionResult = decisionLogic.getDecisionResultConverter().apply(deciderResult);
-    Logger.debug("Journey decision: stage {} - raw result {}, converted to {}", stage.getInternalName(), deciderResult, conversionResult);
+    LOGGER.debug("Journey decision: stage {} - raw result {}, converted to {}", stage.getInternalName(), deciderResult, conversionResult);
 
     //Find then when() clause which matches the decider result value
     TransitionAction transitionAction = decisionLogic.getConditionMap().get(conversionResult);
@@ -141,7 +143,7 @@ public class JourneyDefinition {
 
     //Find the associated move action for the matched when() clause
     MoveAction resultMoveAction = asMoveAction(transitionAction);
-    Logger.debug("Journey decision: resolved next stage {}", resultMoveAction.getDestinationStage().getInternalName());
+    LOGGER.debug("Journey decision: resolved next stage {}", resultMoveAction.getDestinationStage().getInternalName());
 
     return resultMoveAction;
   }

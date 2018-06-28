@@ -7,7 +7,7 @@ import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.play.PlayWebContext;
 import org.pac4j.play.store.PlaySessionStore;
 import org.pac4j.saml.profile.SAML2Profile;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.mvc.Http;
 
 import java.util.List;
@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
  * Manages SAML authentication information from SPIRE on a request's HTTP context.
  */
 public class SpireAuthManager {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SpireAuthManager.class);
 
   private static final String ID_ATTRIBUTE = "ID";
   private static final String EMAIL_ADDRESS_ATTRIBUTE = "PRIMARY_EMAIL_ADDRESS";
@@ -49,7 +51,7 @@ public class SpireAuthManager {
         return AuthInfo.unauthenticatedInstance();
       }
     } finally {
-      Logger.trace(String.format("User info read in %d ms", sw.elapsed(TimeUnit.MILLISECONDS)));
+      LOGGER.trace(String.format("User info read in %d ms", sw.elapsed(TimeUnit.MILLISECONDS)));
     }
   }
 
@@ -82,7 +84,7 @@ public class SpireAuthManager {
     if (CollectionUtils.size(list) == 1) {
       return Optional.of(list.get(0));
     } else {
-      Logger.error("Size of saml attribute {} is not 1", name);
+      LOGGER.error("Size of saml attribute {} is not 1", name);
       return Optional.empty();
     }
   }

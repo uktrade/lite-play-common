@@ -2,7 +2,7 @@ package components.common.logging;
 
 import com.google.common.base.Stopwatch;
 import org.apache.http.client.utils.URIBuilder;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.WSRequestFilter;
@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
  * Utility class providing logging of HTTP/HTTPS request and responses for use in service clients
  */
 public class ServiceClientLogger {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ServiceClientLogger.class);
 
   private ServiceClientLogger() {
   }
@@ -46,7 +48,7 @@ public class ServiceClientLogger {
         // Build URI and construct URL
         url = uriBuilder.build().toURL().toString();
       } catch (URISyntaxException | MalformedURLException exception) {
-        Logger.error("Failed to build URI for request", exception);
+        LOGGER.error("Failed to build URI for request", exception);
       }
     }
     return url;
@@ -81,11 +83,11 @@ public class ServiceClientLogger {
                                               HttpExecutionContext httpExecutionContext) {
     return executor -> request -> {
       String url = requestToURL(request);
-      Logger.info(String.format("%s service request - URL: %s, method: %s", serviceName, url, method));
+      LOGGER.info(String.format("%s service request - URL: %s, method: %s", serviceName, url, method));
       Stopwatch stopwatch = Stopwatch.createStarted();
       return executor.apply(request)
           .thenApplyAsync(response -> {
-            Logger.info(String.format("%s service response - status code: %s, status text: %s, completed in %dms",
+            LOGGER.info(String.format("%s service response - status code: %s, status text: %s, completed in %dms",
                 serviceName, response.getStatus(), response.getStatusText(), stopwatch.elapsed(TimeUnit.MILLISECONDS)));
             return response;
           }, httpExecutionContext.current());

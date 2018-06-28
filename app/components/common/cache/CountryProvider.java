@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import components.common.client.CountryServiceClient;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.util.Collection;
@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class CountryProvider {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CountryProvider.class);
 
   private volatile Map<String, CountryView> cache = new HashMap<>();
   private final CountryServiceClient countryServiceClient;
@@ -42,15 +44,15 @@ public class CountryProvider {
 
   public void loadCountries() {
 
-    Logger.info("Attempting to refresh the country cache....");
+    LOGGER.info("Attempting to refresh the country cache....");
     countryServiceClient.getCountries()
         .thenAcceptAsync(countries -> {
           if (!countries.isEmpty()) {
             cache = countries.stream()
                 .collect(toMap(CountryView::getCountryRef, Function.identity()));
-            Logger.info("Successfully refreshed the country cache.");
+            LOGGER.info("Successfully refreshed the country cache.");
           } else {
-            Logger.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
+            LOGGER.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
           }
         });
   }

@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import components.common.state.ContextParamManager;
 import io.mikael.urlbuilder.UrlBuilder;
 import org.apache.commons.lang3.StringUtils;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.libs.concurrent.HttpExecutionContext;
 import play.mvc.Result;
 
@@ -22,6 +22,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class JourneyManager {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(JourneyManager.class);
 
   public static final String JOURNEY_BACK_LINK_CONTEXT_PARAM = "journeyBackLink";
   public static final String JOURNEY_SUPPRESS_BACK_LINK_CONTEXT_PARAM = "journeySuppressBackLink";
@@ -159,7 +161,7 @@ public class JourneyManager {
 
     setBackLinkOnContext(journey);
 
-    Logger.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
+    LOGGER.debug(String.format("Journey transition: journey '%s', previous stage '%s', event '%s', new stage '%s'",
         journey.getJourneyName(), previousStageName, eventMnemonic, transitionResult.getNewStage().getInternalName()));
 
     return stageAsResult(transitionResult.getNewStage());

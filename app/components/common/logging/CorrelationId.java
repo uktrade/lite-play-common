@@ -1,8 +1,8 @@
 package components.common.logging;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import play.Logger;
 import play.libs.ws.WSRequestFilter;
 import play.mvc.Http;
 
@@ -15,6 +15,8 @@ import java.util.UUID;
  * A Correlation ID is an ID value to uniquely identify an entity across a varying array of systems.
  */
 public class CorrelationId {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CorrelationId.class);
 
   /**
    * HTTP Header that should contain the Correlation ID when receiving or creating a request
@@ -63,7 +65,7 @@ public class CorrelationId {
   private static String createCorrelationId() {
     String newCorrelationId = UUID.randomUUID().toString();
     MDC.put(MDC_KEY, newCorrelationId);
-    Logger.debug("Correlation ID not found in headers, created new correlation id: " + newCorrelationId);
+    LOGGER.debug("Correlation ID not found in headers, created new correlation id: " + newCorrelationId);
     return newCorrelationId;
   }
 
@@ -77,7 +79,7 @@ public class CorrelationId {
    *  .get()
    *  .handleAsync((response, error) -> {
    *    if (error != null) {
-   *      Logger.error(error.getMessage(), error);
+   *      LOGGER.error(error.getMessage(), error);
    *      return Response.failure(ServiceResponseStatus.UNCHECKED_EXCEPTION);
    *    } else if (response.getStatus() != 200) {
    *      return Response.failure(ServiceResponseStatus.UNEXPECTED_HTTP_STATUS_CODE);

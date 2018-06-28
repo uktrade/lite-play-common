@@ -1,7 +1,7 @@
 import com.typesafe.config.Config;
 import components.common.logging.CorrelationId;
+import org.slf4j.LoggerFactory;
 import play.Environment;
-import play.Logger;
 import play.api.OptionalSourceMapper;
 import play.api.PlayException;
 import play.api.http.HttpErrorHandlerExceptions;
@@ -28,6 +28,8 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class ErrorHandler implements HttpErrorHandler {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ErrorHandler.class);
 
   private final Environment environment;
   private final OptionalSourceMapper sourceMapper;
@@ -59,7 +61,7 @@ public class ErrorHandler implements HttpErrorHandler {
     }
     MessageOnlyException cause = new MessageOnlyException(outputMessage);
 
-    Logger.error(String.format("\n\n! @%s - Client error, for (%s) [%s] ->\n",
+    LOGGER.error(String.format("\n\n! @%s - Client error, for (%s) [%s] ->\n",
         CorrelationId.get(), request.method(), request.uri()), cause
     );
 
@@ -81,7 +83,7 @@ public class ErrorHandler implements HttpErrorHandler {
     Option<Exception> optionalException = Option.empty();
     Option<String> optionalFormattedStackTrace = Option.empty();
 
-    Logger.error(String.format("\n\n! @%s - Internal server error, for (%s) [%s] ->\n",
+    LOGGER.error(String.format("\n\n! @%s - Internal server error, for (%s) [%s] ->\n",
         CorrelationId.get(), request.method(), request.uri()), exception
     );
 

@@ -3,12 +3,14 @@ package components.common.transaction;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 @Singleton
 public class TransactionManager implements TransactionIdProvider {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TransactionManager.class);
 
   private final TransactionContextParamProvider transactionContextParamProvider;
 
@@ -26,7 +28,7 @@ public class TransactionManager implements TransactionIdProvider {
 
     transactionContextParamProvider.updateParamValueOnContext(newTransactionId);
 
-    Logger.info("Created transaction " + newTransactionId);
+    LOGGER.info("Created transaction " + newTransactionId);
 
     return newTransactionId;
   }
@@ -45,8 +47,7 @@ public class TransactionManager implements TransactionIdProvider {
 
     if (StringUtils.isBlank(transactionId)) {
       throw new RuntimeException("Transaction ID is not available");
-    }
-    else {
+    } else {
       return transactionId;
     }
   }
