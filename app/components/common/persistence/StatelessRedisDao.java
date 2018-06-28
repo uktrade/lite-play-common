@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Stopwatch;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class StatelessRedisDao {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(StatelessRedisDao.class);
 
   private final RedissonClient redissonClient;
   private final RedisKeyConfig keyConfig;
@@ -119,8 +121,8 @@ public class StatelessRedisDao {
   }
 
   private void log(String message, String fieldName, Stopwatch stopwatch) {
-    if (Logger.isDebugEnabled()) {
-      Logger.debug("{} of {} completed in {}", message, fieldName, stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("{} of {} completed in {}", message, fieldName, stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 

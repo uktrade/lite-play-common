@@ -1,7 +1,7 @@
 package components.common.journey;
 
 import org.apache.commons.lang3.StringUtils;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -10,6 +10,8 @@ import java.util.Deque;
 import java.util.List;
 
 public class Journey {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Journey.class);
 
   private final String journeyName;
   private final Deque<String> historyQueue;
@@ -24,7 +26,7 @@ public class Journey {
   }
 
   public String serialiseToString() {
-    return journeyName + JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR +  String.join(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR, historyQueue);
+    return journeyName + JourneyManager.JOURNEY_NAME_SEPARATOR_CHAR + String.join(JourneyManager.JOURNEY_STAGE_SEPARATOR_CHAR, historyQueue);
   }
 
   public void pushStage(String stageHash) {
@@ -42,7 +44,7 @@ public class Journey {
     } while (poppedStageHash != null && !targetStageHash.equals(poppedStageHash));
 
     if (historyQueue.isEmpty()) {
-      Logger.warn("Journey pop back to {} depleted the history queue", targetStageHash);
+      LOGGER.warn("Journey pop back to {} depleted the history queue", targetStageHash);
     }
 
     //The target stage should now the latest stage in the journey

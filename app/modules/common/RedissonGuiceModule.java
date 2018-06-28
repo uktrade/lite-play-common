@@ -11,12 +11,14 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.SingleServerConfig;
-import play.Logger;
+import org.slf4j.LoggerFactory;
 import play.inject.ApplicationLifecycle;
 
 import java.util.concurrent.CompletableFuture;
 
 public class RedissonGuiceModule extends AbstractModule {
+  
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RedissonGuiceModule.class);
 
   private final Config config;
 
@@ -59,7 +61,7 @@ public class RedissonGuiceModule extends AbstractModule {
 
     //Needs to happen in dev mode to stop connections persisting across restarts
     applicationLifecycle.addStopHook(() -> {
-      Logger.info("Shutdown Redisson client");
+      LOGGER.info("Shutdown Redisson client");
       redissonClient.shutdown();
       return CompletableFuture.completedFuture(null);
     });
