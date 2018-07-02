@@ -1,3 +1,5 @@
+package controllers.common;
+
 import com.typesafe.config.Config;
 import components.common.logging.CorrelationId;
 import org.slf4j.LoggerFactory;
