@@ -1,12 +1,9 @@
 package components.common.logging;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import play.libs.ws.WSRequestFilter;
 import play.mvc.Http;
 
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -26,23 +23,7 @@ public class CorrelationId {
   /**
    * Key to store the Correlation ID against in MDC for logging, use <code>{@code %mdc{corrID} }</code> in a log pattern to log the ID on all messages
    */
-  private static final String MDC_KEY = "corrID";
-
-  /**
-   * This function should be called at the start of the request to either set an existing Correlation ID
-   * (looked for in the request headers) on the thread for later use or to create a new Correlation ID just in time.
-   *
-   * @param requestHeader HTTP Request headers which may contain a header called {@link CorrelationId#HTTP_HEADER_NAME}
-   *                      with an existing Correlation ID in it
-   */
-  public static void setUp(Http.RequestHeader requestHeader) {
-    Optional<String> header = requestHeader.header(HTTP_HEADER_NAME);
-    if (header.isPresent() && StringUtils.isNoneBlank(header.get())) {
-      MDC.put(MDC_KEY, header.get());
-    } else {
-      createCorrelationId();
-    }
-  }
+  private static final String LOGGING_KEY = "corId";
 
   /**
    * Get the Correlation ID for this request, or create one if one couldn't be found.
@@ -50,23 +31,17 @@ public class CorrelationId {
    * @return Correlation ID
    */
   public static String get() {
-    // Note that the Correlation ID storage is using MDC (http://logback.qos.ch/manual/mdc.html) which is backed by a
-    //   ThreadLocal and considerations should be made when creating async code
-    String correlationId = MDC.get(MDC_KEY);
-    if (correlationId == null || correlationId.isEmpty()) {
-      correlationId = createCorrelationId();
+    try {
+      Http.Context context = Http.Context.current();
+      String correlationId = (String) context.args.get(LOGGING_KEY);
+      if (correlationId == null) {
+        correlationId = UUID.randomUUID().toString();
+        context.args.put(LOGGING_KEY, correlationId);
+      }
+      return correlationId;
+    } catch (Exception exception) {
+      return null;
     }
-    return correlationId;
-  }
-
-  /**
-   * Create a new Correlation ID
-   */
-  private static String createCorrelationId() {
-    String newCorrelationId = UUID.randomUUID().toString();
-    MDC.put(MDC_KEY, newCorrelationId);
-    LOGGER.debug("Correlation ID not found in headers, created new correlation id: " + newCorrelationId);
-    return newCorrelationId;
   }
 
   /**
