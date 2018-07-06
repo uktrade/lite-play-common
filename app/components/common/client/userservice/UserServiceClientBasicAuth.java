@@ -39,7 +39,7 @@ public class UserServiceClientBasicAuth {
     String url = address + USER_ACCOUNT_TYPE_PATH + userId;
     return wsClient.url(url)
         .setRequestFilter(CorrelationId.requestFilter)
-        .setRequestFilter(ServiceClientLogger.requestFilter("User", "GET", httpExecutionContext))
+        .setRequestFilter(ServiceClientLogger.requestFilter("User basic", "GET", httpExecutionContext))
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
         .get()

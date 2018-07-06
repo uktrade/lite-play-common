@@ -7,7 +7,7 @@ publishArtifact in(Compile, packageDoc) := false
 
 libraryDependencies ++= Seq(
   guice,
-  ehcache,
+  cacheApi,
   javaWs,
   filters,
   "io.mikael" % "urlbuilder" % "2.0.7",
