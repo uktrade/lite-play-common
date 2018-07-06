@@ -3,6 +3,7 @@ package components.common.client.userservice;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import components.common.logging.CorrelationId;
+import components.common.logging.ServiceClientLogger;
 import filters.common.JwtRequestFilter;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
@@ -41,6 +42,7 @@ public class UserServiceClientJwt {
     String url = address + USER_PRIVILEGES_PATH + userId;
     return wsClient.url(url)
         .setRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(ServiceClientLogger.requestFilter("User JWT", "GET", httpExecutionContext))
         .setRequestFilter(jwtRequestFilter)
         .setRequestTimeout(Duration.ofMillis(timeout))
         .get()
@@ -62,6 +64,7 @@ public class UserServiceClientJwt {
     String url = address + USER_DETAILS_PATH + userId;
     return wsClient.url(url)
         .setRequestFilter(CorrelationId.requestFilter)
+        .setRequestFilter(ServiceClientLogger.requestFilter("User JWT", "GET", httpExecutionContext))
         .setRequestFilter(jwtRequestFilter)
         .setRequestTimeout(Duration.ofMillis(timeout))
         .get()
