@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 public class CountryProvider {
@@ -42,17 +43,16 @@ public class CountryProvider {
     return Collections.unmodifiableMap(cache);
   }
 
-  public void loadCountries() {
-
+  public CompletionStage<Void> loadCountries() {
     LOGGER.info("Attempting to refresh the country cache....");
-    countryServiceClient.getCountries()
+    return countryServiceClient.getCountries()
         .thenAcceptAsync(countries -> {
           if (!countries.isEmpty()) {
             cache = countries.stream()
                 .collect(toMap(CountryView::getCountryRef, Function.identity()));
             LOGGER.info("Successfully refreshed the country cache.");
           } else {
-            LOGGER.error("Failed to refresh country cache - Country Service Client getCountries error occurred.");
+            throw new RuntimeException("Failed to refresh country cache - Country Service Client getCountries error occurred.");
           }
         });
   }
