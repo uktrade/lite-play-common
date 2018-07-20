@@ -5,6 +5,7 @@ import akka.actor.ActorSystem;
 import akka.actor.UntypedAbstractActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -17,17 +18,15 @@ public class UpdateCountryCacheActor extends UntypedAbstractActor {
   private static final Logger LOGGER = LoggerFactory.getLogger(UpdateCountryCacheActor.class);
 
   private final CountryProvider countryProvider;
-  private final int maxAttempts;
   private final int maxDelaySeconds;
-  private final int[] lookupDelaySeconds;
+  private final ExecutionContext executionContext;
 
   private int attempts;
 
-  public UpdateCountryCacheActor(CountryProvider countryProvider, int maxAttempts, int maxDelaySeconds) {
+  public UpdateCountryCacheActor(CountryProvider countryProvider, int maxDelaySeconds, ExecutionContext executionContext) {
     this.countryProvider = countryProvider;
-    this.maxAttempts = maxAttempts;
     this.maxDelaySeconds = maxDelaySeconds;
-    this.lookupDelaySeconds = initializeDelayLookup(maxAttempts);
+    this.executionContext = executionContext;
   }
 
   @Override
@@ -46,7 +45,7 @@ public class UpdateCountryCacheActor extends UntypedAbstractActor {
           LOGGER.error("Error during country provider load", e);
           self().tell(LOAD_MESSAGE, ActorRef.noSender());
         }
-      }, system.dispatcher());
+      }, executionContext);
     } else if (STOP_MESSAGE.equals(message)) {
       LOGGER.info("Stopped scheduling cache loads after {} attempts", attempts);
       attempts = 0;
@@ -55,22 +54,10 @@ public class UpdateCountryCacheActor extends UntypedAbstractActor {
     }
   }
 
+  /**
+   *  Each attempt will increase the duration by one second up to the maximum delay
+   */
   private FiniteDuration delayDuration(int attempt) {
-    if (attempt <= maxAttempts && attempt <= lookupDelaySeconds.length && attempt > 0 && lookupDelaySeconds[attempt -1] <= maxDelaySeconds) {
-      return Duration.create(lookupDelaySeconds[attempt - 1], TimeUnit.SECONDS);
-    } else {
-      return Duration.create(maxDelaySeconds, TimeUnit.SECONDS);
-    }
-  }
-
-  private int[] initializeDelayLookup(int total) {
-    // Initialize array with fibonacci sequence of length total
-    int[] delayLookup = new int[total];
-    delayLookup[0] = 0;
-    delayLookup[1] = 1;
-    for(int i = 2; i < total; i++){
-      delayLookup[i] = delayLookup[i - 1] + delayLookup[i - 2];
-    }
-    return delayLookup;
+    return Duration.create(Math.min(attempt, maxDelaySeconds), TimeUnit.SECONDS);
   }
 }
