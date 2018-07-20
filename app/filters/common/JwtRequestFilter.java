@@ -3,7 +3,7 @@ package filters.common;
 import com.google.inject.Inject;
 import components.common.auth.AuthInfo;
 import components.common.auth.SpireAuthManager;
-import components.common.client.userservice.UserServiceClientBasicAuth;
+import components.common.client.UserServiceClientBasicAuth;
 import org.apache.commons.lang3.StringUtils;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;

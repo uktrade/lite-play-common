@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static play.mvc.Results.ok;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import components.common.client.CountryServiceClient.CountryServiceEndpoint;
 import org.junit.After;
 import org.junit.Before;
@@ -43,8 +42,8 @@ public class CountryServiceClientTest {
     int port = server.httpPort();
     ws = WSTestClient.newClient(port);
     String serviceUrl = "http://localhost:" + port;
-    client = new CountryServiceClient(new HttpExecutionContext(Runnable::run), ws, 1000, serviceUrl,
-        "service:password", CountryServiceEndpoint.SET, COUNTRY_SET_NAME, new ObjectMapper());
+    client = new CountryServiceClient(serviceUrl, 1000, "service:password", ws, new HttpExecutionContext(Runnable::run),
+        CountryServiceEndpoint.SET, COUNTRY_SET_NAME);
   }
 
   @Test

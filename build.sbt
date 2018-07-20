@@ -30,6 +30,9 @@ libraryDependencies ++= Seq(
   "uk.gov.bis.lite" % "lite-country-service-api" % "1.2",
   "uk.gov.bis.lite" % "lite-user-service-api" % "1.2",
   "uk.gov.bis.lite" % "lite-notification-service-api" % "1.1",
+  "uk.gov.bis.lite" % "lite-ogel-service-api" % "1.2",
+  "uk.gov.bis.lite" % "lite-customer-service-api" % "1.1",
+  "uk.gov.bis.lite" % "lite-permissions-service-api" % "1.4",
   "org.assertj" % "assertj-core" % "3.5.2" % "test",
   "au.com.dius" % "pact-jvm-consumer-junit_2.11" % "3.5.13" % "test"
 )
