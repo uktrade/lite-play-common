@@ -197,16 +197,14 @@ table.top-align-cells {
   font-weight: bold;
 }
 
-//Account header
-.account-header {
-  float: right;
+//Proposition menu (sign out link)
+#global-header .header-proposition #proposition-link {
   color: $white;
+  font-weight: bold;
 
-  a:link,
-  a:hover,
-  a:active,
-  a:visited {
-    color: $white;
+  a {
+    text-decoration: underline;
+    margin-left: $gutter-half;
   }
 }
 
