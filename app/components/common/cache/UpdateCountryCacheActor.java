@@ -30,11 +30,11 @@ public class UpdateCountryCacheActor extends UntypedAbstractActor {
   }
 
   @Override
-  public void onReceive(Object message) throws Exception {
+  public void onReceive(Object message) {
     if (LOAD_MESSAGE.equals(message)) {
-      attempts++;
       ActorSystem system = getContext().getSystem();
       FiniteDuration delay = delayDuration(attempts);
+      attempts++;
       LOGGER.info("Scheduling cache load for delay of {} second(s)", delay.toSeconds());
       system.scheduler().scheduleOnce(delay, () -> {
         try {
