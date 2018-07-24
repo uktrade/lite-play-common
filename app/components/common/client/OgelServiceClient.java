@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 public class OgelServiceClient {
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String OGEL_SERVICE = "ogel-service";
 
   private static final String GET_OGEL_PATH = "%s/ogels/%s";
@@ -43,6 +44,14 @@ public class OgelServiceClient {
     this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get()
+        .handleAsync((response, error) -> response.getStatus() == 200);
   }
 
   public CompletionStage<OgelFullView> getById(String ogelId) {

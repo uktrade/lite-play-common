@@ -20,6 +20,7 @@ import java.util.concurrent.CompletionStage;
 
 public class CustomerServiceClient {
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String CUSTOMER_SERVICE = "customer-service";
 
   private static final String GET_CUSTOMER_PATH = "%s/customers/%s";
@@ -29,6 +30,7 @@ public class CustomerServiceClient {
 
   private final String address;
   private final int timeout;
+  private final String credentials;
   private final WSClient wsClient;
   private final HttpExecutionContext context;
   private final JwtRequestFilter jwtRequestFilter;
@@ -36,13 +38,23 @@ public class CustomerServiceClient {
   @Inject
   public CustomerServiceClient(@Named("customerServiceAddress") String address,
                                @Named("customerServiceTimeout") int timeout,
+                               @Named("customerServiceCredentials") String credentials,
                                WSClient wsClient, HttpExecutionContext httpExecutionContext,
                                JwtRequestFilter jwtRequestFilter) {
     this.address = address;
     this.timeout = timeout;
+    this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
     this.jwtRequestFilter = jwtRequestFilter;
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get()
+        .handleAsync((response, error) -> response.getStatus() == 200);
   }
 
   public CompletionStage<List<SiteView>> getSitesByCustomerIdUserId(String customerId, String userId) {

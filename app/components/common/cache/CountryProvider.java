@@ -27,6 +27,10 @@ public class CountryProvider {
     this.countryServiceClient = countryServiceClient;
   }
 
+  public CompletionStage<Boolean> serviceReachable() {
+    return countryServiceClient.serviceReachable();
+  }
+
   public CountryView getCountry(String countryRef) {
     if (countryRef == null) {
       return null;
