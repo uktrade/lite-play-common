@@ -1,6 +1,10 @@
 package pact.consumer.components.common.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static pact.consumer.components.common.client.TestHelper.BASIC_AUTH_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.CONSUMER;
+import static pact.consumer.components.common.client.TestHelper.CONTENT_TYPE_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.PROVIDER;
 
 import au.com.dius.pact.consumer.Pact;
 import au.com.dius.pact.consumer.PactProviderRuleMk2;
@@ -8,7 +12,6 @@ import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.RequestResponsePact;
-import com.google.common.collect.ImmutableMap;
 import components.common.client.CountryServiceClient;
 import org.junit.After;
 import org.junit.Before;
@@ -20,36 +23,31 @@ import play.test.WSTestClient;
 import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.util.List;
-import java.util.Map;
 
-public class CountryServiceDataConsumerPact {
-
-  // service:password
-  private static final Map<String, String> AUTH_HEADERS = ImmutableMap.of("Authorization", "Basic c2VydmljZTpwYXNzd29yZA==");
-  private static final Map<String, String> CONTENT_TYPE_HEADERS = ImmutableMap.of("Content-Type", "application/json");
+public class CommonCountryServiceDataConsumerPact {
 
   private static final String COUNTRY_GROUP_BASE_PATH = "/country-data";
-  private static final String PROVIDER = "lite-play-common";
-  private static final String CONSUMER = "lite-play-common";
   private static final String COUNTRY_REF = "CRTY0";
   private static final String COUNTRY_NAME = "United Kingdom";
 
-  private WSClient ws;
-
   @Rule
-  public final PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
+  public PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
+
+  private WSClient wsClient;
+  private CountryServiceClient client;
 
   @Before
-  public void setUp() throws Exception {
-    ws = WSTestClient.newClient(mockProvider.getPort());
+  public void setup() {
+    wsClient = WSTestClient.newClient(mockProvider.getPort());
+    client = buildCountryServiceAllClient(wsClient, mockProvider);
   }
 
   @After
-  public void tearDown() throws Exception {
-    ws.close();
+  public void teardown() throws Exception {
+    wsClient.close();
   }
 
-  public static CountryServiceClient buildCountryServiceAllClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
+  public static CountryServiceClient buildCountryServiceAllClient(WSClient wsClient, PactProviderRuleMk2 mockProvider) {
     return CountryServiceClient.buildCountryServiceAllClient(mockProvider.getUrl(),
         1000,
         "service:password",
@@ -67,7 +65,7 @@ public class CountryServiceDataConsumerPact {
     return builder
         .given("country data exists")
         .uponReceiving("a request for country data")
-        .headers(AUTH_HEADERS)
+        .headers(BASIC_AUTH_HEADERS)
         .path(COUNTRY_GROUP_BASE_PATH)
         .method("GET")
         .willRespondWith()
@@ -79,17 +77,12 @@ public class CountryServiceDataConsumerPact {
 
   @Test
   @PactVerification(value = PROVIDER, fragment = "countryDataExists")
-  public void countryDataExistsTest() {
-    doCountryDataExistsTest(buildCountryServiceAllClient(mockProvider, ws));
+  public void countryDataExistsPact() throws Exception {
+    countryDataExists(client);
   }
 
-  public static void doCountryDataExistsTest(CountryServiceClient client) {
-    List<CountryView> countries;
-    try {
-      countries = client.getCountries().toCompletableFuture().get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  public static void countryDataExists(CountryServiceClient client) throws Exception {
+    List<CountryView> countries = client.getCountries().toCompletableFuture().get();
     assertThat(countries).isNotEmpty();
     CountryView countryView = countries.get(0);
     assertThat(countryView.getCountryRef()).isEqualTo(COUNTRY_REF);

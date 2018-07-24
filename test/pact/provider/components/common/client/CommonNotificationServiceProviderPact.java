@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import components.common.client.NotificationServiceClient;
 import org.mockito.ArgumentCaptor;
 
-public class NotificationServiceClientProviderPact {
+public class CommonNotificationServiceProviderPact {
 
   public static String validEmailNotification(AmazonSQS amazonSQS) {
     NotificationServiceClient notificationServiceClient = new NotificationServiceClient("url", amazonSQS);

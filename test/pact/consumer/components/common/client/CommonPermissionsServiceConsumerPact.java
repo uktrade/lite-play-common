@@ -2,7 +2,10 @@ package pact.consumer.components.common.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static pact.consumer.components.common.client.JwtTestHelper.JWT_AUTHORIZATION_HEADER;
+import static pact.consumer.components.common.client.TestHelper.CONSUMER;
+import static pact.consumer.components.common.client.TestHelper.CONTENT_TYPE_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.JWT_AUTH_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.PROVIDER;
 
 import au.com.dius.pact.consumer.Pact;
 import au.com.dius.pact.consumer.PactProviderRuleMk2;
@@ -12,7 +15,6 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.RequestResponsePact;
-import com.google.common.collect.ImmutableMap;
 import components.common.client.ClientException;
 import components.common.client.PermissionsServiceClient;
 import org.junit.After;
@@ -33,8 +35,6 @@ import java.util.Map;
 
 public class CommonPermissionsServiceConsumerPact {
 
-  private static final String PROVIDER = "lite-play-common";
-  private static final String CONSUMER = "lite-play-common";
   private static final String LICENCES_URL = "/licences/user/";
   private static final String REGISTRATIONS_URL = "/ogel-registrations/user/";
   private static final String USER_ID = "123456";
@@ -42,12 +42,11 @@ public class CommonPermissionsServiceConsumerPact {
   private static final String REGISTRATION_REFERENCE = "REG/123";
   private static final String CALLBACK_URL = "callbackUrl";
   private static final Map<String, String> REQUEST_HEADERS;
-  private static final Map<String, String> RESPONSE_HEADERS = ImmutableMap.of("Content-Type", "application/json");
 
   static {
     REQUEST_HEADERS = new HashMap<>();
-    REQUEST_HEADERS.put("Content-Type", "application/json");
-    REQUEST_HEADERS.putAll(JWT_AUTHORIZATION_HEADER);
+    REQUEST_HEADERS.putAll(CONTENT_TYPE_HEADERS);
+    REQUEST_HEADERS.putAll(JWT_AUTH_HEADERS);
   }
 
   @Rule
@@ -101,7 +100,7 @@ public class CommonPermissionsServiceConsumerPact {
         .body(existingCustomer)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(response)
         .toPact();
   }
@@ -157,7 +156,7 @@ public class CommonPermissionsServiceConsumerPact {
         .body(newCustomer)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(response)
         .toPact();
   }
@@ -197,7 +196,7 @@ public class CommonPermissionsServiceConsumerPact {
         .body(newSite)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(response)
         .toPact();
   }
@@ -228,10 +227,10 @@ public class CommonPermissionsServiceConsumerPact {
         .path(LICENCES_URL + USER_ID)
         .query("licenceReference=" + LICENCE_REFERENCE)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(licences)
         .toPact();
   }
@@ -244,10 +243,10 @@ public class CommonPermissionsServiceConsumerPact {
         .path(LICENCES_URL + USER_ID)
         .query("licenceReference=" + LICENCE_REFERENCE)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(404)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .toPact();
   }
 
@@ -277,10 +276,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get licences by user ID")
         .path(LICENCES_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(licences)
         .toPact();
   }
@@ -294,10 +293,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get licences by user ID")
         .path(LICENCES_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(emptyArrayBody)
         .toPact();
   }
@@ -310,10 +309,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get licences by user ID")
         .path(LICENCES_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(404)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .toPact();
   }
 
@@ -334,10 +333,10 @@ public class CommonPermissionsServiceConsumerPact {
         .path(REGISTRATIONS_URL + USER_ID)
         .query("registrationReference=" + REGISTRATION_REFERENCE)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(ogelRegistrations)
         .toPact();
   }
@@ -350,10 +349,10 @@ public class CommonPermissionsServiceConsumerPact {
         .path(REGISTRATIONS_URL + USER_ID)
         .query("registrationReference=" + REGISTRATION_REFERENCE)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(404)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .toPact();
   }
 
@@ -374,10 +373,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get OGEL registrations by user ID")
         .path(REGISTRATIONS_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(ogelRegistrations)
         .toPact();
   }
@@ -391,10 +390,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get OGEL registrations by user ID")
         .path(REGISTRATIONS_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(200)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .body(emptyArrayBody)
         .toPact();
   }
@@ -407,10 +406,10 @@ public class CommonPermissionsServiceConsumerPact {
         .uponReceiving("request to get OGEL registrations by user ID")
         .path(REGISTRATIONS_URL + USER_ID)
         .method("GET")
-        .headers(JWT_AUTHORIZATION_HEADER)
+        .headers(JWT_AUTH_HEADERS)
         .willRespondWith()
         .status(404)
-        .headers(RESPONSE_HEADERS)
+        .headers(CONTENT_TYPE_HEADERS)
         .toPact();
   }
 
