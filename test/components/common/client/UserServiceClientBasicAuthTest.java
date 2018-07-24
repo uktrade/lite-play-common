@@ -1,4 +1,4 @@
-package components.common.client.userservice;
+package components.common.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,15 +63,21 @@ public class UserServiceClientBasicAuthTest {
   }
 
   @Test
+  public void unauthorizedErrorTest() {
+    assertThatThrownBy(() -> client.getUserAccountTypeView(UNAUTHORIZED_USER_ID).toCompletableFuture().get())
+        .hasMessageContaining("Unexpected status code 401. Body is empty. user-service getUserAccountTypeView failure.");
+  }
+
+  @Test
   public void userServiceError() throws Exception {
-    assertThatThrownBy(() ->  client.getUserAccountTypeView("NOT_FOUND").toCompletableFuture().get())
-        .hasMessageContaining("Unexpected HTTP status code");
+    assertThatThrownBy(() -> client.getUserAccountTypeView("NOT_FOUND").toCompletableFuture().get())
+        .hasMessageEndingWith("Unexpected status code 404. Body is empty. user-service getUserAccountTypeView failure.");
+  }
 
-    assertThatThrownBy(() ->  client.getUserAccountTypeView(ERROR_USER_ID).toCompletableFuture().get())
-        .hasMessageContaining("Unexpected HTTP status code");
-
-    assertThatThrownBy(() ->  client.getUserAccountTypeView(UNAUTHORIZED_USER_ID).toCompletableFuture().get())
-        .hasMessageContaining("Unexpected HTTP status code");
+  @Test
+  public void internalServerErrorTest() {
+    assertThatThrownBy(() -> client.getUserAccountTypeView(ERROR_USER_ID).toCompletableFuture().get())
+        .hasMessageContaining("Unexpected status code 500. Body is empty. user-service getUserAccountTypeView failure.");
   }
 
   @After

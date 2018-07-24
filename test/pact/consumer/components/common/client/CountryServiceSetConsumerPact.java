@@ -15,7 +15,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.test.WSTestClient;
@@ -66,32 +65,41 @@ public class CountryServiceSetConsumerPact {
   }
 
   public static CountryServiceClient buildCountrySetExistsClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
-    return CountryServiceClient.buildCountryServiceSetClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
-        mockProvider.getUrl(), "service:password", EXISTS, Json.newDefaultMapper());
+    return CountryServiceClient.buildCountryServiceSetClient(mockProvider.getUrl(),
+        1000,
+        "service:password",
+        wsClient,
+        new HttpExecutionContext(Runnable::run),
+        EXISTS);
   }
 
-  public static CountryServiceClient buildCountrySetDoesNotExistClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
-    return CountryServiceClient.buildCountryServiceSetClient(new HttpExecutionContext(Runnable::run), wsClient,1000,
-        mockProvider.getUrl(), "service:password", DOES_NOT_EXIST, Json.newDefaultMapper());
+  public static CountryServiceClient buildCountrySetDoesNotExistClient(PactProviderRuleMk2 mockProvider,
+                                                                       WSClient wsClient) {
+    return CountryServiceClient.buildCountryServiceSetClient(mockProvider.getUrl(),
+        1000,
+        "service:password",
+        wsClient,
+        new HttpExecutionContext(Runnable::run),
+        DOES_NOT_EXIST);
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
   public static RequestResponsePact countrySetExists(PactDslWithProvider builder) {
-    PactDslJsonArray body = PactDslJsonArray.arrayMinLike(0,3)
-      .stringType("countryRef", COUNTRY_REF)
-      .stringType("countryName", COUNTRY_NAME)
-      .closeObject()
-      .asArray();
+    PactDslJsonArray body = PactDslJsonArray.arrayMinLike(0, 3)
+        .stringType("countryRef", COUNTRY_REF)
+        .stringType("countryName", COUNTRY_NAME)
+        .closeObject()
+        .asArray();
     return builder
         .given("provided country set exists")
         .uponReceiving("a request for provided country set")
-          .headers(AUTH_HEADERS)
-          .path(getCountrySetExistsPath())
-          .method("GET")
+        .headers(AUTH_HEADERS)
+        .path(getCountrySetExistsPath())
+        .method("GET")
         .willRespondWith()
-          .status(200)
-          .headers(CONTENT_TYPE_HEADERS)
-          .body(body)
+        .status(200)
+        .headers(CONTENT_TYPE_HEADERS)
+        .body(body)
         .toPact();
   }
 
@@ -104,13 +112,13 @@ public class CountryServiceSetConsumerPact {
     return builder
         .given("provided country set does not exist")
         .uponReceiving("a request for provided country set")
-          .headers(AUTH_HEADERS)
-          .path(getCountrySetDoesNotExistPath())
-          .method("GET")
+        .headers(AUTH_HEADERS)
+        .path(getCountrySetDoesNotExistPath())
+        .method("GET")
         .willRespondWith()
-          .status(404)
-          .headers(CONTENT_TYPE_HEADERS)
-          .body(body)
+        .status(404)
+        .headers(CONTENT_TYPE_HEADERS)
+        .body(body)
         .toPact();
   }
 
@@ -131,8 +139,7 @@ public class CountryServiceSetConsumerPact {
     List<CountryView> countries;
     try {
       countries = client.getCountries().toCompletableFuture().get();
-    }
-    catch (InterruptedException | ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       throw new RuntimeException(e);
     }
     assertThat(countries).isNotNull();
@@ -147,8 +154,7 @@ public class CountryServiceSetConsumerPact {
     List<CountryView> countries;
     try {
       countries = client.getCountries().toCompletableFuture().get();
-    }
-    catch (InterruptedException | ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       throw new RuntimeException(e);
     }
     assertThat(countries).isNotNull();

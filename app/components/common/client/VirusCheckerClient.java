@@ -20,48 +20,39 @@ import java.util.concurrent.CompletionStage;
 
 public class VirusCheckerClient {
 
-  private final HttpExecutionContext httpExecutionContext;
+  private static final String VIRUS_CHECKER_SERVICE = "virus-checker-service";
+
+  private final HttpExecutionContext context;
   private final WSClient wsClient;
   private final String credentials;
   private final String address;
   private final int timeout;
 
   @Inject
-  public VirusCheckerClient(HttpExecutionContext httpExecutionContext,
-                            WSClient wsClient,
+  public VirusCheckerClient(@Named("virusServiceAddress") String address,
+                            @Named("virusServiceTimeout") int timeout,
                             @Named("virusServiceCredentials") String credentials,
-                            @Named("virusServiceAddress") String address,
-                            @Named("virusServiceTimeout") int timeout) {
-    this.httpExecutionContext = httpExecutionContext;
-    this.wsClient = wsClient;
-    this.credentials = credentials;
+                            WSClient wsClient, HttpExecutionContext httpExecutionContext) {
     this.address = address;
     this.timeout = timeout;
+    this.credentials = credentials;
+    this.wsClient = wsClient;
+    this.context = httpExecutionContext;
   }
 
   public CompletionStage<Boolean> isOk(Path path) {
-    WSRequest req = wsClient.url(address)
+    WSRequest request = wsClient.url(address)
         .setRequestFilter(CorrelationId.requestFilter)
-        .setRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", httpExecutionContext))
+        .setRequestFilter(ServiceClientLogger.requestFilter("VirusCheck", "POST", context))
         .setAuth(credentials)
         .setRequestTimeout(Duration.ofMillis(timeout));
     // https://www.playframework.com/documentation/2.5.x/JavaWS#Submitting-multipart/form-data
     Source<ByteString, ?> file = FileIO.fromFile(path.toFile());
     FilePart<Source<ByteString, ?>> fp = new FilePart<>("file", "file.txt", "text/plain", file);
     DataPart dp = new DataPart("key", "value");
-    CompletionStage<String> request = req.post(Source.from(Arrays.asList(fp, dp))).handle((response, error) -> {
-      if (error != null) {
-        String message = "Unable to virus check file " + path.toString();
-        throw new RuntimeException(message, error);
-      } else if (response.getStatus() != 200) {
-        String message = String.format("Unexpected HTTP status code %d. Unable to virus check file  %s",
-            response.getStatus(), path.toString());
-        throw new RuntimeException(message);
-      } else {
-        return response.getBody();
-      }
-    });
-    return request.thenApply("OK"::equals);
+    return request.post(Source.from(Arrays.asList(fp, dp))).handleAsync((response, error) ->
+            "OK".equals(RequestUtil.parse(request, response, error, VIRUS_CHECKER_SERVICE, "isOk", String.class)),
+        context.current());
   }
 
 }

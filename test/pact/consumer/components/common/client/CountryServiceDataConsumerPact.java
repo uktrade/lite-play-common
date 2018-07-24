@@ -14,7 +14,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.test.WSTestClient;
@@ -51,12 +50,11 @@ public class CountryServiceDataConsumerPact {
   }
 
   public static CountryServiceClient buildCountryServiceAllClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
-    return CountryServiceClient.buildCountryServiceAllClient(new HttpExecutionContext(Runnable::run),
-        wsClient,
+    return CountryServiceClient.buildCountryServiceAllClient(mockProvider.getUrl(),
         1000,
-        mockProvider.getUrl(),
         "service:password",
-        Json.newDefaultMapper());
+        wsClient,
+        new HttpExecutionContext(Runnable::run));
   }
 
   @Pact(provider = PROVIDER, consumer = CONSUMER)
