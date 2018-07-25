@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -8,10 +9,12 @@ import com.google.inject.name.Named;
 import components.common.logging.CorrelationId;
 import components.common.logging.ServiceClientLogger;
 import filters.common.JwtRequestFilter;
+import org.slf4j.LoggerFactory;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
+import play.libs.ws.WSResponse;
 import uk.gov.bis.lite.permissions.api.RegisterOgelResponse;
 import uk.gov.bis.lite.permissions.api.param.RegisterParam;
 import uk.gov.bis.lite.permissions.api.view.LicenceView;
@@ -23,6 +26,7 @@ import java.util.concurrent.CompletionStage;
 
 public class PermissionsServiceClient {
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String PERMISSIONS_SERVICE = "permissions-service";
   private static final String REGISTER_OGEL_PATH = "%s/register-ogel";
   private static final String GET_OGEL_REGISTRATIONS_PATH = "%s/ogel-registrations/user/%s";
@@ -30,6 +34,7 @@ public class PermissionsServiceClient {
 
   private final String address;
   private final int timeout;
+  private final String credentials;
   private final WSClient wsClient;
   private final HttpExecutionContext context;
   private final JwtRequestFilter jwtRequestFilter;
@@ -37,13 +42,24 @@ public class PermissionsServiceClient {
   @Inject
   public PermissionsServiceClient(@Named("permissionsServiceAddress") String address,
                                   @Named("permissionsServiceTimeout") int timeout,
+                                  @Named("permissionsServiceCredentials") String credentials,
                                   WSClient wsClient, HttpExecutionContext httpExecutionContext,
                                   JwtRequestFilter jwtRequestFilter) {
     this.address = address;
     this.timeout = timeout;
+    this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
     this.jwtRequestFilter = jwtRequestFilter;
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get().handleAsync((response, error) -> {
+          return handleAsBoolean(response, error, PERMISSIONS_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<String> registerOgel(RegisterParam registerParam, String callbackUrl) {

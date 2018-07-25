@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parse;
 
 import com.google.inject.Inject;
@@ -16,6 +17,7 @@ import java.util.concurrent.CompletionStage;
 
 public class UserServiceClientBasicAuth {
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String USER_SERVICE = "user-service";
 
   private static final String USER_ACCOUNT_TYPE_PATH = "%s/user-account-type/%s";
@@ -36,6 +38,15 @@ public class UserServiceClientBasicAuth {
     this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get().handleAsync((response, error) -> {
+          return handleAsBoolean(response, error, USER_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<UserAccountTypeView> getUserAccountTypeView(String userId) {

@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 public class OgelServiceClient {
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String OGEL_SERVICE = "ogel-service";
 
   private static final String GET_OGEL_PATH = "%s/ogels/%s";
@@ -43,6 +45,15 @@ public class OgelServiceClient {
     this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get().handleAsync((response, error) -> {
+          return handleAsBoolean(response, error, OGEL_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<OgelFullView> getById(String ogelId) {

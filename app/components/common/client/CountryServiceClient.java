@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parseList;
 
 import components.common.logging.CorrelationId;
@@ -18,6 +19,7 @@ public class CountryServiceClient {
 
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CountryServiceClient.class);
 
+  private static final String SERVICE_ADMIN_SERVLET_PING_PATH = "/admin/ping";
   private static final String COUNTRY_SERVICE = "country-service";
 
   private static final String GET_COUNTRIES_SET_URL = "%s/countries/set/%s";
@@ -30,6 +32,7 @@ public class CountryServiceClient {
     ALL
   }
 
+  private final String address;
   private final String url;
   private final int timeout;
   private final String credentials;
@@ -40,11 +43,21 @@ public class CountryServiceClient {
                               WSClient wsClient, HttpExecutionContext httpExecutionContext,
                               CountryServiceEndpoint countryServiceEndpoint,
                               String countryParamName) {
+    this.address = address;
     this.timeout = timeout;
     this.credentials = credentials;
     this.wsClient = wsClient;
     this.context = httpExecutionContext;
     this.url = buildUrl(address, countryServiceEndpoint, countryParamName);
+  }
+
+  public CompletionStage<Boolean> serviceReachable() {
+    return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
+        .setRequestTimeout(Duration.ofMillis(timeout))
+        .setAuth(credentials)
+        .get().handleAsync((response, error) -> {
+          return handleAsBoolean(response, error, COUNTRY_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<List<CountryView>> getCountries() {
