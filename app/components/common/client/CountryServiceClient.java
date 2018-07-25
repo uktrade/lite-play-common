@@ -1,6 +1,6 @@
 package components.common.client;
 
-import static components.common.client.RequestUtil.handle;
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parseList;
 
 import components.common.logging.CorrelationId;
@@ -56,7 +56,7 @@ public class CountryServiceClient {
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
         .get().handleAsync((response, error) -> {
-          return handle(response, error, COUNTRY_SERVICE, "serviceReachable");
+          return handleAsBoolean(response, error, COUNTRY_SERVICE, "serviceReachable");
         }, context.current());
   }
 

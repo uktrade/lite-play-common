@@ -1,6 +1,6 @@
 package components.common.client;
 
-import static components.common.client.RequestUtil.handle;
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -58,7 +58,7 @@ public class PermissionsServiceClient {
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
         .get().handleAsync((response, error) -> {
-          return handle(response, error, PERMISSIONS_SERVICE, "serviceReachable");
+          return handleAsBoolean(response, error, PERMISSIONS_SERVICE, "serviceReachable");
         }, context.current());
   }
 

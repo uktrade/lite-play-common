@@ -20,7 +20,7 @@ public class RequestUtil {
     return Arrays.asList(array);
   }
 
-  public static Boolean handle(WSResponse response, Throwable throwable, String service, String method) {
+  public static Boolean handleAsBoolean(WSResponse response, Throwable throwable, String service, String method) {
     if (throwable != null) {
       LOGGER.error(service + " failure [" + method + "]", throwable);
       return false;

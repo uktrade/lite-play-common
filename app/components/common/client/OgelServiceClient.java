@@ -1,6 +1,6 @@
 package components.common.client;
 
-import static components.common.client.RequestUtil.handle;
+import static components.common.client.RequestUtil.handleAsBoolean;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -52,7 +52,7 @@ public class OgelServiceClient {
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
         .get().handleAsync((response, error) -> {
-          return handle(response, error, OGEL_SERVICE, "serviceReachable");
+          return handleAsBoolean(response, error, OGEL_SERVICE, "serviceReachable");
         }, context.current());
   }
 
