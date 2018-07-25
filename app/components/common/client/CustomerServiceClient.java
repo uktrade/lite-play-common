@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handle;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -53,8 +54,9 @@ public class CustomerServiceClient {
     return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
-        .get()
-        .handleAsync((response, error) -> response.getStatus() == 200);
+        .get().handleAsync((response, error) -> {
+          return handle(response, error, CUSTOMER_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<List<SiteView>> getSitesByCustomerIdUserId(String customerId, String userId) {

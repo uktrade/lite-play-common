@@ -1,5 +1,6 @@
 package components.common.client;
 
+import static components.common.client.RequestUtil.handle;
 import static components.common.client.RequestUtil.parse;
 import static components.common.client.RequestUtil.parseList;
 
@@ -8,10 +9,12 @@ import com.google.inject.name.Named;
 import components.common.logging.CorrelationId;
 import components.common.logging.ServiceClientLogger;
 import filters.common.JwtRequestFilter;
+import org.slf4j.LoggerFactory;
 import play.libs.Json;
 import play.libs.concurrent.HttpExecutionContext;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
+import play.libs.ws.WSResponse;
 import uk.gov.bis.lite.permissions.api.RegisterOgelResponse;
 import uk.gov.bis.lite.permissions.api.param.RegisterParam;
 import uk.gov.bis.lite.permissions.api.view.LicenceView;
@@ -54,8 +57,9 @@ public class PermissionsServiceClient {
     return wsClient.url(address + SERVICE_ADMIN_SERVLET_PING_PATH)
         .setRequestTimeout(Duration.ofMillis(timeout))
         .setAuth(credentials)
-        .get()
-        .handleAsync((response, error) -> response.getStatus() == 200);
+        .get().handleAsync((response, error) -> {
+          return handle(response, error, PERMISSIONS_SERVICE, "serviceReachable");
+        }, context.current());
   }
 
   public CompletionStage<String> registerOgel(RegisterParam registerParam, String callbackUrl) {

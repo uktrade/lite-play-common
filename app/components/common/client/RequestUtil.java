@@ -20,6 +20,17 @@ public class RequestUtil {
     return Arrays.asList(array);
   }
 
+  public static Boolean handle(WSResponse response, Throwable throwable, String service, String method) {
+    if (throwable != null) {
+      LOGGER.error(service + " failure [" + method + "]", throwable);
+      return false;
+    } else if (response.getStatus() != 200) {
+      LOGGER.error(service + " failure [" + method + "]", response.getBody());
+      return false;
+    }
+    return true;
+  }
+
   public static <T> T parse(WSRequest request, WSResponse response, Throwable throwable, String service, String method,
                             Class<T> clazz) {
     if (throwable != null) {
