@@ -69,7 +69,7 @@ public class CommonPermissionsServiceConsumerPact {
 
   public static PermissionsServiceClient buildClient(WSClient wsClient, PactProviderRuleMk2 mockProvider) {
     return new PermissionsServiceClient(mockProvider.getUrl(),
-        1000,
+        1000, "service:password",
         wsClient,
         new HttpExecutionContext(Runnable::run),
         new JwtTestRequestFilter());

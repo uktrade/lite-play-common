@@ -54,7 +54,7 @@ public class CommonCustomerServiceConsumerPact {
 
   public static CustomerServiceClient buildClient(WSClient wsClient, PactProviderRuleMk2 mockProvider) {
     return new CustomerServiceClient(mockProvider.getUrl(),
-        1000,
+        1000, "service:password",
         wsClient,
         new HttpExecutionContext(Runnable::run),
         new JwtTestRequestFilter());
