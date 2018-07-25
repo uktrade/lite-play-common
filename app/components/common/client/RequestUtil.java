@@ -25,7 +25,7 @@ public class RequestUtil {
       LOGGER.error(service + " failure [" + method + "]", throwable);
       return false;
     } else if (response.getStatus() != 200) {
-      LOGGER.error(service + " failure [" + method + "]", response.getBody());
+      LOGGER.error(service + " failure [" + method + "] body [{}]", response.getBody());
       return false;
     }
     return true;
