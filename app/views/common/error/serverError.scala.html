@@ -2,11 +2,11 @@
 @import views.html.common.page._
 @import play.twirl.api.HtmlFormat
 
-@(error: Option[Exception], formattedStackTrace: Option[String], corrID: String)
+@(error: Option[Exception], formattedStackTrace: Option[String], corrID: String, contactEmail: String)
 
 
 @govukTemplate(
-  Some("Application Error - License controlled items and services"),
+  Some("There is a problem with the service"),
   bodyClasses = None,
   htmlLang = None
 )(
@@ -37,22 +37,16 @@
 
     <header class="page-header">
       <div>
-        <h1 class="heading-xlarge">Application Error</h1>
+        <h1 class="heading-large">Sorry, there is a problem with the service</h1>
       </div>
     </header>
 
-    <div class="error-summary" role="group" aria-labelledby="error-summary-heading" tabindex="-1">
+    <p>Try again later.</p>
 
-      <h2 class="heading-medium error-summary-heading" id="error-summary-heading">
-        Application Error
-      </h2>
+    <p><a href="https://www.spire.trade.gov.uk" rel="external" target="_blank">Use SPIRE</a> if you need to apply for an export licence.</p>
 
-      <p>The application has experienced an unexpected error. Please click the browser back button and <a href="javascript: window.history.back()">try again</a>.</p>
-      <p>If this fails, close your browser and try the action again.</p>
-      <br />
-      <p>In the event of further problems, please contact support.</p>
-      <p>Error reference: <strong class="bold-small">@corrID</strong></p>
-    </div>
+    <p>If the problem continues email <a href="mailto:@contactEmail">@contactEmail</a> with error reference <span class="bold">@corrID</span>.</p>
+
 
     @if(error.isDefined) {
       @detailPanel("error-info"){View detailed error information} {

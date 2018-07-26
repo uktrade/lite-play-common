@@ -36,15 +36,16 @@ public class ErrorHandler implements HttpErrorHandler {
   private final Environment environment;
   private final OptionalSourceMapper sourceMapper;
   private final boolean isErrorDetailEnabled;
+  private final String errorContactEmail;
 
   @Inject
-  public ErrorHandler(Environment environment,
-                      OptionalSourceMapper sourceMapper,
-                      Config config) {
+  public ErrorHandler(Environment environment, OptionalSourceMapper sourceMapper, Config config,
+                      String errorContactEmail) {
     this.environment = environment;
     this.sourceMapper = sourceMapper;
     // Error detail is enabled if configured to true or if the environment is running in dev mode
     this.isErrorDetailEnabled = config.getBoolean("errorDetailEnabled") || environment.isDev();
+    this.errorContactEmail = errorContactEmail;
   }
 
 
@@ -72,7 +73,8 @@ public class ErrorHandler implements HttpErrorHandler {
       optionalException = Option.apply(exception);
     }
 
-    return CompletableFuture.completedFuture(Results.status(statusCode, serverError.render(optionalException, Option.empty(), CorrelationId.get())));
+    return CompletableFuture.completedFuture(Results.status(statusCode, serverError.render(optionalException,
+        Option.empty(), CorrelationId.get(), errorContactEmail)));
   }
 
   /**
@@ -98,7 +100,8 @@ public class ErrorHandler implements HttpErrorHandler {
       optionalFormattedStackTrace = Option.apply(sw.toString());
     }
 
-    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException, optionalFormattedStackTrace, CorrelationId.get())));
+    return CompletableFuture.completedFuture(Results.internalServerError(serverError.render(optionalException,
+        optionalFormattedStackTrace, CorrelationId.get(), errorContactEmail)));
   }
 
   /**
