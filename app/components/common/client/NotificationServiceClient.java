@@ -44,6 +44,7 @@ public class NotificationServiceClient {
       throw new RuntimeException("Unable to write email notification as string ", jpe);
     }
     try {
+      LOGGER.info("Sending message type {} to {}", templateName, emailAddress);
       amazonSQS.sendMessage(notificationServiceAwsSqsQueueUrl, message);
     } catch (Exception exception) {
       LOGGER.error("Unable to send message {}", message, exception);
