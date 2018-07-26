@@ -5,14 +5,14 @@ import play.libs.ws.WSRequestExecutor;
 
 public class JwtTestRequestFilter extends JwtRequestFilter {
 
-  public JwtTestRequestFilter() {
+  JwtTestRequestFilter() {
     super(null, null, null);
   }
 
   @Override
   public WSRequestExecutor apply(WSRequestExecutor executor) {
     return request -> {
-      request.addHeader("Authorization", JwtTestHelper.JWT_AUTHORIZATION_HEADER_VALUE);
+      request.addHeader("Authorization", "Bearer " + TestHelper.JWT_TOKEN);
       return executor.apply(request);
     };
   }

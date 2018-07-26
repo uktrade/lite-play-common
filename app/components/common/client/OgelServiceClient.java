@@ -86,7 +86,7 @@ public class OgelServiceClient {
 
     return request.get().handleAsync((response, error) -> {
       List<ApplicableOgelView> applicableOgelViews =
-          parseList(request, response, error, OGEL_SERVICE, "getById", ApplicableOgelView[].class);
+          parseList(request, response, error, OGEL_SERVICE, "get", ApplicableOgelView[].class);
       return filterHistoric(applicableOgelViews, showHistoricOgel);
     }, context.current());
   }

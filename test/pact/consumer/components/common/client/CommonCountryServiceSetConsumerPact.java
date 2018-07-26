@@ -1,6 +1,10 @@
 package pact.consumer.components.common.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static pact.consumer.components.common.client.TestHelper.BASIC_AUTH_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.CONSUMER;
+import static pact.consumer.components.common.client.TestHelper.CONTENT_TYPE_HEADERS;
+import static pact.consumer.components.common.client.TestHelper.PROVIDER;
 
 import au.com.dius.pact.consumer.Pact;
 import au.com.dius.pact.consumer.PactProviderRuleMk2;
@@ -9,7 +13,6 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.RequestResponsePact;
-import com.google.common.collect.ImmutableMap;
 import components.common.client.CountryServiceClient;
 import org.junit.After;
 import org.junit.Before;
@@ -21,50 +24,32 @@ import play.test.WSTestClient;
 import uk.gov.bis.lite.countryservice.api.CountryView;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
+public class CommonCountryServiceSetConsumerPact {
 
-public class CountryServiceSetConsumerPact {
-
-  // service:password
-  private static final Map<String, String> AUTH_HEADERS = ImmutableMap.of("Authorization", "Basic c2VydmljZTpwYXNzd29yZA==");
-  private static final Map<String, String> CONTENT_TYPE_HEADERS = ImmutableMap.of("Content-Type", "application/json");
-
-  public static final String PROVIDER = "lite-play-common";
-  public static final String CONSUMER = "lite-play-common";
-
-  public static final String COUNTRY_REF = "CRTY0";
-  public static final String COUNTRY_NAME = "United Kingdom";
-
-  public static final String COUNTRY_SET_BASE_PATH = "/countries/set/";
-  public static final String EXISTS = "EXISTS";
-  public static final String DOES_NOT_EXIST = "DOES_NOT_EXIST";
-
-  public WSClient ws;
+  private static final String COUNTRY_SET_BASE_PATH = "/countries/set/";
+  private static final String EXISTS = "EXISTS";
+  private static final String DOES_NOT_EXIST = "DOES_NOT_EXIST";
+  private static final String COUNTRY_REF = "CRTY0";
+  private static final String COUNTRY_NAME = "United Kingdom";
 
   @Rule
   public final PactProviderRuleMk2 mockProvider = new PactProviderRuleMk2(PROVIDER, this);
 
+  private WSClient wsClient;
+
   @Before
   public void setUp() throws Exception {
-    ws = WSTestClient.newClient(mockProvider.getPort());
+    wsClient = WSTestClient.newClient(mockProvider.getPort());
   }
 
   @After
   public void tearDown() throws Exception {
-    ws.close();
+    wsClient.close();
   }
 
-  public static String getCountrySetExistsPath() {
-    return COUNTRY_SET_BASE_PATH + EXISTS;
-  }
-
-  public static String getCountrySetDoesNotExistPath() {
-    return COUNTRY_SET_BASE_PATH + DOES_NOT_EXIST;
-  }
-
-  public static CountryServiceClient buildCountrySetExistsClient(PactProviderRuleMk2 mockProvider, WSClient wsClient) {
+  public static CountryServiceClient buildCountryServiceSetExistsClient(PactProviderRuleMk2 mockProvider,
+                                                                        WSClient wsClient) {
     return CountryServiceClient.buildCountryServiceSetClient(mockProvider.getUrl(),
         1000,
         "service:password",
@@ -73,8 +58,8 @@ public class CountryServiceSetConsumerPact {
         EXISTS);
   }
 
-  public static CountryServiceClient buildCountrySetDoesNotExistClient(PactProviderRuleMk2 mockProvider,
-                                                                       WSClient wsClient) {
+  public static CountryServiceClient buildCountryServiceSetDoesNotExistClient(PactProviderRuleMk2 mockProvider,
+                                                                              WSClient wsClient) {
     return CountryServiceClient.buildCountryServiceSetClient(mockProvider.getUrl(),
         1000,
         "service:password",
@@ -93,8 +78,8 @@ public class CountryServiceSetConsumerPact {
     return builder
         .given("provided country set exists")
         .uponReceiving("a request for provided country set")
-        .headers(AUTH_HEADERS)
-        .path(getCountrySetExistsPath())
+        .headers(BASIC_AUTH_HEADERS)
+        .path(COUNTRY_SET_BASE_PATH + EXISTS)
         .method("GET")
         .willRespondWith()
         .status(200)
@@ -112,8 +97,8 @@ public class CountryServiceSetConsumerPact {
     return builder
         .given("provided country set does not exist")
         .uponReceiving("a request for provided country set")
-        .headers(AUTH_HEADERS)
-        .path(getCountrySetDoesNotExistPath())
+        .headers(BASIC_AUTH_HEADERS)
+        .path(COUNTRY_SET_BASE_PATH + DOES_NOT_EXIST)
         .method("GET")
         .willRespondWith()
         .status(404)
@@ -124,24 +109,13 @@ public class CountryServiceSetConsumerPact {
 
   @Test
   @PactVerification(value = PROVIDER, fragment = "countrySetExists")
-  public void countrySetExistsTest() {
-    doCountrySetExistsTest(buildCountrySetExistsClient(mockProvider, ws));
-  }
-
-  @Test
-  @PactVerification(value = PROVIDER, fragment = "countrySetDoesNotExist")
-  public void countrySetDoesNotExistTest() {
-    doCountrySetDoesNotExistTest(buildCountrySetDoesNotExistClient(mockProvider, ws));
+  public void countrySetExistsPact() throws Exception {
+    countrySetExists(buildCountryServiceSetExistsClient(mockProvider, wsClient));
   }
 
   @SuppressWarnings("Duplicates")
-  public static void doCountrySetExistsTest(CountryServiceClient client) {
-    List<CountryView> countries;
-    try {
-      countries = client.getCountries().toCompletableFuture().get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+  public static void countrySetExists(CountryServiceClient client) throws Exception {
+    List<CountryView> countries = client.getCountries().toCompletableFuture().get();
     assertThat(countries).isNotNull();
     assertThat(countries.isEmpty()).isFalse();
     CountryView countryView = countries.get(0);
@@ -149,14 +123,15 @@ public class CountryServiceSetConsumerPact {
     assertThat(countryView.getCountryName()).isEqualTo(COUNTRY_NAME);
   }
 
+  @Test
+  @PactVerification(value = PROVIDER, fragment = "countrySetDoesNotExist")
+  public void countrySetDoesNotExistPact() throws Exception {
+    countrySetDoesNotExist(buildCountryServiceSetDoesNotExistClient(mockProvider, wsClient));
+  }
+
   @SuppressWarnings("Duplicates")
-  public static void doCountrySetDoesNotExistTest(CountryServiceClient client) {
-    List<CountryView> countries;
-    try {
-      countries = client.getCountries().toCompletableFuture().get();
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+  public static void countrySetDoesNotExist(CountryServiceClient client) throws Exception {
+    List<CountryView> countries = client.getCountries().toCompletableFuture().get();
     assertThat(countries).isNotNull();
     assertThat(countries.isEmpty()).isTrue();
   }
