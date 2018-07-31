@@ -23,68 +23,80 @@ Additionally, every generated URL must be decorated by passing it to `ContextPar
 The Journey Manager uses context params to pass the current journey state between forms, so you must do this if you want
 to use the Journey Manager.
 
-## Error Pages
+## Service clients
 
-The ErrorHandler class in /app should be picked up automatically by Play to override the default error handling and
-instead output Gov UK styled error pages.
+Service clients for most LITE backend services are defined in `components.common.client`. These are all injectable but you 
+must provide some `@Named` strings in your Guice module - see the constructor for the client you wish to use.
 
-If you want to have the Play default error handling behaviour you can add the following line to your application config:
+### Country provider
 
-`play.http.errorHandler = "play.http.DefaultHttpErrorHandler"`
+For country service clients you must provide a CountryProvider which specifies the country data you want. The `CountryProvider`
+contains caching pre-population behaviour for the country data.
 
-When the application is running in development mode stack traces and extra error information should be shown on the page.
-In production mode the extra information will not be shown by default. If you want to see that extra information in
-production you can add the following line to your application config:
+```java
+@Provides
+@Singleton
+@Named("countryProviderExport")
+CountryProvider provideCountryServiceExportClient(HttpExecutionContext httpContext, WSClient wsClient,
+                                                  @Named("countryServiceAddress") String address,
+                                                  @Named("countryServiceTimeout") int timeout,
+                                                  @Named("countryServiceCredentials") String credentials) {
+  CountryServiceClient client = CountryServiceClient.buildCountryServiceSetClient(address, timeout, credentials, wsClient, httpContext, "export-control");
+  return new CountryProvider(client);
+}
+``` 
 
-`errorDetailEnabled = true`
+## Pac4j SAML configuration
 
-## Client side validation
+lite-play-common provides utility methods for configuring Pac4j to work with the SPIRE SAML IdP.
 
-Any forms sent out which contain elements with `data-validation` attributes will be validated client side.
+To build a Pac4j config object based on dynamic configuration options (such as the X509 certificate) in `application.conf`,
+write a Guice provider as such:
 
-`data-validation` attributes should be set on form fields and form-groups and contain field validation information in 
-escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidationJSON(field)`, where field is a 
-`Form.field`.
-
-### Skipping validation
-
-You might have a form with multiple submit buttons and only want client side validation to run for some of them. For the
-submit buttons that you want to skip validation you can put an attribute of `data-skip-validation` on them.
-
-### Validating sub-groups of fields in a form
-
-By default when a form is submitted all of the elements in the form with `data-validation` attributes will be validated.
-In cases where you might have multiple submit actions in a form, and you want to scope the submit-validation to a 
-sub-group of elements you can put a `data-validation-group` attribute on the submit action and the elements you wish it
-to validate, using a distinct attribute value for the group, e.g. `data-validation-group="postcode"`
-
-### Validating from custom JS
-
-If you have some custom javascript and want to validate a form you can call:
-
-```javascript
-var validationResult = LITECommon.ClientSideValidation.validateForm($('#form'), $('#triggeringelement'));
+```java
+@Singleton
+@Provides
+public org.pac4j.core.config.Config provideConfig(PlaySessionStore playSessionStore, SamlAuthorizer samlAuthorizer) {
+  return SamlUtil.buildConfig(config, playSessionStore,
+      new SamlHttpActionAdapter(routes.AuthorisationController.unauthorised()),
+      ImmutableMap.of(SamlAuthorizer.AUTHORIZER_NAME, samlAuthorizer));
+}
 ```
 
-Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that 
-triggered the validation (used to find the triggers validation-group).
+In an `@Secure` controller, retrieve the authenticated user's `AuthInfo` (user ID, email and name) by injecting a
+`SpireAuthManager` and calling `getAuthInfoFromContext()`.
 
-### Custom JS validation
-You might find that you need to use a custom validation function instead of the standard client side validation. In order to
-do so, you can call setValidationFunction like so:
- 
-```javascript
-LITECommon.ClientSideValidation.setValidationFunction(function() {
+Note you will also need the Redis dependency to share the Pac4j SAML session between apps via Redis - see below.
 
-  var validationFailures = []; // this array is expected to store objects of the following structure - {field: $('#xyz'), message: 'message'}.  
-  
-  // custom validation code
-  ...
-  return validationFailures;
-});  
+## PostgreSQL in CloudFoundry
+
+`PaasApplicationLoader` must be used when loading an application on GOV.UK PaaS (CloudFoundry), if PostgreSQL is required. 
+The loader parses the `VCAP_SERVICES` environment variable and configures the application's database settings before it starts.
+
+## Redis
+
+`StatelessRedisDao` provides helper methods for using a Redis hash as a session store, with a TTL which is reset whenever
+the map is updated. Do not use `CommonRedisDao` as it is deprecated. 
+
+Install `RedisSessionStoreModule` in your application's `GuiceModule` to enable this functionality. This is also required
+for SAML applications which need to share the authentication session via the `pac4j-session-store` named cache.
+
+## Correlation ID
+
+Call `CorrelationId.setUp()` at the start of a request in Play's `ActionCreator` to establish a unique correlation ID
+set on the current thread using MDC. `CorrelationId.requestFilter` should then be used when making downstream
+service requests to set the correlation ID on the request header:
+
+```java
+WSRequest request = wsClient.url(url)
+    .setRequestFilter(CorrelationId.requestFilter)
+    .get()
 ```
+
+Ensure async calls use `HttpExecutionContext.current()` so the correlation ID is transferred between threads.
 
 ## JWT Request Filter
+
 This request filter (`JwtRequestFilter`) adds an `Authorization` header containing a signed JWT to a `WSRequest`. The JWT 
 is comprised of a a subset of fields from an `AuthInfo` object, id, email, and full name. All signed by secret key shared 
 between both parties of the request. 
@@ -133,55 +145,117 @@ Which produces the following JWT (signature omitted):
 }
 ```
 
-## Dependency version information
-This build created from:
+## Frontend components
 
- * govuk_frontend_toolkit   v5.2.0
- * govuk_elements           v3.0.2 (with https://github.com/alphagov/govuk_elements/pull/611 cherrypicked from v3.1.3)
- * govuk_template           v0.19.0
- * govuk_prototype_kit      v5.0.0
+### Forms
+
+Common form templates for inputs, radios, checkboxes etc are defined in `views.common.form`. These all use the Play `Form`
+object to establish pre-filled values, validation state, etc.
+
+### Client side validation
+
+Any forms sent out which contain elements with `data-validation` attributes will be validated client side.
+
+`data-validation` attributes should be set on form fields and form-groups and contain field validation information in 
+escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidationJSON(field)`, where field is a 
+`Form.field`.
+
+#### Skipping validation
+
+You might have a form with multiple submit buttons and only want client side validation to run for some of them. For the
+submit buttons that you want to skip validation you can put an attribute of `data-skip-validation` on them.
+
+#### Validating sub-groups of fields in a form
+
+By default when a form is submitted all of the elements in the form with `data-validation` attributes will be validated.
+In cases where you might have multiple submit actions in a form, and you want to scope the submit-validation to a 
+sub-group of elements you can put a `data-validation-group` attribute on the submit action and the elements you wish it
+to validate, using a distinct attribute value for the group, e.g. `data-validation-group="postcode"`
+
+#### Validating from custom JS
+
+If you have some custom javascript and want to validate a form you can call:
+
+```javascript
+var validationResult = LITECommon.ClientSideValidation.validateForm($('#form'), $('#triggeringelement'));
+```
+
+Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that 
+triggered the validation (used to find the triggers validation-group).
+
+#### Custom JS validation
+You might find that you need to use a custom validation function instead of the standard client side validation. In order to
+do so, you can call setValidationFunction like so:
+ 
+```javascript
+LITECommon.ClientSideValidation.setValidationFunction(function() {
+
+  var validationFailures = []; // this array is expected to store objects of the following structure - {field: $('#xyz'), message: 'message'}.  
+  
+  // custom validation code
+  ...
+  return validationFailures;
+});  
+```
+
+### Error Pages
+
+The ErrorHandler class in /app should be picked up automatically by Play to override the default error handling and
+instead output Gov UK styled error pages.
+
+If you want to have the Play default error handling behaviour you can add the following line to your application config:
+
+`play.http.errorHandler = "play.http.DefaultHttpErrorHandler"`
+
+When the application is running in development mode stack traces and extra error information should be shown on the page.
+In production mode the extra information will not be shown by default. If you want to see that extra information in
+production you can add the following line to your application config:
+
+`errorDetailEnabled = true`
+
+## Asset dependencies
+
+This section outlines the process undertaken for moving frontend assets from GOV.UK repos into lite-play-common.
+
+### Dependency versions
+
+GOV.UK assets in lite-play-common built from:
+
+ * [govuk_frontend_toolkit](https://github.com/alphagov/govuk_frontend_toolkit/) - v5.2.0
+ * [govuk_elements](https://github.com/alphagov/govuk_elements/) - v3.0.2 
+   (with [this PR](https://github.com/alphagov/govuk_elements/pull/611) cherrypicked from v3.1.3)
+ * [govuk_template](https://github.com/alphagov/govuk_template) - v0.19.0
+ * [govuk_prototype_kit](https://github.com/alphagov/govuk-prototype-kit) - v5.0.0
 
 ### SASS merge (elements/toolkit)
 
-Copy all following files to app/assets/template/stylesheets:
-
-  govuk_elements/public/sass/_govuk-elements.scss
-  govuk_elements/public/sass/main*.css
-  govuk_frontend_toolkit/stylesheets/**.scss
-  govuk_prototype_kit/app/assets/sass/patterns/_check-your-answers.scss
-
-Copy govuk_frontend_toolkit/images to public/template/images
-
-Modify app/assets/template/stylesheets/main.scss:
-  change $path declaration to:  $path: "../images/";
-  import lite scss at bottom of file: @import "lite/lite";
-
+* Copy all following files to `app/assets/template/stylesheets`:
+  * `govuk_elements/public/sass/_govuk-elements.scss`
+  * `govuk_elements/public/sass/main*.css`
+  * `govuk_frontend_toolkit/stylesheets/**.scss`
+  * `govuk_prototype_kit/app/assets/sass/patterns/_check-your-answers.scss`
+* Copy `govuk_frontend_toolkit/images` to `public/template/images`
+* Modify `app/assets/template/stylesheets/main.scss`:
+  * change `$path` declaration to:  `$path: "../images/";`
+  * import lite scss at bottom of file: `@import "lite/lite";`
 
 ### Template files
 
-In govuk_template run: ```bundle exec rake build:play```
+* In govuk_template run: ```bundle exec rake build:play```
+* Copy `pkg/play_govuk_template-0.19.0/assets/*` to `public/template`
 
-Copy pkg/play_govuk_template-0.19.0/assets/* to public/template
+### JavaScript
 
+* Copy `govuk_elements/public/javascripts/vendor/details.polyfill.js` to `public/template/javascripts/vendor`
+* Copy `govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js` to `public/template/javascripts/govuk`
 
-JavaScript
-====
+### Misc
 
-Copy govuk_elements/public/javascripts/vendor/details.polyfill.js to public/template/javascripts/vendor
-
-Copy govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js to public/template/javascripts/govuk
-
-
-Misc
-====
-
-Add overridden govuk_template styling to /public/template/stylesheets/lite.css and lite-ie.css
-
-/public/template/stylesheets/external-links/* pulled from govuk_template v0.17.3
+* Add overridden govuk_template styling to `/public/template/stylesheets/lite.css` and `lite-ie.css`
+* `/public/template/stylesheets/external-links/*` pulled from govuk_template v0.17.3
 
 
-jQuery
-======
+### jQuery
 
 Using the following jQuery components:
 * jQuery Core v1.12.4
