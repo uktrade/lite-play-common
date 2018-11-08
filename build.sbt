@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
   cacheApi,
   javaWs,
   filters,
+  "org.eclipse.jetty" % "jetty-http % "9.4.12.v20180830",
   "io.mikael" % "urlbuilder" % "2.0.7",
   "org.mockito" % "mockito-all" % "1.10.19",
   "org.pac4j" % "pac4j" % "2.3.1",
