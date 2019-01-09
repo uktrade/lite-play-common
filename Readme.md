@@ -235,7 +235,8 @@ GOV.UK assets in lite-play-common built from:
   * change `$govuk-images-path` declaration to:  `#{$govuk-assets-path}images/";`
   * import lite scss at bottom of file: `@import "lite/lite";`
 
-$govuk-assets-path: to $govuk-assets-path: /
+change `$govuk-assets-path:` to `$govuk-assets-path: "/common/assets/template/" !default;`
+
 
 ### JavaScript
 
