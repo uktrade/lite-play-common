@@ -221,7 +221,7 @@ This section outlines the process undertaken for moving frontend assets from GOV
 
 GOV.UK assets in lite-play-common built from:
 
- * [govuk_frontend](https://github.com/alphagov/govuk_frontend') - v5.2.0 TODO
+ * [govuk_frontend](https://github.com/alphagov/govuk_frontend) - v2.4.1
 
 ### SASS merge (elements/toolkit)
 

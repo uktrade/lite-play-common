@@ -3,9 +3,9 @@
 
 @(field: Form.Field, prompt: String, isPromptHtml: Boolean = false, cssClass : String = "", promptNewlineToBr: Boolean = false, contentAfterLabel: Option[Html] = None, inputId: String = "", inputName: String = "", inputValue: String = "true")(checkedContent: Html)
 
-<div class="multiple-choice" @if(checkedContent.body.nonEmpty){data-target="@field.getName.get-content"}>
-  <input id="@if(StringUtils.isBlank(inputId)){@field.getName.get}else{@inputId}" name="@if(StringUtils.isBlank(inputName)){@field.getName.get}else{@inputName}" value="@inputValue" type="checkbox" @if(field.getValue.isPresent && field.getValue.get.equals(inputValue)){ checked="checked" }>
-  <label class="@cssClass" for="@if(StringUtils.isBlank(inputId)){@field.getName.get}else{@inputId}">
+<div class="govuk-radios__item" @if(checkedContent.body.nonEmpty){data-target="@field.getName.get-content"}>
+  <input class="govuk-radios__input" id="@if(StringUtils.isBlank(inputId)){@field.getName.get}else{@inputId}" name="@if(StringUtils.isBlank(inputName)){@field.getName.get}else{@inputName}" value="@inputValue" type="checkbox" @if(field.getValue.isPresent && field.getValue.get.equals(inputValue)){ checked="checked" }>
+  <label class="govuk-label govuk-radios__label" class="@cssClass" for="@if(StringUtils.isBlank(inputId)){@field.getName.get}else{@inputId}">
   @if(promptNewlineToBr) {
     @if(isPromptHtml) {
       @Html(prompt.replace("\n", "<br/>"))

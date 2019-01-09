@@ -2,11 +2,11 @@
 
 @(id: String, summaryDescribedBy: String = "")(summary: Html)(detailContent: Html)
 
-<details class="expanded-details" role="group">
-  <summary aria-expanded="false" aria-controls="@id" @if(StringUtils.isNotBlank(summaryDescribedBy)){aria-describedby="@summaryDescribedBy"} role="button">
-    <span class="summary">@summary</span>
+<details class="govuk-details">
+  <summary class="govuk-details__summary" aria-expanded="false" aria-controls="@id" @if(StringUtils.isNotBlank(summaryDescribedBy)){aria-describedby="@summaryDescribedBy"} role="button">
+    <span class="govuk-details__summary-text">@summary</span>
   </summary>
-  <div aria-hidden="true" class="panel panel-border-wide" id="@id">
+  <div aria-hidden="true" class="govuk-details__text" id="@id">
     @detailContent
   </div>
 </details>

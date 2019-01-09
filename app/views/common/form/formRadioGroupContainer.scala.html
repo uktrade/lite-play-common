@@ -11,7 +11,7 @@
   }
 }
 
-<div id="@field.getName.get" class="form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
+<div id="@field.getName.get" class="govuk-form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -22,12 +22,12 @@
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }>
 
-  <fieldset @if(inline) { class="inline" }>
-    <legend @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { class="clientside-error-message-parent" }>
+  <fieldset class="govuk-fieldset @if(inline) { inline }">
+    <legend @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { class="clientside-error-message-parent govuk-label" }>
       <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
 
       @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
-        <div class="clientside-form-group-error-target clientside-error-message-parent @if(field.error.isDefined) { form-group-error }">
+        <div class="clientside-form-group-error-target clientside-error-message-parent govuk-label @if(field.error.isDefined) { form-group-error }">
           @legendContent
           @errorMessage
         </div>
