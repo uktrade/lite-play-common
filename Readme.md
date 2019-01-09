@@ -4,28 +4,28 @@ Common code for use in all LITE Play projects.
 
 ## Journey Manager
 
-The `JourneyManager` and associated classes allow you to define a user's journey through the application. 
+The `JourneyManager` and associated classes allow you to define a user's journey through the application.
 [Read further details here](docs/Journey.md).
 
 ## Context Params
 
-Context params are used to maintain session data, as an alternative to cookies. They work by "ping-ponging" data 
+Context params are used to maintain session data, as an alternative to cookies. They work by "ping-ponging" data
 between pages as GET or POST parameters attached to every request. This helps avoid common issues encountered when using
 cookies, such as the browser back button not restoring a value to its previous state, or multiple tabs overwriting each
 other's data.
 
-To use context params, subclass `ContextParamProvider` and implement the required name method, then `@Provide` a 
-`ContextParamManager` composed of all your `ContextParamProvider`s from your Guice module. 
+To use context params, subclass `ContextParamProvider` and implement the required name method, then `@Provide` a
+`ContextParamManager` composed of all your `ContextParamProvider`s from your Guice module.
 
 For context params to work correctly, every `<form>` in your application must include the `@contextFormParams` template.
-Additionally, every generated URL must be decorated by passing it to `ContextParamManager.addParamsToCall`. 
+Additionally, every generated URL must be decorated by passing it to `ContextParamManager.addParamsToCall`.
 
 The Journey Manager uses context params to pass the current journey state between forms, so you must do this if you want
 to use the Journey Manager.
 
 ## Service clients
 
-Service clients for most LITE backend services are defined in `components.common.client`. These are all injectable but you 
+Service clients for most LITE backend services are defined in `components.common.client`. These are all injectable but you
 must provide some `@Named` strings in your Guice module - see the constructor for the client you wish to use.
 
 ### Country provider
@@ -44,7 +44,7 @@ CountryProvider provideCountryServiceExportClient(HttpExecutionContext httpConte
   CountryServiceClient client = CountryServiceClient.buildCountryServiceSetClient(address, timeout, credentials, wsClient, httpContext, "export-control");
   return new CountryProvider(client);
 }
-``` 
+```
 
 ## Pac4j SAML configuration
 
@@ -70,13 +70,13 @@ Note you will also need the Redis dependency to share the Pac4j SAML session bet
 
 ## PostgreSQL in CloudFoundry
 
-`PaasApplicationLoader` must be used when loading an application on GOV.UK PaaS (CloudFoundry), if PostgreSQL is required. 
+`PaasApplicationLoader` must be used when loading an application on GOV.UK PaaS (CloudFoundry), if PostgreSQL is required.
 The loader parses the `VCAP_SERVICES` environment variable and configures the application's database settings before it starts.
 
 ## Redis
 
 `StatelessRedisDao` provides helper methods for using a Redis hash as a session store, with a TTL which is reset whenever
-the map is updated. Do not use `CommonRedisDao` as it is deprecated. 
+the map is updated. Do not use `CommonRedisDao` as it is deprecated.
 
 Install `RedisSessionStoreModule` in your application's `GuiceModule` to enable this functionality. This is also required
 for SAML applications which need to share the authentication session via the `pac4j-session-store` named cache.
@@ -97,11 +97,11 @@ Ensure async calls use `HttpExecutionContext.current()` so the correlation ID is
 
 ## JWT Request Filter
 
-This request filter (`JwtRequestFilter`) adds an `Authorization` header containing a signed JWT to a `WSRequest`. The JWT 
-is comprised of a a subset of fields from an `AuthInfo` object, id, email, and full name. All signed by secret key shared 
-between both parties of the request. 
+This request filter (`JwtRequestFilter`) adds an `Authorization` header containing a signed JWT to a `WSRequest`. The JWT
+is comprised of a a subset of fields from an `AuthInfo` object, id, email, and full name. All signed by secret key shared
+between both parties of the request.
 
-`JwtRequestFilter` should be injected wherever an instance is required, this relies on both `JwtRequestFilterConfig` and 
+`JwtRequestFilter` should be injected wherever an instance is required, this relies on both `JwtRequestFilterConfig` and
 `SpireAuthManager` to have providers defined (or otherwise be injectable).
 
 Example `JwtRequestFilterConfig` provider, note: `jwtSharedSecret` must be at least 64 bytes in length.
@@ -156,8 +156,8 @@ object to establish pre-filled values, validation state, etc.
 
 Any forms sent out which contain elements with `data-validation` attributes will be validated client side.
 
-`data-validation` attributes should be set on form fields and form-groups and contain field validation information in 
-escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidationJSON(field)`, where field is a 
+`data-validation` attributes should be set on form fields and form-groups and contain field validation information in
+escaped JSON format which can be obtained with a call to `ViewUtil.fieldValidationJSON(field)`, where field is a
 `Form.field`.
 
 #### Skipping validation
@@ -168,7 +168,7 @@ submit buttons that you want to skip validation you can put an attribute of `dat
 #### Validating sub-groups of fields in a form
 
 By default when a form is submitted all of the elements in the form with `data-validation` attributes will be validated.
-In cases where you might have multiple submit actions in a form, and you want to scope the submit-validation to a 
+In cases where you might have multiple submit actions in a form, and you want to scope the submit-validation to a
 sub-group of elements you can put a `data-validation-group` attribute on the submit action and the elements you wish it
 to validate, using a distinct attribute value for the group, e.g. `data-validation-group="postcode"`
 
@@ -180,18 +180,18 @@ If you have some custom javascript and want to validate a form you can call:
 var validationResult = LITECommon.ClientSideValidation.validateForm($('#form'), $('#triggeringelement'));
 ```
 
-Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that 
+Passing it a jQuery-wrapped form element that contains the fields to validate as well as a jQuery-wrapped element that
 triggered the validation (used to find the triggers validation-group).
 
 #### Custom JS validation
 You might find that you need to use a custom validation function instead of the standard client side validation. In order to
 do so, you can call setValidationFunction like so:
- 
+
 ```javascript
 LITECommon.ClientSideValidation.setValidationFunction(function() {
 
   var validationFailures = []; // this array is expected to store objects of the following structure - {field: $('#xyz'), message: 'message'}.  
-  
+
   // custom validation code
   ...
   return validationFailures;
@@ -217,15 +217,11 @@ production you can add the following line to your application config:
 
 This section outlines the process undertaken for moving frontend assets from GOV.UK repos into lite-play-common.
 
-### Dependency versions
+### Dependency versions TODO
 
 GOV.UK assets in lite-play-common built from:
 
- * [govuk_frontend_toolkit](https://github.com/alphagov/govuk_frontend_toolkit/) - v5.2.0
- * [govuk_elements](https://github.com/alphagov/govuk_elements/) - v3.0.2 
-   (with [this PR](https://github.com/alphagov/govuk_elements/pull/611) cherrypicked from v3.1.3)
- * [govuk_template](https://github.com/alphagov/govuk_template) - v0.19.0
- * [govuk_prototype_kit](https://github.com/alphagov/govuk-prototype-kit) - v5.0.0
+ * [govuk_frontend](https://github.com/alphagov/govuk_frontend') - v5.2.0 TODO
 
 ### SASS merge (elements/toolkit)
 
@@ -236,13 +232,10 @@ GOV.UK assets in lite-play-common built from:
   * `govuk_prototype_kit/app/assets/sass/patterns/_check-your-answers.scss`
 * Copy `govuk_frontend_toolkit/images` to `public/template/images`
 * Modify `app/assets/template/stylesheets/main.scss`:
-  * change `$path` declaration to:  `$path: "../images/";`
+  * change `$govuk-images-path` declaration to:  `#{$govuk-assets-path}images/";`
   * import lite scss at bottom of file: `@import "lite/lite";`
 
-### Template files
-
-* In govuk_template run: ```bundle exec rake build:play```
-* Copy `pkg/play_govuk_template-0.19.0/assets/*` to `public/template`
+$govuk-assets-path: to $govuk-assets-path: /
 
 ### JavaScript
 
@@ -254,11 +247,9 @@ GOV.UK assets in lite-play-common built from:
 * Add overridden govuk_template styling to `/public/template/stylesheets/lite.css` and `lite-ie.css`
 * `/public/template/stylesheets/external-links/*` pulled from govuk_template v0.17.3
 
-
 ### jQuery
 
 Using the following jQuery components:
 * jQuery Core v1.12.4
 * jQuery UI v1.12.0 (no theme)
 * selectToAutocomplete v1.2.0 (https://github.com/LCartwright/selectToAutocomplete)
-
