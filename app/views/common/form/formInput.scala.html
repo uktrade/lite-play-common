@@ -6,19 +6,19 @@
 
 @formattedLabel = {
   <label for="@field.id">
-    <span class="@labelClass">@label</span>
+    <span class="@labelClass govuk-label">@label</span>
 
     @if(ViewUtil.cssClassContainsHeading(labelClass)) {
-      <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+      <div class="govuk-form-group @if(field.error.isDefined) { govuk-form-group--error }">
     }
 
       @if(hint.isDefined){
-        <span class="form-hint">@hint</span>
+        @hint
       }
 
-      <div class="clientside-error-message-parent">
+      <div class="govuk-form-group">
         @if(field.error.isDefined) {
-          <span class="error-message">@Messages(field.error.get.message)</span>
+          <span class="govuk-error-message">@Messages(field.error.get.message)</span>
         }
       </div>
 
@@ -28,7 +28,7 @@
   </label>
 }
 
-<div class="govuk-form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(labelWrapperTag)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(labelClass)) { clientside-form-group-error-target }>
+<div class="govuk-form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(labelWrapperTag)) { govuk-form-group--error } @if(!ViewUtil.cssClassContainsHeading(labelClass)) { clientside-form-group-error-target }>
 
   @if(!StringUtils.isBlank(labelWrapperTag)) {
     <@labelWrapperTag>@formattedLabel</@labelWrapperTag>
@@ -37,10 +37,10 @@
   }
 
   @if(ViewUtil.cssClassContainsHeading(labelClass)) {
-    <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+    <div class="clientside-form-group-error-target @if(field.error.isDefined) { govuk-input--error }">
   }
 
-  <input class="govuk-input form-control @cssClass @if(field.error.isDefined){ form-control-error }" id="@field.id" name="@field.getName.get" type="text" value="@field.getValue.orElse(null)"
+  <input class="govuk-input form-control @cssClass @if(field.error.isDefined){ govuk-input--error }" id="@field.id" name="@field.getName.get" type="text" value="@field.getValue.orElse(null)"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){

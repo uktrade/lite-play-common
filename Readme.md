@@ -225,28 +225,28 @@ GOV.UK assets in lite-play-common built from:
 
 ### SASS merge (elements/toolkit)
 
-* Copy all following files to `app/assets/template/stylesheets`:
+* Copy all following files to `app/assets/stylesheets`:
   * `govuk_elements/public/sass/_govuk-elements.scss`
   * `govuk_elements/public/sass/main*.css`
   * `govuk_frontend_toolkit/stylesheets/**.scss`
   * `govuk_prototype_kit/app/assets/sass/patterns/_check-your-answers.scss`
-* Copy `govuk_frontend_toolkit/images` to `public/template/images`
-* Modify `app/assets/template/stylesheets/main.scss`:
+* Copy `govuk_frontend_toolkit/images` to `public/images`
+* Modify `app/assets/stylesheets/main.scss`:
   * change `$govuk-images-path` declaration to:  `#{$govuk-assets-path}images/";`
   * import lite scss at bottom of file: `@import "lite/lite";`
 
-change `$govuk-assets-path:` to `$govuk-assets-path: "/common/assets/template/" !default;`
+change `$govuk-assets-path:` to `$govuk-assets-path: "/common/assets/" !default;`
 
 
 ### JavaScript
 
-* Copy `govuk_elements/public/javascripts/vendor/details.polyfill.js` to `public/template/javascripts/vendor`
-* Copy `govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js` to `public/template/javascripts/govuk`
+* Copy `govuk_elements/public/javascripts/vendor/details.polyfill.js` to `public/javascripts/vendor`
+* Copy `govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js` to `public/javascripts/govuk`
 
 ### Misc
 
-* Add overridden govuk_template styling to `/public/template/stylesheets/lite.css` and `lite-ie.css`
-* `/public/template/stylesheets/external-links/*` pulled from govuk_template v0.17.3
+* Add overridden govuk_template styling to `/public/stylesheets/lite.css` and `lite-ie.css`
+* `/public/stylesheets/external-links/*` pulled from govuk_template v0.17.3
 
 ### jQuery
 

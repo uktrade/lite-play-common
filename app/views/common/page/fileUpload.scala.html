@@ -18,7 +18,7 @@
   }
 
   @if(form.getError(FileService.FILE_UPLOAD_FORM_FIELD).isPresent) {
-    <span class="error-message">@form.getError(FileService.FILE_UPLOAD_FORM_FIELD).get.message</span>
+    <span class="govuk-error-message">@form.getError(FileService.FILE_UPLOAD_FORM_FIELD).get.message</span>
   }
 
   <div class="file-upload-drop-target">

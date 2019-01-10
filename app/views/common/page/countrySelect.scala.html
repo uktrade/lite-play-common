@@ -12,7 +12,7 @@ detailPanel: Option[Html] = None, validationGroup: Option[String] = None)
 
   <div class="clientside-error-message-parent">
   @if(field.error.isDefined) {
-    <span class="error-message">@Messages(field.error.get.message)</span>
+    <span class="govuk-error-message">@Messages(field.error.get.message)</span>
   }
   </div>
 

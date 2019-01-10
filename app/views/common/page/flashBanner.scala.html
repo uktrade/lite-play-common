@@ -1,9 +1,14 @@
 @(flashType: String = "")(message: Html)(detail: Html = Html(""))
-<div class="flash @if(flashType != ""){ @flashType-flash }" role="alert">
-  <span class="flash-heading">@message</span>
-  @if(detail.toString.trim.length > 0) {
-    <div class="flash-detail">
-      @detail
-    </div>
-  }
+<div class="govuk-error-summary @if(flashType != ""){ @flashType-flash }" role="alert">
+	<span class="govuk-error-summary__title">@message</span>
+	<h2 class="govuk-error-summary__title" id="error-summary-title">
+		There is a problem
+	</h2>
+	@if(detail.toString.trim.length > 0) {
+	<div class="govuk-error-summary__body">
+		<ul class="govuk-list govuk-error-summary__list">
+			@detail
+		</ul>
+	</div>
+	}
 </div>

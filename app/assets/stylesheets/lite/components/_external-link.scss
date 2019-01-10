@@ -1,0 +1,33 @@
+a[rel="external"] {
+	position: relative;
+	display: inline-block;
+
+	&:before {
+		content: "";
+		position: absolute;
+		right: 0;
+		top: 4px;
+		width: 12px;
+		height: 12px;
+		background-color: currentColor;
+		background-image: url("/common/assets/images/lite/external/external.svg");
+		background-repeat: no-repeat;
+	}
+
+	&:after {
+		content: "\A0\A0\A0\A0";
+	}
+
+	&:hover:before {
+		background-color: currentColor!important;
+	}
+
+	&:focus:before {
+		background-color: currentColor!important;
+		background-position: 0 -12px!important;
+	}
+
+	&:visited:before {
+		background-color: $govuk-link-visited-colour;
+	}
+}

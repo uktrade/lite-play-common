@@ -7,8 +7,8 @@ LITECommon.ClientSideValidation = {
   // These selectors exclude error targets and message parents inside panels, such as radio booleans with content.
   // This stops the error styling and message being applied to any fields inside these panels.
   // Fields inside panels are never validated client-side as dependent validation isn't implemented.
-  formGroupErrorTargetSelector: '.clientside-form-group-error-target:not(.form-group .panel .form-group .clientside-form-group-error-target):not(.form-group .panel .form-group.clientside-form-group-error-target)',
-  errorMessageParentSelector: '.clientside-error-message-parent:not(.form-group .panel .form-group .clientside-error-message-parent):not(.form-group .panel .form-group.clientside-error-message-parent)',
+  formGroupErrorTargetSelector: '.clientside-form-group-error-target:not(.govuk-form-group .panel .govuk-form-group .clientside-form-group-error-target):not(.govuk-form-group .panel .govuk-form-group.clientside-form-group-error-target)',
+  errorMessageParentSelector: '.clientside-error-message-parent:not(.govuk-form-group .panel .form-group .clientside-error-message-parent):not(.govuk-form-group .panel .form-group.clientside-error-message-parent)',
   _validationFunction: null,
   _$triggeringElement: null,
 
@@ -265,7 +265,7 @@ LITECommon.ClientSideValidation = {
 
     var $errorMessage = $("<span/>");
     $errorMessage.text(message);
-    $errorMessage.addClass("error-message");
+    $errorMessage.addClass("govuk-error-message");
     $errorMessage.attr(LITECommon.ClientSideValidation.clientSideDataAttrName, true);
 
     if (LITECommon.ClientSideValidation._isTextField(field)) {

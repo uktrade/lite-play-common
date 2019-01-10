@@ -3,11 +3,11 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
+@(field: Form.Field)(prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "", validationGroup: Option[String] = None, inline: Boolean = false, legendContent: Option[Html] = None)(radioContent: Html)
 
 @errorMessage = {
   @if(field.error.isDefined) {
-    <span class="error-message">@Messages(field.error.get.message)</span>
+    <span class="govuk-error-message">@Messages(field.error.get.message)</span>
   }
 }
 
@@ -22,12 +22,12 @@
     @Html(" data-validation-group=\"" + HtmlFormat.escape(validationGroup.get) + "\"")
   }>
 
-  <fieldset class="govuk-fieldset @if(inline) { inline }">
-    <legend @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { class="clientside-error-message-parent govuk-label" }>
+  <fieldset class="govuk-fieldset">
+    <legend>
       <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
 
       @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
-        <div class="clientside-form-group-error-target clientside-error-message-parent govuk-label @if(field.error.isDefined) { form-group-error }">
+        <div class="clientside-form-group-error-target clientside-error-message-parent govuk-label @if(field.error.isDefined) { govuk-form-group-error }">
           @legendContent
           @errorMessage
         </div>
@@ -38,11 +38,13 @@
     </legend>
 
     @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {
-      <div class="clientside-form-group-error-target @if(field.error.isDefined) { form-group-error }">
+      <div class="govuk-radios @if(inline){ govuk-radios--inline } @if(field.error.isDefined) { govuk-form-group-error }">
         @radioContent
       </div>
     } else {
-      @radioContent
+		<div class="govuk-radios @if(inline){ govuk-radios--inline }">
+      		@radioContent
+  		</div>
     }
 
   </fieldset>
