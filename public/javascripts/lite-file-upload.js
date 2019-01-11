@@ -48,7 +48,7 @@ $(function () {
       var fileRowCount = $('#file-list tr').length;
 
       //Create tr in the uploads table
-      data.context = $('<tr><th class="file-upload-filename bold" id="file-upload-filename-' + fileRowCount + '">' + filename + '</th><td class="file-upload-status"></td><td class="file-upload-actions"><a href="#" class="file-cancel-link">Cancel<span class="visually-hidden"> upload of ' + filename + '</span></a></td></tr>').prependTo($('#file-list tbody'));
+      data.context = $('<tr><th class="file-upload-filename bold" id="file-upload-filename-' + fileRowCount + '">' + filename + '</th><td class="file-upload-status"></td><td class="file-upload-actions"><a href="#" class="file-cancel-link">Cancel<span class="govuk-visually-hidden"> upload of ' + filename + '</span></a></td></tr>').prependTo($('#file-list tbody'));
 
       var allowedExtensions = $("input[name='files[]']").attr('data-upload-validation-allowed-extensions').split(',');
       var maxSize = parseInt($("input[name='files[]']").attr('data-upload-validation-max-size'))
@@ -95,7 +95,7 @@ $(function () {
 
         setTimeout( function() {
           //Add download link, success label and filesize
-          data.context.find('.file-upload-filename').html('<a href="' + url + '"><span class="visually-hidden">Download</span> ' + filename + '</a>');
+          data.context.find('.file-upload-filename').html('<a href="' + url + '"><span class="govuk-visually-hidden">Download</span> ' + filename + '</a>');
           data.context.find('.file-upload-status').html('<span class="status-label status-label-finished">Success</span><span class="file-upload-size">' + size + '</span>');
 
           // After 2 seconds, fade out the success label to reveal the file size
@@ -105,7 +105,7 @@ $(function () {
 
           // Create the delete action
           data.context.find('.file-upload-actions').html('<a href="#" data-js-delete-link="' + jsDeleteLink +
-            '" class="file-delete-link">Remove<span class="visually-hidden"> ' + filename + '</span></a>');
+            '" class="file-delete-link">Remove<span class="govuk-visually-hidden"> ' + filename + '</span></a>');
 
           // If the page has been validated, remove the error summary and any error from the upload widget,
           // and rerun the validation

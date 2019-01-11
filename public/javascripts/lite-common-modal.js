@@ -31,8 +31,8 @@ LITECommon.Modal = {
       '<div id="modal" role="dialog" aria-label="' + ariaLabel + '" aria-describedby="modal-aria-description">' +
       '<div id="' + LITECommon.Modal.contentID + '" role="document">' +
       '</div></div></div>');
-    $modal.find('#'+LITECommon.Modal.contentID).append('<div id="modal-aria-description" class="visually-hidden">Press escape to close this popover</div>');
-    $modal.find('#'+LITECommon.Modal.contentID).append('<button id="close-modal-fixed-button" class="' + LITECommon.Modal.closeClass + ' link">Close<span class="visually-hidden"> popover</span></a>');
+    $modal.find('#'+LITECommon.Modal.contentID).append('<div id="modal-aria-description" class="govuk-visually-hidden">Press escape to close this popover</div>');
+    $modal.find('#'+LITECommon.Modal.contentID).append('<button id="close-modal-fixed-button" class="' + LITECommon.Modal.closeClass + ' link">Close<span class="govuk-visually-hidden"> popover</span></a>');
     $modal.find('#'+LITECommon.Modal.contentID).append($content);
 
     // Add the class that stops scrolling of the main page

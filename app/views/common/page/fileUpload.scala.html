@@ -8,7 +8,7 @@
 <div id="file-upload-container" @if(form.getError(FileService.FILE_UPLOAD_FORM_FIELD).isPresent){ class="form-group-error" }>
 
   @twoThirdsColumn {
-    <div id="file-upload-label-fileupload" @if(labelVisuallyHidden) { class="visually-hidden" }>
+    <div id="file-upload-label-fileupload" @if(labelVisuallyHidden) { class="govuk-visually-hidden" }>
       @if(labelVisuallyHidden) {
         @label.toString
       } else {
@@ -35,7 +35,7 @@
     <tr>
       <th>File name</th>
       <th style="min-width: 202px">Size</th>
-      <th><span class="visually-hidden">Actions</span></th>
+      <th><span class="govuk-visually-hidden">Actions</span></th>
     </tr>
   </thead>
   <tbody>
@@ -43,7 +43,7 @@
     <tr>
       <th class="file-upload-filename">
         <a href="@file.getLink">
-          <span class="visually-hidden">Download</span>
+          <span class="govuk-visually-hidden">Download</span>
           @file.getName
         </a>
       </th>
@@ -52,7 +52,7 @@
         <button class="js-hidden" name="delete" value="@file.getId">Remove</button>
         <a href="#" class="file-delete-link" data-js-delete-link="@file.getJsDeleteLink">
           <div class="js-only">Remove</div>
-          <span class="visually-hidden">@file.getName</span>
+          <span class="govuk-visually-hidden">@file.getName</span>
         </a>
       </td>
     </tr>
