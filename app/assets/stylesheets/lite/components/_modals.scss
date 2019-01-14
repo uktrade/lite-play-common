@@ -14,7 +14,7 @@
 	display: none;
 	padding: govuk-spacing(6);
 	overflow-y: scroll;
-  	-webkit-overflow-scrolling: touch;
+	-webkit-overflow-scrolling: touch;
 }
 
 #modal {
@@ -31,12 +31,38 @@
 	margin-bottom: govuk-spacing(2);
 }
 
+.govuk-link--arrow {
+	position: relative;
+	display: inline-block;
+	padding-right: 14px;
+	border-bottom: 1px solid currentColor;
+	text-decoration: none;
+
+	&:after {
+		@include govuk-shape-arrow($direction: right, $base: 11px, $height: 6px);
+		content: "";
+		position: absolute;
+		top: 0;
+		bottom: 1px;
+		right: 0;
+		margin: auto;
+	}
+
+	&:visited {
+		color: $govuk-link-visited-colour;
+		border-bottom: 1px solid $govuk-link-visited-colour;
+		&:after {
+			border-left-color: $govuk-link-visited-colour;
+		}
+	}
+}
+
 #modal-back-button {
 	position: relative;
 	float: left;
 	display: none;
 	border-bottom: 1px solid currentColor;
-    text-decoration: none;
+	text-decoration: none;
 	// Allow space for the arrow
 	padding-left: 14px;
 
@@ -54,7 +80,7 @@
 #modal-close-button {
 	float: right;
 	border-bottom: 1px solid currentColor;
-    text-decoration: none;
+	text-decoration: none;
 }
 
 #modal-contents {
@@ -62,7 +88,8 @@
 }
 
 .modal-content {
-	p:last-of-type {
-		padding-bottom: 0;
+	& > *:last-child {
+		margin-bottom: 0!important;
+		padding-bottom: 0!important;
 	}
 }
