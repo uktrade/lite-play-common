@@ -11,7 +11,7 @@
   }
 }
 
-<div id="@field.getName.get" class="govuk-form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
+<div id="@field.getName.get" class="govuk-form-group @if(field.error.isDefined && !ViewUtil.cssClassContainsHeading(promptCssClass)) { govuk-form-group-error } @if(!ViewUtil.cssClassContainsHeading(promptCssClass)) { clientside-form-group-error-target }"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -23,7 +23,7 @@
   }>
 
   <fieldset class="govuk-fieldset">
-    <legend>
+    <legend class="govuk-fieldset__legend">
       <@promptHeadingTag class="@promptCssClass">@prompt</@promptHeadingTag>
 
       @if(ViewUtil.cssClassContainsHeading(promptCssClass)) {

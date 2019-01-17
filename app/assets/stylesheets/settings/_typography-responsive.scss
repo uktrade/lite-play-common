@@ -16,7 +16,11 @@
 /// @type Boolean
 /// @access public
 
-$govuk-typography-use-rem: false !default;
+$govuk-typography-use-rem: if((
+    $govuk-compatibility-govukfrontendtoolkit or
+    $govuk-compatibility-govuktemplate or
+    $govuk-compatibility-govukelements
+  ), false, true) !default;
 
 /// Root font size
 ///

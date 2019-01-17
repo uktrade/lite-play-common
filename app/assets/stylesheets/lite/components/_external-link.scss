@@ -1,4 +1,4 @@
-a[rel="external"] {
+a[rel="external"], a[target="_blank"] {
 	position: relative;
 	display: inline-block;
 
@@ -30,4 +30,10 @@ a[rel="external"] {
 	&:visited:before {
 		background-color: $govuk-link-visited-colour;
 	}
+}
+
+// TODO:
+.js-hidden {
+	display: none;
+	visibility: hidden;
 }
