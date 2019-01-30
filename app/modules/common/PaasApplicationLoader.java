@@ -46,7 +46,7 @@ public class PaasApplicationLoader extends GuiceApplicationLoader {
   @Override
   public GuiceApplicationBuilder builder(Context context) {
 
-    String schema = context.initialConfiguration().getString("db.default.schema");
+    String schema = context.initialConfig().getString("db.default.schema");
 
     return initialBuilder
         .in(context.environment())
