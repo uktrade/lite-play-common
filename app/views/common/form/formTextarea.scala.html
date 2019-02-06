@@ -13,12 +13,12 @@
     }
 
       @if(hint.isDefined){
-        <span class="form-hint">@hint</span>
+        <span class="govuk-hint">@hint</span>
       }
 
       <div class="clientside-error-message-parent">
         @if(field.error.isDefined) {
-          <span class="error-message">@Messages(field.error.get.message)</span>
+          <span class="govuk-error-message">@Messages(field.error.get.message)</span>
         }
       </div>
 

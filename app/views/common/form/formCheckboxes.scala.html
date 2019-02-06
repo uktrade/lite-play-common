@@ -4,7 +4,7 @@
 
 @(field: Form.Field, options: Map[SelectOption, Boolean], validationGroup: Option[String] = None)
 
-<div id="@field.getName.get" class="form-group"
+<div id="@field.getName.get" class="govuk-form-group"
   @{
     val fieldValidationData = ViewUtil.fieldValidationJSON(field);
     if(fieldValidationData != null){
@@ -17,9 +17,9 @@
 
   @* Iterator required to preserve ordering *@
   @for((option, index) <- options.iterator.zipWithIndex) {
-    <div class="multiple-choice">
-      <input id="@field.getName.get@index" type="checkbox" name="@{field.getName.get}[@index]" value="@option._1.value" @if(option._2) { checked="checked" }>
-      <label for="@field.getName.get@index">
+    <div class="govuk-checkboxes__item">
+      <input class="govuk-checkboxes__input" id="@field.getName.get@index" type="checkbox" name="@{field.getName.get}[@index]" value="@option._1.value" @if(option._2) { checked="checked" }>
+      <label class="govuk-label govuk-checkboxes__label" for="@field.getName.get@index">
         @if(option._1.isPromptHtml) {
           @Html(option._1.prompt.replace("\n", "<br/>"))
         } else {

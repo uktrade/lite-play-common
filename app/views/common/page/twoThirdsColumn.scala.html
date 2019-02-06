@@ -1,7 +1,12 @@
-@(content: Html)
+@(content: Html, sidebar: Html = null)
 
-<div class="grid-row">
-  <div class="column-two-thirds">
-    @content
-  </div>
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-two-thirds">
+		@content
+	</div>
+	@if(sidebar != null) {
+		<div class="govuk-grid-column-one-third">
+			@sidebar
+		</div>
+	}
 </div>

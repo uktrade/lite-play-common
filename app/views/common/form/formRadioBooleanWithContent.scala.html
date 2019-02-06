@@ -1,7 +1,7 @@
 @import utils.common.ViewUtil
 @import play.twirl.api.HtmlFormat
 
-@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "form-label-bold", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)(trueContent: Html)(falseContent: Html)
+@(field: Form.Field, prompt: Html, promptHeadingTag: String = "span", promptCssClass: String = "govuk-label", truePrompt: String = "Yes", falsePrompt: String = "No", validationGroup: Option[String] = None, inline: Boolean = true, legendContent: Option[Html] = None)(trueContent: Html)(falseContent: Html)
 
 @trueDisclosurePanelId = {
   @if(trueContent.body.nonEmpty) {
@@ -20,7 +20,7 @@
   @formRadio(field, truePrompt, "true", disclosurePanelId=trueDisclosurePanelId.toString().trim)
 
   @if(trueContent.body.nonEmpty && !inline) {
-    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
+    <div class="govuk-inset-text js-hidden" id="@field.getName.get-T-content">
     @trueContent
     </div>
   }
@@ -28,13 +28,13 @@
   @formRadio(field, falsePrompt, "false", disclosurePanelId=falseDisclosurePanelId.toString().trim)
 
   @if(trueContent.body.nonEmpty && inline) {
-    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-T-content">
+    <div class="govuk-inset-text js-hidden" id="@field.getName.get-T-content">
     @trueContent
     </div>
   }
 
   @if(falseContent.body.nonEmpty) {
-    <div class="panel panel-border-narrow js-hidden" id="@field.getName.get-F-content">
+    <div class="govuk-inset-text js-hidden" id="@field.getName.get-F-content">
     @falseContent
     </div>
   }

@@ -6,10 +6,10 @@
 <div class="form-group clientside-form-group-error-target @if(dayField.error.isDefined || monthField.error.isDefined || yearField.error.isDefined){ form-group-error }">
   <fieldset>
     <legend>
-      <span class="form-label-bold">
+      <span class="govuk-hint">
         @label
       </span>
-      <span class="form-hint">
+      <span class="govuk-hint">
         @if(hint.nonEmpty) {
           @hint
         } else {
@@ -17,9 +17,9 @@
         }
       </span>
       <div class="clientside-error-message-parent">
-        @if(dayField.error.isDefined) { <span class="error-message">@Messages(dayField.error.get.message)</span> }
-        @if(monthField.error.isDefined) { <span class="error-message">@Messages(monthField.error.get.message)</span> }
-        @if(yearField.error.isDefined) { <span class="error-message">@Messages(yearField.error.get.message)</span> }
+        @if(dayField.error.isDefined) { <span class="govuk-error-message">@Messages(dayField.error.get.message)</span> }
+        @if(monthField.error.isDefined) { <span class="govuk-error-message">@Messages(monthField.error.get.message)</span> }
+        @if(yearField.error.isDefined) { <span class="govuk-error-message">@Messages(yearField.error.get.message)</span> }
       </div>
     </legend>
     <div class="form-date">

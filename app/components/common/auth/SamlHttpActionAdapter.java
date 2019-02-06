@@ -29,7 +29,7 @@ public class SamlHttpActionAdapter extends DefaultHttpActionAdapter {
       return redirect(unauthorisedCall);
     } else if (code == HttpConstants.OK && responseContent.contains("onload=\"document.forms[0].submit()\"")) {
       //Hack to intercept the Pac4j self-posting redirect form and inject an external script into it (CSP workaround)
-      Assets.Asset asset = new Assets.Asset("template/javascripts/saml-redirect.js");
+      Assets.Asset asset = new Assets.Asset("javascripts/saml-redirect.js");
       String jsUrl = controllers.common.routes.Assets.versioned(asset).toString();
       String fixedResponseContent = responseContent.replace("</body>",
           String.format("<script type=\"text/javascript\" src=\"%s\"></script></body>", jsUrl));
