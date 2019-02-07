@@ -9,9 +9,10 @@ public class SelectOption {
   public final String value;
   public final String prompt;
   public final boolean isPromptHtml;
+  public final boolean isDividerAbove;
 
-  public SelectOption(String value, String prompt) {
-    this(value, prompt, false);
+  public SelectOption(String value, String prompt, boolean isDividerAbove) {
+    this(value, prompt, false, isDividerAbove);
   }
 
   /**
@@ -19,10 +20,11 @@ public class SelectOption {
    *
    * @param isPromptHtml set to true if you can guarantee that the prompt contains safe HTML.
    */
-  public SelectOption(String value, String prompt, boolean isPromptHtml) {
+  public SelectOption(String value, String prompt, boolean isPromptHtml, boolean isDividerAbove) {
     this.value = value;
     this.prompt = prompt;
     this.isPromptHtml = isPromptHtml;
+	this.isDividerAbove = isDividerAbove;
   }
 
   public static LinkedHashMap<SelectOption, Boolean> fromEmpty(List<SelectOption> allOptions) {
