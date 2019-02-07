@@ -2,11 +2,6 @@
 
 Common code for use in all LITE Play projects.
 
-## Journey Manager
-
-The `JourneyManager` and associated classes allow you to define a user's journey through the application.
-[Read further details here](docs/Journey.md).
-
 ## Context Params
 
 Context params are used to maintain session data, as an alternative to cookies. They work by "ping-ponging" data
@@ -27,24 +22,6 @@ to use the Journey Manager.
 
 Service clients for most LITE backend services are defined in `components.common.client`. These are all injectable but you
 must provide some `@Named` strings in your Guice module - see the constructor for the client you wish to use.
-
-### Country provider
-
-For country service clients you must provide a CountryProvider which specifies the country data you want. The `CountryProvider`
-contains caching pre-population behaviour for the country data.
-
-```java
-@Provides
-@Singleton
-@Named("countryProviderExport")
-CountryProvider provideCountryServiceExportClient(HttpExecutionContext httpContext, WSClient wsClient,
-                                                  @Named("countryServiceAddress") String address,
-                                                  @Named("countryServiceTimeout") int timeout,
-                                                  @Named("countryServiceCredentials") String credentials) {
-  CountryServiceClient client = CountryServiceClient.buildCountryServiceSetClient(address, timeout, credentials, wsClient, httpContext, "export-control");
-  return new CountryProvider(client);
-}
-```
 
 ## Pac4j SAML configuration
 
@@ -198,26 +175,7 @@ LITECommon.ClientSideValidation.setValidationFunction(function() {
 });  
 ```
 
-### Error Pages
-
-The ErrorHandler class in /app should be picked up automatically by Play to override the default error handling and
-instead output Gov UK styled error pages.
-
-If you want to have the Play default error handling behaviour you can add the following line to your application config:
-
-`play.http.errorHandler = "play.http.DefaultHttpErrorHandler"`
-
-When the application is running in development mode stack traces and extra error information should be shown on the page.
-In production mode the extra information will not be shown by default. If you want to see that extra information in
-production you can add the following line to your application config:
-
-`errorDetailEnabled = true`
-
-## Asset dependencies
-
-This section outlines the process undertaken for moving frontend assets from GOV.UK repos into lite-play-common.
-
-#### jQuery
+### jQuery
 
 Using the following jQuery components:
 * jQuery Core v1.12.4
