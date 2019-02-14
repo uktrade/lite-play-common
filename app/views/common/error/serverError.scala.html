@@ -18,7 +18,7 @@
   footerTop = HtmlFormat.empty,
   footerLinks = HtmlFormat.empty,
   headerClass = Html("with-proposition"),
-  propositionHeader = Html("<div class=\"header-proposition\"><div class=\"content\"><nav id=\"proposition-menu\"><a id=\"proposition-name\" href=\"/\">"
+  propositionHeader = Html("<div class=\"header-proposition\"><div class=\"content\"><nav id=\"proposition-menu\"><a id=\"proposition-name\" class=\"govuk-header__link govuk-header__link--service-name\" href=\"/\">"
     + "License controlled items and services</a></nav></div></div>"),
   homepageUrl = None,
   globalHeaderText = None,
@@ -31,21 +31,15 @@
     " except where otherwise stated</p>"),
   crownCopyrightMessage = None
 ){
-  <main id="content" role="main">
+	<div class="govuk-width-container">
+       <main class="govuk-main-wrapper " id="main-content" role="main">
+         <h1 class="govuk-heading-l">Sorry, there is a problem with the service</h1>
 
-    <a id="contentStart"></a>
+    <p class="govuk-body">Try again later.</p>
 
-    <header class="page-header">
-      <div>
-        <h1 class="heading-large">Sorry, there is a problem with the service</h1>
-      </div>
-    </header>
+    <p class="govuk-body"><a class="govuk-link" href="https://www.spire.trade.gov.uk" rel="external" target="_blank">Use SPIRE</a> if you need to apply for an export licence.</p>
 
-    <p>Try again later.</p>
-
-    <p><a href="https://www.spire.trade.gov.uk" rel="external" target="_blank">Use SPIRE</a> if you need to apply for an export licence.</p>
-
-    <p>If the problem continues email <a href="mailto:@contactEmail">@contactEmail</a> with error reference <span class="govuk-!-font-weight-bold">@corrID</span>.</p>
+    <p class="govuk-body">If the problem continues email <a class="govuk-link" href="mailto:@contactEmail">@contactEmail</a> with error reference <span class="govuk-!-font-weight-bold">@corrID</span>.</p>
 
 
     @if(error.isDefined) {
@@ -122,4 +116,5 @@
     }
 
   </main>
+</div>
 }
